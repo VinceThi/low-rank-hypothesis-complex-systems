@@ -2,14 +2,11 @@
 # @author: Vincent Thibeault
 
 import numpy as np
-from numba import jit
+from scipy.linalg import pinv
 
 
-# Wilson-Cowan
-
-def reduced_wilson_cowan_factorization(t, x, L, M, a, b):
-    return -x + M@(1/(1+np.exp(-a*(L@x - b))))
-
-
-def reduced_wilson_cowan_suboptimal(t, x, redW, a, b, alpha):
-    return -x + alpha*(1/(1+np.exp(-a*((redW@x/alpha)-b))))
+def reduced_wilson_cowan(t, X, L, M, coupling, a, b, c, d):
+    N = len(M[0, :])
+    return -a*X \
+        + M@((np.ones(N) - b*pinv(M)@X) /
+             (1+np.exp(-c*(coupling/N*L@X - d))))
