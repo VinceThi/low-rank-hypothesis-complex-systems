@@ -105,11 +105,11 @@ def extractGraphProperties():
                                     comment="#", delimiter=r"\s+")
         graphPropList = graphPropDF.values.tolist()
 
-    for networkName in glob.glob('graph_data/netzschleuder/*.gt.zst'):
+    for networkName in glob.glob('graphs/graph_data/netzschleuder/*.gt.zst'):
         networkName = networkName.split('.')[0].split('/')[-1]
         if not (graphPropDF['name'] == networkName).any():
             print(networkName)
-            networkFilename = 'graph_data/netzschleuder/' + networkName\
+            networkFilename = 'graphs/graph_data/netzschleuder/' + networkName\
                               + '.gt.zst'
             graphPropList.append([networkName] + analyzeGraph(networkFilename))
 

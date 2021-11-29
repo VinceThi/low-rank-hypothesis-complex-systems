@@ -18,10 +18,11 @@ def computeSingularValues():
                                 delimiter=r"\s+")
     graphPropDF.set_index('name', inplace=True)
 
-    for networkName in glob.glob('graph_data/netzschleuder/*.gt.zst'):
+    for networkName in glob.glob('graphs/graph_data/netzschleuder/*.gt.zst'):
 
         networkName = networkName.split('.')[0].split('/')[-1]
-        networkFilename = 'graph_data/netzschleuder/' + networkName + '.gt.zst'
+        networkFilename = 'graphs/graph_data/netzschleuder/' + networkName \
+                          + '.gt.zst'
         singularValuesFilename = 'properties/singular_values/' + networkName \
                                  + '_singular_values.txt'
 
