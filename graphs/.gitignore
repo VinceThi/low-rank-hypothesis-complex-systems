@@ -1,0 +1,9 @@
+**/.DS_Store
+../.DS_Store
+Icon*
+
+
+**.ipynb_checkpoints
+
+graph_data/erreur_optht_plante/
+graph_data/erreur_valeur_singuliere_infinie/
