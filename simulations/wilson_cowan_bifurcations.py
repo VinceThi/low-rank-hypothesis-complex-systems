@@ -4,6 +4,9 @@
 from dynamics.integrate import *
 from dynamics.dynamics import *
 from dynamics.reduced_dynamics import *
+from singular_values.compute_effective_ranks import computeStableRank,\
+    findCoudePosition, computeERank
+from optht import optht
 from plots.config_rcparams import *
 from scipy.linalg import pinv
 import pandas as pd
@@ -25,9 +28,8 @@ timelist = np.linspace(t0, t1, int(t1 / dt))
 
 """ Graph parameters """
 graph_str = "celegans"
-
 path_str = "C:/Users/thivi/Documents/GitHub/low-dimension-hypothesis/" \
-           "singular_values/graph_data/connectomes/"
+           "graphs/graph_data/connectomes/"
 
 if graph_str == "Gilbert":
     n1 = 60
@@ -178,12 +180,12 @@ if plot_weight_matrix:
 
 
 """ Dynamical parameters """
-a = 1
-b = 0.1
-c = 1
-d = 3
+D = np.eye(N)
+a = 0.1
+b = 1
+c = 3
 # coupling_constants = N*np.linspace(0.05, 0.2, 10)
-coupling_constants = N*np.linspace(0.35, 0.9, 50)  # celegans,ciona,zebrafish
+coupling_constants = N*np.linspace(0.35, 0.9, 10)  # celegans,ciona,zebrafish
 # coupling_constants = N*np.linspace(0.5, 8.5, 100)# mouse_meso (not connex ?)
 # coupling_constants = N*np.linspace(0.6, 1.2, 100)# mouse_meso hysteresis 1
 # coupling_constants = N*np.linspace(5, 10, 100)   # mouse_meso hysteresis 2
@@ -191,6 +193,8 @@ coupling_constants = N*np.linspace(0.35, 0.9, 50)  # celegans,ciona,zebrafish
 
 """ SVD and dimension reduction """
 U, S, Vh = np.linalg.svd(W)
+print(computeStableRank(S), optht(1, sv=S, sigma=None),
+      findCoudePosition(S), computeERank(S))
 rank_D = np.linalg.matrix_rank(W)
 n = 1
 print(f"rank = {rank_D}")
@@ -210,6 +214,7 @@ s = np.array([np.eye(n, n)[0, :]])
 m = s @ M / np.sum(s @ M)
 ell = (s / np.sum(s @ M))[0]
 # mp = pinv(m)
+calD = M@D@Mp
 timestr_M_D = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")
 
 hatW_global_list = []
@@ -224,7 +229,7 @@ redx0_sub = M @ x0
 for coupling in tqdm(coupling_constants):
 
     # Integrate complete dynamics
-    args_dynamics = (coupling, a, b, c, d)
+    args_dynamics = (coupling, D, a, b, c)
     x = np.array(integrate_dopri45(t0, t1, dt, wilson_cowan,
                                    W, x0, *args_dynamics))
     x_glob = np.sum(m*x, axis=1)
@@ -235,7 +240,7 @@ for coupling in tqdm(coupling_constants):
     x0 = x[-1, :]
 
     # Integrate reduced dynamics
-    args_reduced_dynamics = (M, coupling, a, b, c, d)
+    args_reduced_dynamics = (M, coupling, calD, a, b, c)
     redx = np.array(integrate_dopri45(t0, t1, dt, reduced_wilson_cowan,
                                       L, redx0, *args_reduced_dynamics))
     redx0 = redx[-1, :]
@@ -276,7 +281,7 @@ redx0_sub_b = M @ x0_b
 for coupling in tqdm(coupling_constants[::-1]):
 
     # Integrate complete dynamics
-    args_dynamics = (coupling, a, b, c, d)
+    args_dynamics = (coupling, D, a, b, c)
     x = np.array(integrate_dopri45(t0, t1, dt, wilson_cowan,
                                    W, x0_b, *args_dynamics))
     x_glob = np.sum(m * x, axis=1)
@@ -285,7 +290,7 @@ for coupling in tqdm(coupling_constants[::-1]):
     x0_b = x[-1, :]
 
     # Integrate reduced dynamics
-    args_reduced_dynamics = (M, coupling, a, b, c, d)
+    args_reduced_dynamics = (M, coupling, calD, a, b, c)
     redx = np.array(integrate_dopri45(t0, t1, dt, reduced_wilson_cowan,
                                       L, redx0_b, *args_reduced_dynamics))
     redx0_b = redx[-1, :]
@@ -354,7 +359,7 @@ if messagebox.askyesno("Python",
     timestr = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")
 
     parameters_dictionary = {"graph_str": graph_str, "a": a, "b": b, "c": c,
-                             "d": d, "n": n, "N": N,
+                             "D": D, "n": n, "N": N,
                              "t0": t0, "t1": t1, "dt": dt,
                              "coupling_constants": coupling_constants.tolist()}
 
