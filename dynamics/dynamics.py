@@ -19,9 +19,9 @@ def wilson_cowan(t, x, W, coupling, D, a, b, c):
     return -D@x + (np.ones(N) - a*x)/(1+np.exp(-b*(coupling/N*W@x-c)))
 
 
-def kuramoto_sakaguchi(t, theta, W, coupling, omega, alpha):
+def kuramoto_sakaguchi(t, theta, W, coupling, D, alpha):
     N = len(theta)
-    return omega \
+    return np.diag(D) \
         + coupling/N*(np.cos(theta+alpha)*np.dot(W, np.sin(theta))
                       - np.sin(theta+alpha)*np.dot(W, np.cos(theta)))
 

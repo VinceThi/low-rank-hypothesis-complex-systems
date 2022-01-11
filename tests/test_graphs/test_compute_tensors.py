@@ -28,6 +28,31 @@ def test_compute_tensor_order_3():
     assert np.allclose(calW_test, calW_true)
 
 
+def test_compute_tensor_order_4():
+    N = 3
+    n = 2
+    W = np.random.random((N, N))
+    M = np.random.random((n, N))
+
+    calW_test = compute_tensor_order_4(M, W)
+
+    # A slower but equivalent way of computing the tensor
+    calW_true = np.zeros((n, n, n, n))
+    Mp = np.linalg.pinv(M)
+    WMp = W @ Mp
+    for mu in range(n):
+        for nu in range(n):
+            for tau in range(n):
+                for eta in range(n):
+                    element_munutaueta = 0
+                    for i in range(N):
+                        element_munutaueta += \
+                            M[mu, i] * Mp[i, nu] * Mp[i, tau] * WMp[i, eta]
+                    calW_true[mu, nu, tau, eta] += element_munutaueta
+
+    assert np.allclose(calW_test, calW_true)
+
+
 def test_product_tensor_vector():
     n = 2
     X = np.random.random(n)
