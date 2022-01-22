@@ -5,36 +5,34 @@ import numpy as np
 
 
 def lotka_volterra(t, x, W, coupling, D):
-    N = len(x)
-    return -D@x + coupling/N*x*(W@x)
+    return D@(x*(1 - x)) + coupling*x*(W@x)
 
 
 def qmf_sis(t, x, W, coupling, D):
-    N = len(x)
-    return -D@x + (np.ones(N) - x)*(coupling/N*W@x)
+    return -D@x + (1 - x)*(coupling*W@x)
 
 
 def wilson_cowan(t, x, W, coupling, D, a, b, c):
-    N = len(x)
-    return -D@x + (np.ones(N) - a*x)/(1+np.exp(-b*(coupling/N*W@x-c)))
+    return -D@x + (1 - a*x)/(1+np.exp(-b*(coupling*W@x-c)))
 
 
 def kuramoto_sakaguchi(t, theta, W, coupling, D, alpha):
-    N = len(theta)
-    return np.diag(D) \
-        + coupling/N*(np.cos(theta+alpha)*np.dot(W, np.sin(theta))
-                      - np.sin(theta+alpha)*np.dot(W, np.cos(theta)))
+    return np.diag(D) + coupling*(np.cos(theta+alpha)*(W@np.sin(theta))
+                                  - np.sin(theta+alpha)*(W@np.cos(theta)))
+
+
+def complex_kuramoto_sakaguchi(t, z, W, coupling, D, alpha):
+    return 1j*D@z + coupling/2*(W@z*np.exp(-1j*alpha)
+                                - (z**2)*(W@np.conj(z))*np.exp(1j*alpha))
 
 
 def theta(t, theta, W, coupling, Iext):
-    N = len(theta)
     return 1 - np.cos(theta) + (1 + np.cos(theta)) * \
-        (Iext + coupling/N*(W@(np.ones(N)-np.cos(theta))))
+        (Iext + coupling*(W@(np.ones(len(theta))-np.cos(theta))))
 
 
 def winfree(t, theta, W, coupling, omega):
-    N = len(theta)
-    return omega - coupling/N*np.sin(theta)*(W@(np.ones(N) + np.cos(theta)))
+    return omega-coupling*np.sin(theta)*(W@(np.ones(len(theta))+np.cos(theta)))
 
 
 def lorenz(t, X, W, coupling, a, b, c):

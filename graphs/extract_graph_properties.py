@@ -91,7 +91,7 @@ def analyzeGraph(networkFilename):
 
 def extractGraphProperties():
 
-    graphPropFilename = 'properties/graph_properties.txt'
+    graphPropFilename = 'graph_data/graph_properties.txt'
     if not os.path.isfile(graphPropFilename):
         header = ['name', '(un)dir', '(un)weighted', 'uni/bi-partite',
                   'selfloops', 'multiedges', 'nbVertices', 'nbEdges',

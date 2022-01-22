@@ -17,20 +17,41 @@ def test_complete_vs_reduced_wilson_cowan_full():
     coupling = 1
     D = np.diag(np.random.random(N))
     a, b, c = 1, 1, 3
-    U, s, Vh = np.linalg.svd(W)
-    S = np.diag(s)
-    M = Vh
-    L = U @ S
-    calD = M@D@np.linalg.pinv(M)
+    U, s, M = np.linalg.svd(W)
+    Mp = np.linalg.pinv(M)
     Mdotx = M@wilson_cowan(t, x, W, coupling, D, a, b, c)
-    dotX = reduced_wilson_cowan(t, M@x, L, M, coupling, calD, a, b, c)
+    dotX = reduced_wilson_cowan(t, M@x, W, coupling, M, Mp, D, a, b, c)
     assert np.allclose(Mdotx, dotX)
 
 
-def test_complete_vs_reduced_wilson_cowan_rank():
+def test_complete_vs_reduced_wilson_cowan_rank_identical_params_a_0():
+    """ Compares the complete Wilson-Cowan dynamics with the reduced one
+     for n = rank(W), the rank of the weight matrix W and identical
+     parameters. We set a = 0, which essentially gives the dynamics
+     of a recurrent neural network. """
+    t = 10
+    x = np.array([0.2, 0.8, 0.1])
+    W = np.array([[0, 0.2, -0.8],
+                  [0.5, -0.4, 0.2],
+                  [0.5, -0.4, 0.2]])
+    rankW = 2
+    coupling = 1
+    D = np.diag([2, 2, 2])
+    a, b, c = 0, 1, 3
+    U, s, Vh = np.linalg.svd(W)
+    M = Vh[:rankW, :]
+    Mp = np.linalg.pinv(M)
+    Mdotx = M@wilson_cowan(t, x, W, coupling, D, a, b, c)
+    dotX = reduced_wilson_cowan(t, M@x, W, coupling, M, Mp, D, a, b, c)
+    assert np.allclose(Mdotx, dotX)
+
+
+def test_complete_vs_reduced_wilson_cowan_rank_special():
     """ Compares the complete Wilson-Cowan dynamics with the reduced one
      for n = rank(W), the rank of the weight matrix W and the parameters matrix
      D is correlated to W. TODO precise "correlated" """
+
+    """ WARNING: This is a very particular case that works."""
     t = 10
     x = np.array([0.2, 0.8, 0.1])
     W = np.array([[0, 0.2, 0.1],
@@ -40,16 +61,11 @@ def test_complete_vs_reduced_wilson_cowan_rank():
     coupling = 1
     D = np.diag([3, 2, 2])
     a, b, c = 1, 1, 3
-    U, s, Vh = np.linalg.svd(W)    # s = [1.41421356e+00 7.07106781e-01 0]
-    print(s)
-    S = np.diag(s[:rankW])
+    U, s, Vh = np.linalg.svd(W)
     M = Vh[:rankW, :]
-    P = np.linalg.pinv(M)@M
-    print(np.linalg.norm(M@D@(np.eye(3) - P), ord=2))
-    L = U[:, :rankW] @ S
-    calD = M @ D @ np.linalg.pinv(M)
+    Mp = np.linalg.pinv(M)
     Mdotx = M@wilson_cowan(t, x, W, coupling, D, a, b, c)
-    dotX = reduced_wilson_cowan(t, M@x, L, M, coupling, calD, a, b, c)
+    dotX = reduced_wilson_cowan(t, M@x, W, coupling, M, Mp, D, a, b, c)
     assert np.allclose(Mdotx, dotX)
 
 

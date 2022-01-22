@@ -2,13 +2,12 @@
 # @author: Vincent Thibeault
 
 from dynamics.integrate import *
-from dynamics.dynamics import *
-from dynamics.reduced_dynamics import *
-from singular_values.compute_effective_ranks import computeStableRank,\
-    findCoudePosition, computeERank
-from optht import optht
+from dynamics.dynamics import wilson_cowan
+from dynamics.reduced_dynamics import reduced_wilson_cowan
+from singular_values.compute_effective_ranks import computeEffectiveRanks
+from singular_values.compute_svd import computeTruncatedSVD_more_positive
 from plots.config_rcparams import *
-from scipy.linalg import pinv
+from scipy.linalg import pinv, svdvals
 import pandas as pd
 import networkx as nx
 from tqdm import tqdm
@@ -58,13 +57,13 @@ if graph_str == "Gilbert" or graph_str == "SBM":
     weight_str = "binary"  # "random_symmetric"
 
     if weight_str == "random":
-        W = binaryD * random_weights
+        A = binaryD * random_weights
     elif weight_str == "random_symmetric":
-        W = binaryD * random_symmetric_weights
+        A = binaryD * random_symmetric_weights
     elif weight_str == "binary":
-        W = binaryD
+        A = binaryD
     else:
-        W = None
+        A = None
         print("WARNING: this weight_str is not"
               " among the available choice.")
 
@@ -74,9 +73,9 @@ elif graph_str == "mouse_meso":
     # Nature 508, 207–214 (2014) doi:10.1038/nature13186
 
     # To binary matrix  (with "> 0")
-    W = (np.loadtxt(path_str + "ABA_weight_mouse.txt") > 0).astype(float)
+    A = (np.loadtxt(path_str + "ABA_weight_mouse.txt") > 0).astype(float)
     # W = (W + W.T) / 2
-    G_mouse_meso = nx.from_numpy_array(W)
+    G_mouse_meso = nx.from_numpy_array(A)
     N = G_mouse_meso.number_of_nodes()
     print(f"N = {N}")
     # N = 213
@@ -115,7 +114,7 @@ elif graph_str == "zebrafish_meso":
     adjacency = np.log(adjacency + 0.00001)
     adjacency -= np.amin(adjacency)
     adjacency = adjacency / np.amax(adjacency)
-    W = adjacency + np.eye(N)
+    A = adjacency + np.eye(N)
 
     print(f"N = {N}")
     # N = 71
@@ -126,8 +125,8 @@ elif graph_str == "celegans":
     # supplementary material of the article : Network control principles
     # predict neuron function in the C. elegans connectome - Yan,..., Barabasi
     # The data come from Wormatlas.
-    W = np.array(1 * np.load(path_str + "C_Elegans.npy"))
-    G_celegans = nx.from_numpy_array(W)
+    A = np.array(1 * np.load(path_str + "C_Elegans.npy"))
+    G_celegans = nx.from_numpy_array(A)
     N = G_celegans.number_of_nodes()
     print(f"N = {N}")
     # N = 279
@@ -156,7 +155,7 @@ elif graph_str == "ciona":
     A_ciona = np.array(A_ciona_nan, dtype=float)
     where_are_NaNs = np.isnan(A_ciona)
     A_ciona[where_are_NaNs] = 0
-    W = (A_ciona > 0).astype(float)
+    A = (A_ciona > 0).astype(float)
     G_ciona = nx.from_numpy_array(A_ciona)
 
     N = G_ciona.number_of_nodes()
@@ -171,7 +170,7 @@ else:
 if plot_weight_matrix:
     fig = plt.figure(figsize=(4.5, 4))
     ax = plt.subplot(111)
-    cax = ax.matshow(W, aspect='auto')
+    cax = ax.matshow(A, aspect='auto')
     cbar = fig.colorbar(cax)
     cbar.ax.tick_params(labelsize=12)
     cbar.set_label("$W_{ij}$", fontsize=14, rotation=0, labelpad=10)
@@ -184,40 +183,30 @@ D = np.eye(N)
 a = 0.1
 b = 1
 c = 3
-# coupling_constants = N*np.linspace(0.05, 0.2, 10)
-coupling_constants = N*np.linspace(0.35, 0.9, 10)  # celegans,ciona,zebrafish
-# coupling_constants = N*np.linspace(0.5, 8.5, 100)# mouse_meso (not connex ?)
-# coupling_constants = N*np.linspace(0.6, 1.2, 100)# mouse_meso hysteresis 1
-# coupling_constants = N*np.linspace(5, 10, 100)   # mouse_meso hysteresis 2
+
+# sigma1 times these linspace
+coupling_constants = np.linspace(0.35, 0.9, 10)  # celegans,ciona,zebrafish
+# coupling_constants = np.linspace(0.5, 8.5, 100)# mouse_meso (not connex ?)
+# coupling_constants = np.linspace(0.6, 1.2, 100)# mouse_meso hysteresis 1
+# coupling_constants = np.linspace(5, 10, 100)   # mouse_meso hysteresis 2
 
 
 """ SVD and dimension reduction """
-U, S, Vh = np.linalg.svd(W)
-print(computeStableRank(S), optht(1, sv=S, sigma=None),
-      findCoudePosition(S), computeERank(S))
-rank_D = np.linalg.matrix_rank(W)
-n = 1
-print(f"rank = {rank_D}")
-print(f"n = {n} \n")
-Ur = U[:, :n]
-Sr = np.diag(S[:n])
-Vhr = Vh[:n, :]
-DVhr = np.diag(-(np.sum(Vhr, axis=1) < 0).astype(float)) \
-       + np.diag((np.sum(Vhr, axis=1) >= 0).astype(float))
+n = 1  # Dimension of the reduced dynamics
+Un, Sn, Vhn = computeTruncatedSVD_more_positive(A, n)
+L, M = Un@Sn, Vhn
+print(computeEffectiveRanks(svdvals(A), graph_str, N))
+print(f"\nDimension of the reduced system n = {n} \n")
 
-M = DVhr @ Vhr
-L = Ur @ DVhr @ Sr
+W = A/Sn[0][0]  # We normalize the network by the largest singular value
 
 Mp = pinv(M)
 s = np.array([np.eye(n, n)[0, :]])
 # ^ This yields the dominant singular vector observable
 m = s @ M / np.sum(s @ M)
 ell = (s / np.sum(s @ M))[0]
-# mp = pinv(m)
 calD = M@D@Mp
 timestr_M_D = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")
-
-hatW_global_list = []
 
 """ Forward branch  """
 x_forward_equilibrium_points_list = []
@@ -225,7 +214,6 @@ redx_forward_equilibrium_points_list = []
 
 x0 = -10 * np.random.random(N)
 redx0 = M @ x0
-redx0_sub = M @ x0
 for coupling in tqdm(coupling_constants):
 
     # Integrate complete dynamics
@@ -234,7 +222,7 @@ for coupling in tqdm(coupling_constants):
                                    W, x0, *args_dynamics))
     x_glob = np.sum(m*x, axis=1)
 
-    # /!\ We assume that the dynamics reach an equilibrium point
+    # /!\ Look carefully if the dynamics reach an equilibrium point
     equilibrium_point = x_glob[-1]
     x_forward_equilibrium_points_list.append(equilibrium_point)
     x0 = x[-1, :]
@@ -243,6 +231,9 @@ for coupling in tqdm(coupling_constants):
     args_reduced_dynamics = (M, coupling, calD, a, b, c)
     redx = np.array(integrate_dopri45(t0, t1, dt, reduced_wilson_cowan,
                                       L, redx0, *args_reduced_dynamics))
+    # args_reduced_dynamics = (coupling, M, Mp, D, a, b, c)
+    # redx = np.array(integrate_dopri45(t0, t1, dt, reduced_wilson_cowan,
+    #                                   W, redx0, *args_reduced_dynamics))
     redx0 = redx[-1, :]
 
     # Get global observables
@@ -277,7 +268,6 @@ x_backward_equilibrium_points_list = []
 redx_backward_equilibrium_points_list = []
 x0_b = 10 * np.random.random(N)
 redx0_b = M @ x0_b
-redx0_sub_b = M @ x0_b
 for coupling in tqdm(coupling_constants[::-1]):
 
     # Integrate complete dynamics
@@ -290,9 +280,12 @@ for coupling in tqdm(coupling_constants[::-1]):
     x0_b = x[-1, :]
 
     # Integrate reduced dynamics
-    args_reduced_dynamics = (M, coupling, calD, a, b, c)
+    # args_reduced_dynamics = (M, coupling, calD, a, b, c)
+    # redx = np.array(integrate_dopri45(t0, t1, dt, reduced_wilson_cowan,
+    #                                   L, redx0_b, *args_reduced_dynamics))
+    args_reduced_dynamics = (coupling, M, Mp, D, a, b, c)
     redx = np.array(integrate_dopri45(t0, t1, dt, reduced_wilson_cowan,
-                                      L, redx0_b, *args_reduced_dynamics))
+                                      W, redx0_b, *args_reduced_dynamics))
     redx0_b = redx[-1, :]
 
     # Get global observables
@@ -300,7 +293,7 @@ for coupling in tqdm(coupling_constants[::-1]):
     redX_sub_glob = np.zeros(len(redx[:, 0]))
     for nu in range(n):
         redX_nu = redx[:, nu]
-        redX_glob = redX_glob + ell[nu] * redX_nu
+        redX_glob = redX_glob + ell[nu]*redX_nu
     red_equilibrium_point = redX_glob[-1]
     redx_backward_equilibrium_points_list.append(red_equilibrium_point)
     red_sub_equilibrium_point = redX_sub_glob[-1]
@@ -332,7 +325,6 @@ redx_backward_equilibrium_points_list.reverse()
 fig = plt.figure(figsize=(4, 4))
 redlinewidth = 2
 plt.subplot(111)
-# hatW_global_list
 plt.plot(coupling_constants, x_forward_equilibrium_points_list,
          color=first_community_color, label="Complete")
 plt.plot(coupling_constants, x_backward_equilibrium_points_list,

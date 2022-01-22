@@ -1,5 +1,6 @@
 # -​*- coding: utf-8 -*​-
 # @author: Antoine Allard <antoineallard.info>
+#          Vincent Thibeault
 import glob
 import numpy as np
 import os
@@ -50,8 +51,8 @@ def computeERank(singularValues):
                           * np.log(normalizedSingularValues)))
 
 
-def findCoudePosition(singularValues):
-    """Effective rank based on the coude method."""
+def findElbowPosition(singularValues):
+    """Effective rank based on the elbow method."""
     # Coordinates of the diagonal line y = 1 - x  using ax + by + c = 0.
     a, b, c = 1, 1, -1
 
@@ -80,9 +81,32 @@ def computeStableRank(singularValues):
     return np.sum(singularValues*singularValues) / np.max(singularValues)**2
 
 
-def computeEffectiveRanks():
-    """Computes the rank and various effective ranks
-    and add them to a dataframe."""
+def computeEffectiveRanks(singularValues, matrixName, size):
+    """
+    Computes the rank and various effective ranks and add them to a dataframe.
+    :param singularValues: Singular values of a matrix
+    :param matrixName: (str) Name of the matrix for which we have computed the
+                             singular values
+    :param size: Size of the matrix
+    :return Table with the name of the matrix, its size, rank, and effective
+            ranks (G-D rank, erank, elbow, energy ratio, stable rank).
+    """
+    header = ['Name', 'Size', 'Rank', 'G-D rank',
+              'erank', 'Elbow', 'Energy ratio', 'Stable Rank']
+    properties = [[matrixName, size,
+                  len(singularValues[singularValues > 1e-13]),
+                  optht.optht(1, sv=singularValues, sigma=None),
+                  computeERank(singularValues),
+                  findElbowPosition(singularValues),
+                  computeEffectiveRankEnergyRatio(singularValues,
+                                                  threshold=0.9),
+                  computeStableRank(singularValues)]]
+    return tabulate.tabulate(properties, headers=header)
+
+
+def computeEffectiveRanksManyNetworks():
+    """ Computes the rank andvarious effective ranks
+    and add them to a dataframe for many networks. """
 
     graphPropFilename = 'properties/graph_properties.txt'
     header = open(graphPropFilename, 'r').readline().replace('#', ' ').split()
@@ -93,7 +117,7 @@ def computeEffectiveRanks():
     effectiveRanksFilename = 'properties/effective_ranks.txt'
     if not os.path.isfile(effectiveRanksFilename):
         header = ['name', 'nbVertices', 'rank', 'rankGD',
-                  'erank', 'coude', 'energyRatio', 'stableRank']
+                  'erank', 'elbow', 'energyRatio', 'stableRank']
         effectiveRanksDF = pd.DataFrame(columns=header)
         effectiveRanksList = []
     else:
@@ -113,16 +137,15 @@ def computeEffectiveRanks():
                                      + networkName + '_singular_values.txt'
             singularValues = np.loadtxt(singularValuesFilename)
             print(networkName)
-            effectiveRanks = [networkName]
-            effectiveRanks.append(graphPropDF.loc[networkName]['nbVertices'])
-            effectiveRanks.append(int(len(singularValues)))
-            effectiveRanks.append(optht.optht(1, sv=singularValues,
-                                              sigma=None))
-            effectiveRanks.append(computeERank(singularValues))
-            effectiveRanks.append(findCoudePosition(singularValues))
-            effectiveRanks.append(computeEffectiveRankEnergyRatio(
-                singularValues, threshold=0.9))
-            effectiveRanks.append(computeStableRank(singularValues))
+            effectiveRanks = [networkName,
+                              graphPropDF.loc[networkName]['nbVertices'],
+                              int(len(singularValues)),
+                              optht.optht(1, sv=singularValues, sigma=None),
+                              computeERank(singularValues),
+                              findElbowPosition(singularValues),
+                              computeEffectiveRankEnergyRatio(singularValues,
+                                                              threshold=0.9),
+                              computeStableRank(singularValues)]
             effectiveRanksList.append(effectiveRanks)
 
     effectiveRanksDF = pd.DataFrame(effectiveRanksList, columns=header)
@@ -132,4 +155,4 @@ def computeEffectiveRanks():
 
 
 if __name__ == "__main__":
-    computeEffectiveRanks()
+    computeEffectiveRanksManyNetworks()
