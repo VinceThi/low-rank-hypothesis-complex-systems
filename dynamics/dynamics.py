@@ -5,11 +5,15 @@ import numpy as np
 
 
 def lotka_volterra(t, x, W, coupling, D):
-    return D@(x*(1 - x)) + coupling*x*(W@x)
+    return D@x + coupling*x*(W@x)
 
 
 def qmf_sis(t, x, W, coupling, D):
     return -D@x + (1 - x)*(coupling*W@x)
+
+
+def microbial(t, x, W, coupling, D, a, b, c):
+    return a - D@x + b*x**2 - c*x**3 + coupling*x*(W@x)
 
 
 def wilson_cowan(t, x, W, coupling, D, a, b, c):

@@ -149,6 +149,11 @@ plt.rcParams["patch.force_edgecolor"] = True
 plt.rcParams["patch.force_edgecolor"] = False
 
 """ Colormaps """
+
+# Default colormap
+plt.rcParams["image.cmap"] = 'inferno'  # 'Greys', 'magma'
+
+# Custom colormaps
 cdict = {
     'red':   ((0, 255/255, 255/255),
               (0.4, 253 / 255, 253 / 255),
@@ -166,7 +171,8 @@ cdict = {
               (0.8, 60 / 255,  60 / 255),
               (1.0, 19 / 255, 19 / 255))
 }
-cm = matplotlib.colors.LinearSegmentedColormap('my_colormap', cdict, 1024)
+cm_white_to_orange = \
+    matplotlib.colors.LinearSegmentedColormap('my_colormap', cdict, 1024)
 
 cdict2 = {
     'red':   ((0,   241 / 255, 241 / 255),
@@ -179,7 +185,8 @@ cdict2 = {
               (0.5, 255 / 255, 255 / 255),
               (1.0, 181 / 255, 181 / 255))
 }
-cm2 = matplotlib.colors.LinearSegmentedColormap('my_colormap', cdict2, 1024)
+cm_blue_white_orange = \
+    matplotlib.colors.LinearSegmentedColormap('my_colormap', cdict2, 1024)
 
 cdict3 = {
     'red':   ((0,   158 / 255, 158 / 255),
@@ -192,7 +199,8 @@ cdict3 = {
               (0.5, 255 / 255, 255 / 255),
               (1.0, 162 / 255, 162 / 255))
 }
-cm3 = matplotlib.colors.LinearSegmentedColormap('my_colormap', cdict3, 1024)
+cm_light_blue_white_orange = \
+    matplotlib.colors.LinearSegmentedColormap('my_colormap', cdict3, 1024)
 
 cdict4 = {
     'red':   ((0,   255 / 255, 255 / 255),
@@ -205,4 +213,5 @@ cdict4 = {
               (0.1, 225 / 255, 225 / 255),
               (1.0, 162 / 255, 162 / 255))
 }
-cm4 = matplotlib.colors.LinearSegmentedColormap('my_colormap', cdict4, 1024)
+cm_white_blue_orange = \
+    matplotlib.colors.LinearSegmentedColormap('my_colormap', cdict4, 1024)

@@ -10,9 +10,11 @@ from numba import njit, prange
 def compute_tensor_order_3(M, W):
     """
     Compute a tensor in T_{3,n} (order 3 and dimension (n,n,n)) where n is the
-    dimension of the reduced system. This tensor appears in the dimension
-    reduction of the Lotka-Volterra dynamics, the quenched-mean-field SIS
-    dynamics, ... for which there is a nonlinear term sum_j W_{ij} x_i x_j.
+    dimension of the reduced system. For instance, this tensor appears in the
+    dimension reduction of the Lotka-Volterra dynamics,
+    the quenched-mean-field SIS dynamics, the microbial dynamics...
+    for which there are nonlinear terms of the form sum_j W_{ij} x_i x_j.
+    If we set W = I, the tensor appears when there is a quadratic term x_i^2
 
     :param M: Reduction matrix. Array of shape (n,N) where N is the dimension
               of the complete system
@@ -58,30 +60,6 @@ def compute_tensor_order_3_tensordot(M, W):
     return np.einsum("iuiviw->uvw", calT)
 
 
-# @njit(parallel=True)
-# def compute_tensor_order_3_parameters(M, D):
-#     """
-#     A tensor in T_{3,n} (order 3 and dimension (n, n, n)) where n is the
-#     dimension of the reduced system. This tensor appears, for instance,
-#     in the dimension reduction of the Lotka-Volterra dynamics for which there
-#     is a nonlinear term sum_j D_{ij} x_i^2.
-# 
-#     :param M: Reduction matrix. Array of shape (n,N) where N is the dimension
-#               of the complete system
-#     :param D: Parameter matrix. Array with shape (N,N)
-#     :return: Tensor T_{3,n}. Array with shape (n,n,n).
-#     """
-#     n = len(M[:, 0])
-#     Mp = np.linalg.pinv(M)
-#     MD = M @ D
-#     calD = np.zeros((n, n, n))
-#     for mu in prange(n):
-#         for nu in prange(n):
-#             for tau in prange(n):
-#                 calD[mu, nu, tau] += np.sum(MD[mu, :]*Mp[:, nu]*Mp[:, tau])
-#     return calD
-
-
 @njit(parallel=True)
 def compute_tensor_order_4(M, W):
     """
@@ -89,6 +67,7 @@ def compute_tensor_order_4(M, W):
     dimension of the reduced system. This tensor appears in the dimension
     reduction of the Kuramoto dynamics for which there is a nonlinear term
     sum_j W_{ij} z_i^2 bar{z}_j.
+    If we set W = I, the tensor appears when there is a cubic term x_i^2
 
     :param M: Reduction matrix. Array of shape (n,N) where N is the dimension
               of the complete system

@@ -5,21 +5,54 @@ from dynamics import *
 import numpy as np
 
 
-def reduced_lotka_volterra(t, X, calWD_tensor3, coupling, calD):
+def reduced_lotka_volterra(t, X, calW_tensor3, coupling, calD):
     """
     Reduced Lotka-Volterra dynamics
     :param t: (float) time
     :param X: (n-dim array) Population size trajectory
-    :param calWD_tensor3: (n x n x n array) Third-order interaction and
-                                            parameters tensor, related to
-                                            W - D/coupling
-    :param coupling: (float) Coupling constant
+    :param calW_tensor3: (n x n x n array) Third-order interactions
+    :param coupling: (float) Inverse carrying capacity (coupling constant)
     :param calD: (n x n array) Reduced matrix (typically diagonal) of
-                               intrinsic growth rates
+                               intrinsic death rates
     :return: (n-dim array)
      Vector field of the reduced Lotka-Volterra dynamics
     """
-    return calD@X + coupling*np.einsum("uvw,v,w->u", calWD_tensor3, X, X)
+    return calD@X + coupling*(calW_tensor3@X)@X
+
+
+def reduced_microbial(t, X, calW_tensor3, coupling,
+                      calD, calM, calM_tensor3, calM_tensor4, a, b, c):
+    """
+    Reduced microbial dynamics
+    :param t: (float) time
+    :param X: (n-dim array) Population size trajectory
+    :param calW_tensor3: (n x n x n array) Third-order interactions
+    :param coupling: (float) Inverse carrying capacity (coupling constant)
+    :param calD: (n x n array) Reduced matrix (typically diagonal) of
+                               intrinsic growth rates MDM^+
+    :param calM = M1
+    :param calM_tensor3: (n x n x n array) 3rd-order tensor because x_i^2
+    :param calM_tensor4: (n x n x n x n array) 4th-order tensor because x_i^3
+    :param a: See below
+    :param b: See below
+    :param c: See below
+    The correspondances with Sanhedrai et al., Nat. Phys. 2022, is
+    a = F, b = B(1 + K/C), c = B/C, D = BK*np.eye(N)
+    F: migration rate
+    B: Logistic growth rate
+    C: Carrying capacity
+    K: Allee effect strength
+    Typical params: F = 5, B = 3, C = 3, K = 10
+                    a = 5, b = 13, c =10/3, D = 30*np.eye(N)
+
+                    F = 1/4, B = 1, C = 3, K = 10
+                    a = 1/4, b = 13/3, c = 1/3, D = 10*np.eye(N)
+
+    :return: (n-dim array)
+     Vector field of the reduced microbial dynamics
+    """
+    calWM_tensor3 = coupling*calW_tensor3 + b*calM_tensor3
+    return a*calM - calD@X + (calWM_tensor3@X)@X - c*((calM_tensor4@X)@X)@X
 
 
 def reduced_qmf_sis(t, X, calW, calW_tensor3, coupling, calD):
@@ -29,15 +62,14 @@ def reduced_qmf_sis(t, X, calW, calW_tensor3, coupling, calD):
     :param X: (n-dim array) Trajectory of the probability of being infected
     :param calW: (n x n array) Reduced weight matrix
     :param calW_tensor3: (n x n x n array) Third-order interactions
-    :param coupling: (float) Coupling constant
+    :param coupling: (float) Infection rate (coupling constant)
     :param calD: (n x n array) Reduced matrix (typically diagonal) of
                                recovery rates
 
     :return: (n-dim array)
      Vector field of the reduced QMF SIS dynamics
     """
-    return (coupling*calW - calD)@X - coupling*np.einsum("uvw,v,w->u",
-                                                         calW_tensor3, X, X)
+    return (coupling*calW - calD)@X - coupling*(calW_tensor3@X)@X
 
 
 def reduced_kuramoto_sakaguchi(t, Z, calW, calW_tensor4,
@@ -56,9 +88,12 @@ def reduced_kuramoto_sakaguchi(t, Z, calW, calW_tensor4,
     :return: (n-dim array)
      Vector field of the reduced kuramoto-sakaguchi dynamics
     """
+    barZ = np.conj(Z)
     return (1j*calD + coupling/2*np.exp(-1j*alpha)*calW)@Z \
-        - coupling/2*np.exp(1j*alpha)*np.einsum("uvwx,v,w,x->u", calW_tensor4,
-                                                Z, Z, np.conj(Z))
+        - coupling/2*np.exp(1j*alpha)*((calW_tensor4@barZ)@Z)@Z
+# np.einsum("uvwx,v,w,x->u",
+#           calW_tensor4, Z, Z, np.conj(Z))
+# np.matmul(np.matmul(np.matmul(calW_tensor4, np.conj(Z)), Z), Z)
 
 
 def reduced_wilson_cowan(t, X, L, M, coupling, calD, a, b, c):
@@ -102,6 +137,37 @@ def reduced_lotka_volterra_vector_field(t, X, W, coupling, M, Mp, D):
      Vector field of the reduced Lotka-Volterra dynamics
     """
     return M@lotka_volterra(t, Mp@X, W, coupling, D)
+
+
+def reduced_microbial_vector_field(t, X, W, coupling, M, Mp, D, a, b, c):
+    """
+    Reduced microbial dynamics
+    :param t: (float) time
+    :param X: (n-dim array) Population size trajectory
+    :param W: (N x N array) Weight matrix
+    :param coupling: (float) Inverse carrying capacity (coupling constant)
+    :param M: (n x N array) Reduction (lumping) matrix
+    :param Mp: (n x N array) Moore-Penrose pseudoinv. of the reduction matrix
+    :param D: (N x N array) parameter matrix (typically diagonal)
+    :param a: See below
+    :param b: See below
+    :param c: See below
+    The correspondances with Sanhedrai et al., Nat. Phys. 2022, is
+    a = F, b = B(1 + K/C), c = B/C, D = BK*np.eye(N)
+    F: migration rate
+    B: Logistic growth rate
+    C: Carrying capacity
+    K: Allee effect strength
+    Typical params: F = 5, B = 3, C = 3, K = 10
+                    a = 5, b = 13, c =10/3, D = 30*np.eye(N)
+
+                    F = 1/4, B = 1, C = 3, K = 10
+                    a = 1/4, b = 13/3, c = 1/3, D = 10*np.eye(N)
+
+    :return: (n-dim array)
+     Vector field of the reduced microbial dynamics
+    """
+    return M@microbial(t, Mp@X, W, coupling, D, a, b, c)
 
 
 def reduced_qmf_sis_vector_field(t, X, W, coupling, M, Mp, D):
@@ -161,4 +227,7 @@ def reduced_wilson_cowan_vector_field(t, X, W, coupling, M, Mp, D, a, b, c):
     :return: (n-dim array)
      Vector field of the reduced Wilson-Cowan dynamics
     """
-    return M @ wilson_cowan(t, Mp @ X, W, coupling, D, a, b, c)
+    return M@wilson_cowan(t, Mp@X, W, coupling, D, a, b, c)
+
+
+
