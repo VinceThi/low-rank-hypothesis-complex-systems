@@ -6,12 +6,15 @@ from plots.config_rcparams import *
 # import networkx as nx
 # import pandas as pd
 # import scipy.linalg as la
-import svgutils.compose as sc
+# import svgutils.compose as sc
 import numpy as np
 from optht import optht
 from singular_values.compute_effective_ranks import computeERank,\
-    computeStableRank, findCoudePosition
+    computeStableRank, findElbowPosition, computeRank
 
+
+# TODO : Update with plot_singular_values, this script can be way more concise
+# Note however that this is an exploration script to generate Fig. 1.
 
 """
 path_str = "C:/Users/thivi/Documents/GitHub/network-synch/" \
@@ -47,35 +50,33 @@ with open(singularValuesFilename, 'wb') as singularValuesFile:
 """
 
 singularValues = np.loadtxt(singularValuesFilename)
-numberSingularValues = len(singularValues)
+rank = computeRank(singularValues)
 stableRank = computeStableRank(singularValues)
 gavishDonohoThreshold = optht(1, sv=singularValues, sigma=None)
-coudePosition = findCoudePosition(singularValues)
+elbowPosition = findElbowPosition(singularValues)
 erank = computeERank(singularValues)
 
-print(f"number of singular values = {numberSingularValues}")
+print(f"Rank = {rank}")
 print(f"Stable rank = {stableRank}")
 print(f"Gavish-Donoho threshold = {gavishDonohoThreshold}")
-print(f"Elbow position = {coudePosition}")
+print(f"Elbow position = {elbowPosition}")
 print(f"Erank = {erank}")
 
-# Warning: N = 21733, but we have 21687 singular values
-
 fig, ax = plt.subplots(1, figsize=(3, 2.8))
-# plt.axvline(x=21687, linestyle="--",
-#             color=reduced_grey, label="Rank")
-# plt.axvline(x=gavishDonohoThreshold, linestyle="--",
-#             color=reduced_first_community_color,
-#             label="Gavish-Donoho")
-# plt.axvline(x=stableRank, linestyle="--",
-#             color=reduced_second_community_color,
-#             label="Stable rank")
-# plt.axvline(x=coudePosition, linestyle="--",
-#             color=reduced_third_community_color,
-#             label="Elbow position")
-# plt.axvline(x=erank, linestyle="--",
-#             color=reduced_fourth_community_color,
-#             label="erank")
+plt.axvline(x=21687, linestyle="--",
+            color=reduced_grey, label="Rank")
+plt.axvline(x=gavishDonohoThreshold, linestyle="--",
+            color=reduced_first_community_color,
+            label="Gavish-Donoho")
+plt.axvline(x=stableRank, linestyle="--",
+            color=reduced_second_community_color,
+            label="Stable rank")
+plt.axvline(x=elbowPosition, linestyle="--",
+            color=reduced_third_community_color,
+            label="Elbow position")
+plt.axvline(x=erank, linestyle="--",
+            color=reduced_fourth_community_color,
+            label="erank")
 ax.scatter(np.arange(1, len(singularValues) + 1, 1),
            singularValues / singularValues[0], s=10)
 # ax.scatter(np.arange(1, len(singularValues) + 1, 1), singularValues, s=10)
@@ -86,13 +87,13 @@ plt.xlabel("Index $i$")
 # ax.set_yscale('log')
 # plt.xlim([1, 1.1*len(singularValues)])
 # plt.ylim([1, 10*max(singularValues)])
-# plt.legend(loc=4, fontsize=8)
+plt.legend(loc=4, fontsize=8)
 # plt.tight_layout()
-# ticks = ax.get_xticks()
-# ticks[ticks.tolist().index(0)] = 1
-# ticks = [i for i in ticks
-#          if -0.1*len(singularValues) < i < 1.1*len(singularValues)]
-# plt.xticks(ticks)
+ticks = ax.get_xticks()
+ticks[ticks.tolist().index(0)] = 1
+ticks = [i for i in ticks
+         if -0.1*len(singularValues) < i < 1.1*len(singularValues)]
+plt.xticks(ticks)
 # fig.savefig('drosophila_singular_values_cover.svg', transparent=True)
 # sc.Figure("210cm", "200cm",
 #           sc.Panel(sc.SVG("figures/drosophile.svg")

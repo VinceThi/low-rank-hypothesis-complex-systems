@@ -10,6 +10,7 @@ import tabulate
 
 # Effective rank based on the definition
 # by Gavish and Donoho (doi:10.1109/TIT.2014.2323359).
+# See also the thesis of P.O. Perry : https://arxiv.org/pdf/0909.3052.pdf
 sys.path.insert(1, 'src/optht')
 import optht  # https://github.com/erichson/optht
 
@@ -40,6 +41,10 @@ def to_fwf(df, fname, cols=None):
 
 # Adds the custom method to Pandas.
 pd.DataFrame.to_fwf = to_fwf
+
+
+def computeRank(singularValues, tolerance=1e-13):
+    return len(singularValues[singularValues > tolerance])
 
 
 def computeERank(singularValues):
@@ -94,7 +99,7 @@ def computeEffectiveRanks(singularValues, matrixName, size):
     header = ['Name', 'Size', 'Rank', 'G-D rank',
               'erank', 'Elbow', 'Energy ratio', 'Stable Rank']
     properties = [[matrixName, size,
-                  len(singularValues[singularValues > 1e-13]),
+                  computeRank(singularValues),
                   optht.optht(1, sv=singularValues, sigma=None),
                   computeERank(singularValues),
                   findElbowPosition(singularValues),
@@ -139,7 +144,7 @@ def computeEffectiveRanksManyNetworks():
             print(networkName)
             effectiveRanks = [networkName,
                               graphPropDF.loc[networkName]['nbVertices'],
-                              int(len(singularValues)),
+                              computeRank(singularValues),
                               optht.optht(1, sv=singularValues, sigma=None),
                               computeERank(singularValues),
                               findElbowPosition(singularValues),

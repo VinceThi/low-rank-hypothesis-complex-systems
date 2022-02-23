@@ -4,6 +4,10 @@
 import numpy as np
 
 
+def linear(t, x, W, coupling, D):
+    return (D - coupling*W)@x
+
+
 def lotka_volterra(t, x, W, coupling, D):
     return D@x + coupling*x*(W@x)
 
