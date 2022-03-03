@@ -5,14 +5,8 @@ import glob
 import numpy as np
 import os
 import pandas as pd
-import sys
 import tabulate
-
-# Effective rank based on the definition
-# by Gavish and Donoho (doi:10.1109/TIT.2014.2323359).
-# See also the thesis of P.O. Perry : https://arxiv.org/pdf/0909.3052.pdf
-sys.path.insert(1, 'src/optht')
-import optht  # https://github.com/erichson/optht
+from singular_values.optimal_shrinkage import optimal_shrinkage
 
 
 def to_fwf(df, fname, cols=None):
@@ -86,6 +80,13 @@ def computeStableRank(singularValues):
     return np.sum(singularValues*singularValues) / np.max(singularValues)**2
 
 
+def computeOptimalShrinkage(singularValues, norm="fro"):
+    """ Optimal shrinkage for a given norm for a square matrix """
+    shrinked_singvals = optimal_shrinkage(singularValues, 1, norm)
+    numericalZero = 1e-13
+    return len(shrinked_singvals[shrinked_singvals > numericalZero])
+
+
 def computeEffectiveRanks(singularValues, matrixName, size):
     """
     Computes the rank and various effective ranks and add them to a dataframe.
@@ -100,7 +101,7 @@ def computeEffectiveRanks(singularValues, matrixName, size):
               'erank', 'Elbow', 'Energy ratio', 'Stable Rank']
     properties = [[matrixName, size,
                   computeRank(singularValues),
-                  optht.optht(1, sv=singularValues, sigma=None),
+                  computeOptimalShrinkage(singularValues, 'op'),
                   computeERank(singularValues),
                   findElbowPosition(singularValues),
                   computeEffectiveRankEnergyRatio(singularValues,
@@ -121,7 +122,7 @@ def computeEffectiveRanksManyNetworks():
 
     effectiveRanksFilename = 'properties/effective_ranks.txt'
     if not os.path.isfile(effectiveRanksFilename):
-        header = ['name', 'nbVertices', 'rank', 'rankGD',
+        header = ['name', 'nbVertices', 'rank', 'optimalShrinkage',
                   'erank', 'elbow', 'energyRatio', 'stableRank']
         effectiveRanksDF = pd.DataFrame(columns=header)
         effectiveRanksList = []
@@ -145,7 +146,7 @@ def computeEffectiveRanksManyNetworks():
             effectiveRanks = [networkName,
                               graphPropDF.loc[networkName]['nbVertices'],
                               computeRank(singularValues),
-                              optht.optht(1, sv=singularValues, sigma=None),
+                              computeOptimalShrinkage(singularValues, 'op'),
                               computeERank(singularValues),
                               findElbowPosition(singularValues),
                               computeEffectiveRankEnergyRatio(singularValues,

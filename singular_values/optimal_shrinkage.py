@@ -13,6 +13,8 @@ Donoho, David and Gavish, Matan. (2014). Code supplement to "The Optimal Hard
 Threshold for Singular Values is 4/\sqrt(3)". Stanford Digital Repository.
 Available at: https://purl.stanford.edu/vg705qn9070
 
+See also the thesis of P.O. Perry : https://arxiv.org/pdf/0909.3052.pdf
+
 We modified the code in our style and made few modifications.
 """
 

@@ -4,14 +4,13 @@
 import pytest
 from singular_values.optimal_shrinkage import optimal_shrinkage,\
     optimal_threshold
-from numpy.random import RandomState
 import numpy as np
 
 # The values below must not be changed for the test of optimal_shrinkage
 N = 100
 rank_r = 20
 beta = 1
-prng = RandomState(1234567890)
+prng = np.random.RandomState(1234567890)
 L = prng.uniform(0, 0.5, (N, rank_r))
 M = prng.normal(0, 0.5, (rank_r, N))
 sigma = 2.5
@@ -21,11 +20,11 @@ W = L@M + noise_level*prng.normal(0, 0.2, (N, N))
 # It does not matter for the test below, we test for unknown noise.
 U, S, Vh = np.linalg.svd(W)
 # from scipy.io import savemat
-# from plots.plot_weight_matrix import plot_weight_matrix
-# from plots.plot_singular_values import plot_singular_values
-# plot_weight_matrix(W)
 # savemat("matrix_test_optimal_shrinkage.mat",{"W": W, "label": "test_matrix"})
-#  plot_singular_values(S)
+# from plots.plot_weight_matrix import plot_weight_matrix
+# plot_weight_matrix(W)
+# from plots.plot_singular_values import plot_singular_values
+# plot_singular_values(S)
 
 
 def test_optimal_shrinkage_frobenius_unknown_noise():
