@@ -4,7 +4,7 @@
 import numpy as np
 import pytest
 from dynamics.dynamics import wilson_cowan
-from dynamics.reduced_dynamics import reduced_wilson_cowan
+from dynamics.reduced_dynamics import reduced_wilson_cowan_vector_field
 
 
 def test_complete_vs_reduced_wilson_cowan_full():
@@ -20,7 +20,8 @@ def test_complete_vs_reduced_wilson_cowan_full():
     U, s, M = np.linalg.svd(W)
     Mp = np.linalg.pinv(M)
     Mdotx = M@wilson_cowan(t, x, W, coupling, D, a, b, c)
-    dotX = reduced_wilson_cowan(t, M@x, W, coupling, M, Mp, D, a, b, c)
+    dotX = reduced_wilson_cowan_vector_field(t, M@x, W, coupling,
+                                             M, Mp, D, a, b, c)
     assert np.allclose(Mdotx, dotX)
 
 
@@ -42,7 +43,8 @@ def test_complete_vs_reduced_wilson_cowan_rank_identical_params_a_0():
     M = Vh[:rankW, :]
     Mp = np.linalg.pinv(M)
     Mdotx = M@wilson_cowan(t, x, W, coupling, D, a, b, c)
-    dotX = reduced_wilson_cowan(t, M@x, W, coupling, M, Mp, D, a, b, c)
+    dotX = reduced_wilson_cowan_vector_field(t, M@x, W, coupling,
+                                             M, Mp, D, a, b, c)
     assert np.allclose(Mdotx, dotX)
 
 
@@ -65,7 +67,8 @@ def test_complete_vs_reduced_wilson_cowan_rank_special():
     M = Vh[:rankW, :]
     Mp = np.linalg.pinv(M)
     Mdotx = M@wilson_cowan(t, x, W, coupling, D, a, b, c)
-    dotX = reduced_wilson_cowan(t, M@x, W, coupling, M, Mp, D, a, b, c)
+    dotX = reduced_wilson_cowan_vector_field(t, M@x, W, coupling,
+                                             M, Mp, D, a, b, c)
     assert np.allclose(Mdotx, dotX)
 
 

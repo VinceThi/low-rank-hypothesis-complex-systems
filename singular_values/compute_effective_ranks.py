@@ -6,7 +6,8 @@ import numpy as np
 import os
 import pandas as pd
 import tabulate
-from singular_values.optimal_shrinkage import optimal_shrinkage
+from singular_values.optimal_shrinkage import optimal_shrinkage,\
+    optimal_threshold
 
 
 def to_fwf(df, fname, cols=None):
@@ -45,6 +46,8 @@ def computeERank(singularValues):
     """Effective rank based on the definition using spectral entropy
      (https://ieeexplore.ieee.org/document/7098875
       and doi:10.1186/1745-6150-2-2). """
+    # We use the convention 0*log(0)=0 so we remove the zero singular values
+    singularValues = singularValues[singularValues > 1e-13]
     normalizedSingularValues = singularValues / np.sum(singularValues)
     return np.exp(-np.sum(normalizedSingularValues
                           * np.log(normalizedSingularValues)))
@@ -62,7 +65,7 @@ def findElbowPosition(singularValues):
 
     # See https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
     # Line_defined_by_an_equation
-    distanceToDiagonal = np.abs(a * x + b * y + c) / np.sqrt(a**2 + b**2)
+    distanceToDiagonal = np.abs(a*x + b*y + c) / np.sqrt(a**2 + b**2)
 
     # Returns the index of the largest distance (rank must be larger than 0).
     return np.argmax(distanceToDiagonal) + 1
@@ -80,11 +83,17 @@ def computeStableRank(singularValues):
     return np.sum(singularValues*singularValues) / np.max(singularValues)**2
 
 
-def computeOptimalShrinkage(singularValues, norm="fro"):
-    """ Optimal shrinkage for a given norm for a square matrix """
+def computeOptimalThreshold(singularValues):
+    """ Optimal threshold for a given norm for a square matrix with gaussian
+     noise (see Gavish, Donoho, 2014) """
+    return optimal_threshold(singularValues, 1)
+
+
+def computeOptimalShrinkage(singularValues, norm="frobenius", tolerance=1e-13):
+    """ Optimal shrinkage for a given norm ('frobenius', 'nuclear', 'operator')
+     for a square matrix with gaussian noise (see Gavish, Donoho, 2017) """
     shrinked_singvals = optimal_shrinkage(singularValues, 1, norm)
-    numericalZero = 1e-13
-    return len(shrinked_singvals[shrinked_singvals > numericalZero])
+    return len(shrinked_singvals[shrinked_singvals > tolerance])
 
 
 def computeEffectiveRanks(singularValues, matrixName, size):
@@ -95,13 +104,14 @@ def computeEffectiveRanks(singularValues, matrixName, size):
                              singular values
     :param size: Size of the matrix
     :return Table with the name of the matrix, its size, rank, and effective
-            ranks (G-D rank, erank, elbow, energy ratio, stable rank).
+            ranks.
     """
-    header = ['Name', 'Size', 'Rank', 'G-D rank',
-              'erank', 'Elbow', 'Energy ratio', 'Stable Rank']
+    header = ['Name', 'Size', 'Rank', 'Optimal threshold', 'Optimal shrinkage',
+              'Erank', 'Elbow', 'Energy ratio', 'Stable rank']
     properties = [[matrixName, size,
                   computeRank(singularValues),
-                  computeOptimalShrinkage(singularValues, 'op'),
+                  computeOptimalThreshold(singularValues),
+                  computeOptimalShrinkage(singularValues),
                   computeERank(singularValues),
                   findElbowPosition(singularValues),
                   computeEffectiveRankEnergyRatio(singularValues,
@@ -122,8 +132,9 @@ def computeEffectiveRanksManyNetworks():
 
     effectiveRanksFilename = 'properties/effective_ranks.txt'
     if not os.path.isfile(effectiveRanksFilename):
-        header = ['name', 'nbVertices', 'rank', 'optimalShrinkage',
-                  'erank', 'elbow', 'energyRatio', 'stableRank']
+        header = ['Name', 'Size', 'Rank', 'Optimal threshold',
+                  'Optimal shrinkage', 'Erank', 'Elbow',
+                  'Energy ratio', 'Stable rank']
         effectiveRanksDF = pd.DataFrame(columns=header)
         effectiveRanksList = []
     else:
@@ -146,7 +157,8 @@ def computeEffectiveRanksManyNetworks():
             effectiveRanks = [networkName,
                               graphPropDF.loc[networkName]['nbVertices'],
                               computeRank(singularValues),
-                              computeOptimalShrinkage(singularValues, 'op'),
+                              computeOptimalThreshold(singularValues),
+                              computeOptimalShrinkage(singularValues),
                               computeERank(singularValues),
                               findElbowPosition(singularValues),
                               computeEffectiveRankEnergyRatio(singularValues,

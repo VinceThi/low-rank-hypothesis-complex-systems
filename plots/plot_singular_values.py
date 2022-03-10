@@ -6,26 +6,37 @@ import os
 import pandas as pd
 import seaborn as sns
 from plots.config_rcparams import *
-from optht import optht
 from singular_values.compute_effective_ranks import computeERank, \
-    computeStableRank, findElbowPosition, computeRank
+    computeStableRank, findElbowPosition, computeRank,\
+    computeEffectiveRankEnergyRatio, \
+    computeOptimalShrinkage, computeOptimalThreshold
 
 
 def plot_singular_values(singularValues,
                          plot_effective_ranks=True,
                          plot_cum_explained_var=False):
 
+    singularValues = np.sort(singularValues)[::-1]
+
     if plot_effective_ranks:
         numberSingularValues = len(singularValues)
         rank = computeRank(singularValues)
         stableRank = computeStableRank(singularValues)
-        gavishDonohoThreshold = optht(1, sv=singularValues, sigma=None)
+        optimalThreshold = computeOptimalThreshold(singularValues)
+        norm_str = 'frobenius'
+        optimalShrinkage = computeOptimalShrinkage(singularValues)
         elbowPosition = findElbowPosition(singularValues)
         erank = computeERank(singularValues)
+        threshold = 0.9
+        percentage_threshold = "%.0f" % (threshold*100)
+        energyRatio = computeEffectiveRankEnergyRatio(singularValues,
+                                                      threshold=threshold)
 
         print(f"Number of singular values = {numberSingularValues}")
         print(f"Stable rank = {stableRank}")
-        print(f"Gavish-Donoho threshold = {gavishDonohoThreshold}")
+        print(f"Optimal threshold = {optimalThreshold}")
+        print(f"Optimal shrinkage = {optimalShrinkage}")
+        print(f"Energy ratio = {energyRatio}")
         print(f"Elbow position = {elbowPosition}")
         print(f"Erank = {erank}")
 
@@ -34,7 +45,7 @@ def plot_singular_values(singularValues,
         for r in range(1, len(singularValues) + 1):
             # explained_variance.append(S[r]**2/np.sum(S**2))
             cumulative_explained_variance.append(
-                np.sum(singularValues[0:r] ** 2) / np.sum(singularValues**2))
+                np.sum(singularValues[0:r]**2) / np.sum(singularValues**2))
 
     if plot_cum_explained_var:
         plt.figure(figsize=(8, 4))
@@ -42,23 +53,29 @@ def plot_singular_values(singularValues,
         if plot_effective_ranks:
             plt.axvline(x=rank, linestyle="--",
                         color=reduced_grey, label="Rank")
-            plt.axvline(x=gavishDonohoThreshold, linestyle="--",
-                        color=reduced_first_community_color,
-                        label="Gavish-Donoho")
             plt.axvline(x=stableRank, linestyle="--",
-                        color=reduced_second_community_color,
+                        color=deep[0],
                         label="Stable rank")
             plt.axvline(x=elbowPosition, linestyle="--",
-                        color=reduced_third_community_color,
+                        color=deep[1],
                         label="Elbow position")
             plt.axvline(x=erank, linestyle="--",
-                        color=reduced_fourth_community_color,
+                        color=deep[2],
                         label="erank")
+            plt.axvline(x=energyRatio, linestyle="--",
+                        color=deep[3],
+                        label=f"Energy ratio ({percentage_threshold}%)")
+            plt.axvline(x=optimalThreshold, linestyle="--",
+                        color=deep[4],
+                        label=f"Optimal threshold")
+            plt.axvline(x=optimalShrinkage, linestyle="--",
+                        color=deep[5],
+                        label=f"Optimal shrinkage ({norm_str})")
         ax1.scatter(np.arange(1, len(singularValues) + 1, 1),
                     singularValues/singularValues[0], s=10)
         plt.ylabel("Normalized singular\n values $\\sigma_i/\\sigma_1$")
         plt.xlabel("Index $i$")
-        plt.legend(loc="best", fontsize=fontsize_legend)
+        plt.legend(loc=1, fontsize=fontsize_legend)
         plt.tight_layout()
         ticks = ax1.get_xticks()
         ticks[ticks.tolist().index(0)] = 1
@@ -69,7 +86,7 @@ def plot_singular_values(singularValues,
                     cumulative_explained_variance, zorder=1)
         plt.xlabel("Number of singular values $n$", fontsize=12)
         plt.ylabel("Cumulative explained variance "
-                   "$\sum_{j=1}^n\\sigma_j^2/\\sum_{j=1}^N \\sigma_j^2$")
+                   "$\\sum_{j=1}^n\\sigma_j^2/\\sum_{j=1}^N \\sigma_j^2$")
         ticks = ax2.get_xticks()
         ticks[ticks.tolist().index(0)] = 1
         plt.xticks(ticks[ticks > 0])
@@ -82,23 +99,29 @@ def plot_singular_values(singularValues,
         if plot_effective_ranks:
             plt.axvline(x=rank, linestyle="--",
                         color=reduced_grey, label="Rank")
-            plt.axvline(x=gavishDonohoThreshold, linestyle="--",
-                        color=reduced_first_community_color,
-                        label="Gavish-Donoho")
             plt.axvline(x=stableRank, linestyle="--",
-                        color=reduced_second_community_color,
+                        color=deep[0],
                         label="Stable rank")
             plt.axvline(x=elbowPosition, linestyle="--",
-                        color=reduced_third_community_color,
+                        color=deep[1],
                         label="Elbow position")
             plt.axvline(x=erank, linestyle="--",
-                        color=reduced_fourth_community_color,
+                        color=deep[2],
                         label="erank")
+            plt.axvline(x=energyRatio, linestyle="--",
+                        color=deep[3],
+                        label=f"Energy ratio ({percentage_threshold}%)")
+            plt.axvline(x=optimalShrinkage, linestyle="--",
+                        color=deep[4],
+                        label=f"Optimal shrinkage ({norm_str})")
+            plt.axvline(x=optimalThreshold, linestyle="--",
+                        color=deep[5],
+                        label=f"Optimal threshold")
         ax.scatter(np.arange(1, len(singularValues) + 1, 1),
                    singularValues/singularValues[0], s=10)
         plt.ylabel("Normalized singular\n values $\\sigma_i/\\sigma_1$")
         plt.xlabel("Index $i$")
-        plt.legend(loc=4, fontsize=8)
+        plt.legend(loc=1, fontsize=8)
         ticks = ax.get_xticks()
         ticks[ticks.tolist().index(0)] = 1
         ticks = [i for i in ticks
@@ -115,17 +138,28 @@ def plot_singular_values_given_effective_ranks(singularValues, effectiveRanks):
     line, = ax1.plot(range(1, np.int(effectiveRanks['rank']+1)),
                      singularValues, linestyle='None',
                      color=next(colors), marker='o')
-
-    ax1.axvline(effectiveRanks['rankGD'], linestyle='--',
-                color=next(colors), label=r'G\&D')
-    ax1.axvline(effectiveRanks['erank'], linestyle='-.',
-                color=next(colors), label=r'erank')
-    ax1.axvline(effectiveRanks['coude'], linestyle=':',
-                color=next(colors), label=r'coude')
-    ax1.axvline(effectiveRanks['energyRatio'], linestyle='--',
-                color=next(colors), label=r'energy ratio')
-    ax1.axvline(effectiveRanks['stableRank'], linestyle='-.',
-                color=next(colors), label=r'stable rank')
+    header = ['Name', 'Size', 'Rank', 'Optimal threshold', 'Optimal shrinkage',
+              'Erank', 'Elbow', 'Energy ratio', 'Stable rank']
+    ax1.axvline(x=effectiveRanks['rank'], linestyle="--",
+                color=reduced_grey, label="Rank")
+    ax1.axvline(x=effectiveRanks['Stable Rank'], linestyle="-.",
+                color=deep[0],
+                label="Stable rank")
+    ax1.axvline(x=effectiveRanks['Elbow'], linestyle=":",
+                color=deep[1],
+                label="Elbow position")
+    ax1.axvline(x=effectiveRanks['Erank'], linestyle="--",
+                color=deep[2],
+                label="erank")
+    ax1.axvline(x=effectiveRanks['Energy ratio'], linestyle="-.",
+                color=deep[3],
+                label=f"Energy ratio")
+    ax1.axvline(x=effectiveRanks['Optimal shrinkage'], linestyle=":",
+                color=deep[4],
+                label=f"Optimal shrinkage")
+    ax1.axvline(x=effectiveRanks['Optimal threshold'], linestyle="--",
+                color=deep[5],
+                label=f"Optimal threshold")
 
     normalizedCumulSquaredSingularValues = np.cumsum(np.square(singularValues))
     normalizedCumulSquaredSingularValues /= \

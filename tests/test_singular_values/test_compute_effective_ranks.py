@@ -21,9 +21,9 @@ def test_compare_optimal_shrinkage_and_threshold_random_matrix():
     W = L @ M + noise_level * prng.normal(0, 0.2, (N, N))
     U, S, Vh = np.linalg.svd(W)
 
-    threshold_shrink_fro = computeOptimalShrinkage(S, 'fro')
-    threshold_shrink_op = computeOptimalShrinkage(S, 'op')
-    threshold_shrink_nuc = computeOptimalShrinkage(S, 'nuc')
+    threshold_shrink_fro = computeOptimalShrinkage(S, 'frobenius')
+    threshold_shrink_op = computeOptimalShrinkage(S, 'operator')
+    threshold_shrink_nuc = computeOptimalShrinkage(S, 'nuclear')
 
     hard_threshold_fro = np.round(optimal_threshold(S, 1), 2)
 
@@ -40,9 +40,9 @@ def test_compare_optimal_shrinkage_and_threshold_drosophila():
     networkName = "drosophila"
     singularValuesFilename = path + networkName + '_singular_values.txt'
     S = np.loadtxt(singularValuesFilename)
-    threshold_shrink_fro = computeOptimalShrinkage(S, 'fro')
-    threshold_shrink_op = computeOptimalShrinkage(S, 'op')
-    threshold_shrink_nuc = computeOptimalShrinkage(S, 'nuc')
+    threshold_shrink_fro = computeOptimalShrinkage(S, 'frobenius')
+    threshold_shrink_op = computeOptimalShrinkage(S, 'operator')
+    threshold_shrink_nuc = computeOptimalShrinkage(S, 'nuclear')
 
     hard_threshold_fro = np.round(optimal_threshold(S, 1), 2)
 

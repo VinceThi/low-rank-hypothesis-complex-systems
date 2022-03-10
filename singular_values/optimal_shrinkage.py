@@ -10,7 +10,7 @@ We also merge the code of Ben Erichson at https://github.com/erichson/optht,
 which is a Python traduction of the Matlab script optimal_SVHT_coef.m from
 
 Donoho, David and Gavish, Matan. (2014). Code supplement to "The Optimal Hard
-Threshold for Singular Values is 4/\sqrt(3)". Stanford Digital Repository.
+Threshold for Singular Values is 4/sqrt(3)". Stanford Digital Repository.
 Available at: https://purl.stanford.edu/vg705qn9070
 
 See also the thesis of P.O. Perry : https://arxiv.org/pdf/0909.3052.pdf
@@ -20,6 +20,7 @@ We modified the code in our style and made few modifications.
 
 import numpy as np
 import logging
+import warnings
 from scipy import integrate
 
 
@@ -133,6 +134,11 @@ def optimal_threshold(singvals, beta, sigma=None, target_rank=False):
         coef = optimal_SVHT_coef_sigma_known(beta) / \
             np.sqrt(median_marcenko_pastur(beta))
         cutoff = coef * np.median(singvals)
+        if np.allclose(cutoff, 0) and np.allclose(np.median(singvals), 0):
+            warnings.warn("The noise was predicted to be zero, because"
+                          " the median of the singular values is 0."
+                          " The rank of the original matrix is returned.")
+            return len(singvals[singvals > 1e-13])
     else:
         log.info('Sigma known.')
         # Compute optimal ``w(beta)``
@@ -158,13 +164,14 @@ def inverse_asymptotic_singvals(y, beta):
     Donoho 2017. It is the inverse of Equation (15) which would yield four
     solutions. This is the case where the positive square roots are considered.
     """
-    return np.sqrt(0.5*((y**2-beta-1) + np.sqrt((y**2-beta-1)**2 - 4*beta)))\
-        * (y >= 1+np.sqrt(beta))
+    inverse = np.emath.sqrt(
+        0.5*((y**2-beta-1) + np.emath.sqrt((y**2-beta-1)**2 - 4*beta)))
+    return np.real(inverse*(y >= 1+np.sqrt(beta)))
 
 
 def optimal_shrinker_frobenius(y, beta):
     """ Equation (7) in Optimal Shrinkage of Singular Values of Gavish and
-    Donoho 2017 """
+        Donoho 2017 """
     return np.sqrt(np.maximum(((y**2-beta-1)**2 - 4*beta), np.zeros(len(y))))/y
 
 
@@ -176,11 +183,12 @@ def optimal_shrinker_operator(y, beta):
 
 def optimal_shrinker_nuclear(y, beta):
     """ Equation (10) in Optimal Shrinkage of Singular Values of Gavish and
-    Donoho 2017 """
-    return np.maximum(np.zeros(len(y)),
-                      (inverse_asymptotic_singvals(y, beta)**4
-                       - np.sqrt(beta)*inverse_asymptotic_singvals(y, beta)*y
-                       - beta))/((inverse_asymptotic_singvals(y, beta)**2)*y)
+        Donoho 2017 """
+    with np.errstate(divide='ignore'):
+        f = (inverse_asymptotic_singvals(y, beta)**4
+             - np.sqrt(beta)*inverse_asymptotic_singvals(y, beta)*y - beta) / \
+            ((inverse_asymptotic_singvals(y, beta)**2)*y)
+    return np.maximum(np.zeros(len(y)), f)
 
 
 def optimal_shrinkage(singvals, beta, loss, sigma=None):
@@ -198,10 +206,10 @@ def optimal_shrinkage(singvals, beta, loss, sigma=None):
     :param beta: aspect ratio m/n of the m-by-n matrix whose singular values
                 are given
     :param loss: loss function for which the shrinkage should be optimal
-                presently implmented: 'fro' (Frobenius or square
-                                             Frobenius norm loss = MSE)
-                                      'nuc' (nuclear norm loss)
-                                      'op'  (operator norm loss)
+                presently implmented: 'frobenius' (Frobenius or square
+                                                   Frobenius norm loss = MSE)
+                                      'nuclear' (nuclear norm loss)
+                                      'operator'  (operator norm loss)
     :param sigma: (optional) noise standard deviation (of each entry of the
                 noise matrix) if this argument is not provided, the noise
                 level is estimated from the data.
@@ -214,12 +222,12 @@ def optimal_shrinkage(singvals, beta, loss, sigma=None):
       with zero mean, form a denoised matrix Xhat by:
 
       U, S, Vh = np.linalg.svd(Y)
-      shrink_s = optimal_shrinkage(S, m/n, 'op')
+      shrink_s = optimal_shrinkage(S, m/n, 'operator')
       Xhat = U@np.diag(shrink_s)@Vh;
 
       where you can replace 'op' with one of the other losses.
       if the noise level sigma is known, in the third line use instead
-          y = optimal_shrinkage(s, m/n, 'op', sigma);
+          y = optimal_shrinkage(s, m/n, 'operator', sigma);
 
     ---------------------------------------------------------------------------
     Authors: Matan Gavish and David Donoho <lastname>@stanford.edu, 2013
@@ -239,33 +247,35 @@ def optimal_shrinkage(singvals, beta, loss, sigma=None):
     with this program.  If not, see <http://www.gnu.org/licenses/>.
     ---------------------------------------------------------------------------
     """
-    assert np.prod(np.size(beta)) == 1
     assert beta <= 1
     assert beta > 0
-    # assert np.prod(np.size(singvals)) == len(singvals)
-    assert np.isin(loss, np.array(['fro', 'op', 'nuc']))
 
     if sigma is None:
         sigma = np.median(singvals)/np.sqrt(median_marcenko_pastur(beta))
 
-    assert sigma > 0
-
-    y = singvals/sigma
-    x = inverse_asymptotic_singvals(y, beta)
-
-    if loss == 'fro':
-        shrinked_singvals = sigma*optimal_shrinker_frobenius(y, beta)
-    elif loss == 'nuc':
-        shrinked_singvals = np.nan_to_num(
-            sigma*optimal_shrinker_nuclear(y, beta))
-        shrinked_singvals[np.where((x**4 - np.sqrt(beta)*x*y - beta) <= 0)] = 0
-        # See Eq. (10) of the paper    ^
-    elif loss == 'op':
-        shrinked_singvals = np.nan_to_num(
-            sigma*optimal_shrinker_operator(y, beta))
+    if np.allclose(sigma, 0) and np.allclose(np.median(singvals), 0):
+        warnings.warn("The noise was predicted to be zero, because"
+                      " the median of the singular values is 0. The original"
+                      " singular values are returned.")
+        return singvals
     else:
-        raise ValueError("Unknown loss. The Frobenius norm/loss 'fro',"
-                         " the nuclear norm/loss 'nuc' and"
-                         " the operator norm/loss 'op' can be chosen.")
+        y = singvals/sigma
+        x = inverse_asymptotic_singvals(y, beta)
 
-    return shrinked_singvals
+        if loss == 'frobenius':
+            shrinked_singvals = sigma*optimal_shrinker_frobenius(y, beta)
+        elif loss == 'nuclear':
+            shrinked_singvals = sigma*optimal_shrinker_nuclear(y, beta)
+            shrinked_singvals[
+                np.where((x**4 - np.sqrt(beta)*x*y - beta) <= 0)] = 0
+            # See Eq. (10) of the paper    ^
+        elif loss == 'operator':
+            shrinked_singvals = sigma*optimal_shrinker_operator(y, beta)
+        else:
+            raise ValueError("Unknown loss."
+                             " The Frobenius norm/loss 'frobenius',"
+                             " the nuclear norm/loss 'nuclear' and"
+                             " the operator (spectral) norm/loss 'operator' "
+                             " can be chosen.")
+
+        return shrinked_singvals

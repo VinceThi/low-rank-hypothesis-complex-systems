@@ -86,9 +86,7 @@ def get_connectome_weight_matrix(graph_name):
                                                target='bodyId_post',
                                                edge_attr='weight',
                                                create_using=Graphtype)
-        W = nx.to_numpy_array(G_drosophila)
-        N = G_drosophila.number_of_nodes()
-        print(f"N = {N}")
+        A = nx.to_numpy_array(G_drosophila)
         # N = 21733
         # rank_drosophila =
 
@@ -109,6 +107,34 @@ def get_connectome_weight_matrix(graph_name):
         raise ValueError("This graph_str connectome is not an option. "
                          "See the documentation of "
                          "get_connectome_weight_matrix")
+
+    return A
+
+
+def get_microbiome_weight_matrix(graph_str):
+
+    path_str = f"C:/Users/thivi/Documents/GitHub/low-dimension-hypothesis/" \
+               f"graphs/graph_data/microbiomes/{graph_str}/"
+
+    if graph_str == "gut":
+        # See p.27-28 of the supplementary information of
+        # Reviving a failed network through microscopic interventions
+        # R. Lim, J.J.T. Cabatbat, T.L.P. Martin, H. Kim, S. Kim, J. Sung,
+        # C.-M. Ghim and P.-J. Kim. Large- scale metabolic interaction network
+        # of the mouse and human gut microbiota. Scientific Data, 7, 204, 2020.
+        dict = scipy.io.loadmat(path_str+'MicrobiomeNetworks.mat')
+        P = dict['complementarity']
+        Q = dict['competition']
+
+        # These are the parameters mentionned in p.28 of the SI
+        omegaP = 30
+        omegaQ = 1
+
+        A = omegaP*P - omegaQ*Q
+
+    else:
+        raise ValueError("This graph_str microbiome is not an option. See the"
+                         " documentation of get_microbiome_weight_matrix")
 
     return A
 
@@ -144,30 +170,19 @@ def get_foodweb_weight_matrix(graph_str):
     return A
 
 
-def get_microbiome_weight_matrix(graph_str):
-
+def get_epidemiological_weight_matrix(graph_str):
     path_str = f"C:/Users/thivi/Documents/GitHub/low-dimension-hypothesis/" \
-               f"graphs/graph_data/microbiomes/{graph_str}/"
+               f"graphs/graph_data/epidemiological/{graph_str}/"
 
-    if graph_str == "gut":
-        # See p.27-28 of the supplementary information of
-        # Reviving a failed network through microscopic interventions
-        # R. Lim, J.J.T. Cabatbat, T.L.P. Martin, H. Kim, S. Kim, J. Sung,
-        # C.-M. Ghim and P.-J. Kim. Large- scale metabolic interaction network
-        # of the mouse and human gut microbiota. Scientific Data, 7, 204, 2020.
-        dict = scipy.io.loadmat(path_str+'MicrobiomeNetworks.mat')
-        P = dict['complementarity']
-        Q = dict['competition']
-
-        # These are the parameters mentionned in p.28 of the SI
-        omegaP = 30
-        omegaQ = 1
-
-        A = omegaP*P - omegaQ*Q
+    if graph_str == "high_school_proximity":
+        # Taken from Netzschleuder : https://networks.skewed.de/
+        G = nx.read_edgelist(path_str + "edges_no_time.csv", delimiter=',',
+                             create_using=nx.Graph)
+        A = nx.to_numpy_array(G)
 
     else:
-        raise ValueError("This graph_str microbiome is not an option. See the"
-                         " documentation of get_microbiome_weight_matrix")
+        raise ValueError("This graph_str epidemiological is not an option. "       
+                         "See the documentation of"
+                         "get_epidemiological_weight_matrix")
 
     return A
-

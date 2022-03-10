@@ -12,14 +12,16 @@ dark_grey = '#404040'                       # RGB: 48, 48, 48     dark grey
 complete_grey = "#252525"                   # RGB: 37, 37, 37     dark grey 2
 reduced_grey = "#969696"                    # RGB: 150, 150, 150  light grey
 total_color = "#525252"                     # RGB: 82, 82, 82     grey
-first_community_color = "#2171b5"           # RGB: 33, 113, 181   blue
-second_community_color = "#f16913"          # RGB: 241, 105, 19   orange
+first_community_color = "#4c72b0"   # "#2171b5" # RGB: 33, 113, 181   blue
+second_community_color = "#e66816"  # "#f16913" # RGB: 241, 105, 19   orange
 third_community_color = "#238b45"           # RGB: 35, 139, 69    green
 fourth_community_color = "#6a51a3"          # RGB: 106, 81, 163   purple
 reduced_first_community_color = "#9ecae1"   # RGB: 158, 202, 225  light blue
 reduced_second_community_color = "#fdd0a2"  # RGB: 253, 208, 162  light orange
 reduced_third_community_color = "#a1d99b"   # RGB: 161, 217, 155  light green
 reduced_fourth_community_color = "#9e9ac8"  # RGB: 158, 154, 200  light purple
+deep = ["#4C72B0", "#DD8452", "#55A868", "#C44E52", "#8172B3",
+        "#937860", "#DA8BC3", "#8C8C8C", "#CCB974", "#64B5CD"]
 
 
 """ Font and text """

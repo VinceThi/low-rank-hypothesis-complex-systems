@@ -3,6 +3,8 @@
 
 from singular_values.compute_svd import *
 import pytest
+from plots.plot_weight_matrix import plot_weight_matrix
+from plots.plot_singular_values import plot_singular_values
 
 
 def test_D_sign_in_computeTruncatedSVD_more_positive():
@@ -28,6 +30,17 @@ def test_computeTruncatedSVD_vs_computeTruncatedSVD_more_positive():
     Un, Sn, Vhn = computeTruncatedSVD(W, n)
     UnD, Sn, DVhn = computeTruncatedSVD_more_positive(W, n)
     assert np.allclose(Un@Sn@Vhn, UnD@Sn@DVhn) and np.sum(Vhn) < np.sum(DVhn)
+
+
+def test_generate_randomly_rank_r_matrix_from_singvals():
+    N = 100
+    rank = 20
+    singvals = np.block([np.sqrt(np.linspace(20, 30, rank))[::-1],
+                         np.zeros(N-rank)])
+    W = generate_random_rank_r_matrix_from_singvals(singvals)
+    plot_weight_matrix(W)
+    plot_singular_values(singvals)
+    assert np.allclose(np.linalg.matrix_rank(W), rank)
 
 
 if __name__ == "__main__":

@@ -3,12 +3,13 @@
 
 from dynamics.integrate import *
 from dynamics.dynamics import qmf_sis
-from dynamics.reduced_dynamics import reduced_qmf_sis, reduced_qmf_sis_vector_field
+from dynamics.reduced_dynamics import reduced_qmf_sis_vector_field
 from graphs.compute_tensors import compute_tensor_order_3
+from graphs.get_real_networks import get_epidemiological_weight_matrix
 from singular_values.compute_effective_ranks import computeEffectiveRanks
 from singular_values.compute_svd import computeTruncatedSVD_more_positive
+from plots.plot_weight_matrix import plot_weight_matrix
 from scipy.linalg import pinv, svdvals
-import networkx as nx
 from tqdm import tqdm
 from plots.config_rcparams import *
 import time
@@ -17,6 +18,7 @@ import tkinter.simpledialog
 from tkinter import messagebox
 
 plot_time_series = False
+plot_weight_matrix_bool = False
 
 """ Time parameters """
 t0, t1, dt = 0, 30, 0.1
@@ -24,21 +26,10 @@ timelist = np.linspace(t0, t1, int(t1 / dt))
 
 """ Graph parameters """
 graph_str = "high_school_proximity"
-path_str = f"C:/Users/thivi/Documents/GitHub/low-dimension-hypothesis/" \
-           f"graphs/graph_data/{graph_str}/"
-#  import csv
-#  with open(path_str + "edges.csv", "rt") as source:
-#     rdr = csv.reader(source)
-#     with open(path_str + "edges_no_time.csv", "wt") as result:
-#         wtr = csv.writer(result)
-#         for r in rdr:
-#             wtr.writerow((r[0], r[1]))
-G = nx.read_edgelist(path_str + "edges_no_time.csv", delimiter=',',
-                     create_using=nx.Graph)
-A = nx.to_numpy_array(G)
+A = get_epidemiological_weight_matrix(graph_str)
 N = len(A[0])  # Dimension of the complete dynamics
-# plt.matshow(A, aspect="auto")
-# plt.show()
+if plot_weight_matrix_bool:
+    plot_weight_matrix(A)
 
 """ Dynamical parameters """
 dynamics_str = "qmf_sis"
@@ -64,7 +55,7 @@ calW, calW_tensor3 = M@W@Mp, compute_tensor_order_3(M, W)
 """ Integration """
 x_equilibrium_points_list = []
 redx_equilibrium_points_list = []
-print("\n Iterating on coupling constants for equilibrium point diagram... \n")
+print("\n Iterating on coupling constants for equilibrium points diagram...\n")
 for coupling in tqdm(coupling_constants):
 
     x0 = np.random.random(N)

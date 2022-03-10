@@ -29,7 +29,8 @@ U, S, Vh = np.linalg.svd(W)
 
 def test_optimal_shrinkage_frobenius_unknown_noise():
 
-    shrinked_singvals_Python = np.round(optimal_shrinkage(S, beta, 'fro'), 1)
+    shrinked_singvals_Python = np.round(
+        optimal_shrinkage(S, beta, 'frobenius'), 1)
     shrinked_singvals_Matlab = np.round(np.array(
         [62.6968, 10.3039, 10.0925, 9.3524, 9.1710, 8.4156, 8.3366, 7.4465,
          7.3157, 7.0097, 6.4597, 6.0529, 5.9396, 5.3009, 4.8881, 4.8049,
@@ -43,7 +44,8 @@ def test_optimal_shrinkage_frobenius_unknown_noise():
 
 
 def test_optimal_shrinkage_operator_unknown_noise():
-    shrinked_singvals_Python = np.round(optimal_shrinkage(S, beta, 'op'), 1)
+    shrinked_singvals_Python = np.round(
+        optimal_shrinkage(S, beta, 'operator'), 1)
     shrinked_singvals_Matlab = np.round(np.array(
         [62.7021, 10.3358, 10.1250,  9.3875,  9.2068,  8.4546,  8.3760,
          7.4905, 7.3605, 7.0564, 6.5103, 6.1068, 5.9945, 5.3624,
@@ -57,7 +59,8 @@ def test_optimal_shrinkage_operator_unknown_noise():
 
 
 def test_optimal_shrinkage_nuclear_unknown_noise():
-    shrinked_singvals_Python = np.round(optimal_shrinkage(S, beta, 'nuc'), 1)
+    shrinked_singvals_Python = np.round(
+        optimal_shrinkage(S, beta, 'nuclear'), 1)
     shrinked_singvals_Matlab = np.round(
         np.array([62.6916, 10.2720, 10.0600,  9.3173,  9.1352,  8.3767,
                   8.2973,  7.4025,  7.2710,  6.9631,  6.4091,  5.9989,

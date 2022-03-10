@@ -71,17 +71,3 @@ def get_reduction_matrix_snmf_onmf(V_T, number_initializations=500):
 
     return M, snmf_frobenius_error, onmf_frobenius_error, onmf_ortho_error
 
-
-# --------------------- Error functions ---------------------------------------
-
-def mse(a, b):
-    return np.mean((a - b)**2)
-
-
-def rmse(a, b):
-    return np.sqrt(np.mean((a - b)**2))
-
-
-def rmse_compatibility_equation(M, X):
-    return rmse(M@X, M@X@pinv(M)@M)
-
