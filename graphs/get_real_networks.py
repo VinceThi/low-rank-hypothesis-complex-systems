@@ -10,23 +10,93 @@ import scipy.io
 def get_connectome_weight_matrix(graph_name):
     """
     Return the weight matrix for a given graph.
-    graph_name (str): "mouse_meso", "zebrafish_meso", "celegans", "drosophila",
-                      "ciona"
+    graph_name (str): "mouse_meso", "zebrafish_meso", "celegans",
+                      "celegans_signed", "drosophila", "ciona"
     """
     path_str = "C:/Users/thivi/Documents/GitHub/low-dimension-hypothesis/" \
                "graphs/graph_data/connectomes/"
-    if graph_name == "mouse_meso":
+
+    if graph_name == "celegans":
+        # Data obtained from Mohamed Bahdine, extracted as described in the
+        # supplementary material of the article : Network control principles
+        # predict neuron function in the C. elegans connectome - Yan et al.
+        # The data come from Wormatlas.
+        A = np.array(1 * np.load(path_str + "C_Elegans.npy"))
+        # N = 279
+        # rank_celegans = 273
+
+    elif graph_name == "celegans_signed":
+        # Data: https://elegansign.linkgroup.hu/#!NT+R%20method%20prediction
+        # Paper: https://doi.org/10.1371/journal.pcbi.1007974
+        df = pd.read_excel(
+            path_str + 'celegans_weighted_directed_signed.xls',
+            usecols="A,D,E,P")
+        df = df.replace(to_replace=['+', '-', 'no pred', 'complex'],
+                        value=[1, -1, 0, 0])
+        df_dale = df[["Source"]]
+        df_dale["Strength x Sign"] = df["Edge Weight"] * df["Sign"]
+        df_dale = df_dale.groupby(['Source']).sum()
+        # We complete the missing data using Dale's principle, i.e., if most
+        # of the synapses of a neuron are excitatory (inhibitory), then we
+        #  consider that the unknown ones are excitatory (inhibitory). When no
+        # information allows to apply Dale's principle, we consider the neuron
+        # as an excitator given the fact that there are more excitators than
+        # inhibitors in connectomes.
+        for i, neuron in enumerate(df["Source"]):
+            if df["Sign"].values[i] == 0 \
+                    and df_dale.loc[neuron].values[0] >= 0:
+                df.loc[i, ['Sign']] = 1
+            elif df["Sign"].values[i] == 0 \
+                    and df_dale.loc[neuron].values[0] < 0:
+                df.loc[i, ['Sign']] = -1
+        df["Weight x Sign"] = df["Edge Weight"] * df["Sign"]
+        # with pd.option_context('display.max_rows', None,
+        #                        'display.max_columns', None):
+        #     print(df)
+        # print(df["Weight x Sign"].sum())
+        G_celegans = nx.from_pandas_edgelist(df,
+                                             source='Source',
+                                             target='Target',
+                                             edge_attr='Weight x Sign',
+                                             create_using=nx.DiGraph())
+        A = nx.to_numpy_array(G_celegans, weight='Weight x Sign')
+        # N = 297
+
+    elif graph_name == "drosophila":
+        df = pd.read_csv(
+            path_str + 'drosophila_exported-traced-adjacencies-v1.1/'
+                       'traced-total-connections.csv')
+        Graphtype = nx.DiGraph()
+        G_drosophila = nx.from_pandas_edgelist(df,
+                                               source='bodyId_pre',
+                                               target='bodyId_post',
+                                               edge_attr='weight',
+                                               create_using=Graphtype)
+        A = nx.to_numpy_array(G_drosophila, weight='weight')
+        # N = 21733
+
+    elif graph_name == "ciona":
+        A_from_xlsx = pd.read_excel(path_str +
+                                    'ciona_intestinalis_lavaire_elife-16962'
+                                    '-fig16-data1-v1_modified.xlsx').values
+        A_ciona_nan = np.array(A_from_xlsx[0:, 1:])
+        A_ciona = np.array(A_ciona_nan, dtype=float)
+        where_are_NaNs = np.isnan(A_ciona)
+        A_ciona[where_are_NaNs] = 0
+        A = A_ciona
+        # A = (A_ciona > 0).astype(float)
+        # N = 213
+        # rank = 203
+
+    elif graph_name == "mouse_meso":
         # Oh, S., Harris, J., Ng, L. et al.
         # A mesoscale connectome of the mouse brain.
         # Nature 508, 207–214 (2014) doi:10.1038/nature13186
-
         # To binary matrix  (with "> 0")
-        A = (np.loadtxt(path_str + "ABA_weight_mouse.txt") > 0).astype(float)
-        G_mouse_meso = nx.from_numpy_array(A)
-        N = G_mouse_meso.number_of_nodes()
-        print(f"N = {N}")
+        # A = (np.loadtxt(path_str + "ABA_weight_mouse.txt") > 0).astype(float)
+        A = (np.loadtxt(path_str + "ABA_weight_mouse.txt")).astype(float)
         # N = 213
-        # rank_mouse_meso = 185
+        # rank = 185
 
     elif graph_name == "zebrafish_meso":
         # Kunst et al.
@@ -47,7 +117,6 @@ def get_connectome_weight_matrix(graph_name):
             1 * np.load(path_str + "volumes_zebrafish_meso.npy"))
         relativeVolumes = volumes / sum(volumes)
         adjacency = df.to_numpy()[:, 1:-1].astype(float)
-        N = len(adjacency[0])
         # """ To get an undirected graph """
         # for i in range(adjacency.shape[0]):
         #     for j in range(i+1, adjacency.shape[0]):
@@ -63,45 +132,10 @@ def get_connectome_weight_matrix(graph_name):
         adjacency = np.log(adjacency + 0.00001)
         adjacency -= np.amin(adjacency)
         adjacency = adjacency / np.amax(adjacency)
-        A = adjacency + np.eye(N)
+        # We add a diagonal because there are interactions within modules
+        A = adjacency + np.eye(len(adjacency[0]))
         # N = 71
         # rank_zebrafish_meso = 71
-
-    elif graph_name == "celegans":
-        # Data obtained from Mohamed Bahdine, extracted as described in the
-        # supplementary material of the article : Network control principles
-        # predict neuron function in the C. elegans connectome - Yan et al.
-        # The data come from Wormatlas.
-        A = np.array(1 * np.load(path_str + "C_Elegans.npy"))
-        # N = 279
-        # rank_celegans = 273
-
-    elif graph_name == "drosophila":
-        df = pd.read_csv(
-            path_str + 'drosophila_exported-traced-adjacencies-v1.1/'
-                       'traced-total-connections.csv')
-        Graphtype = nx.DiGraph()
-        G_drosophila = nx.from_pandas_edgelist(df,
-                                               source='bodyId_pre',
-                                               target='bodyId_post',
-                                               edge_attr='weight',
-                                               create_using=Graphtype)
-        A = nx.to_numpy_array(G_drosophila)
-        # N = 21733
-        # rank_drosophila =
-
-    elif graph_name == "ciona":
-        A_from_xlsx = pd.read_excel(path_str +
-                                    'ciona_intestinalis_lavaire_elife-16962'
-                                    '-fig16-data1-v1_modified.xlsx').values
-        A_ciona_nan = np.array(A_from_xlsx[0:, 1:])
-        A_ciona = np.array(A_ciona_nan, dtype=float)
-        where_are_NaNs = np.isnan(A_ciona)
-        A_ciona[where_are_NaNs] = 0
-        A = A_ciona
-        # A = (A_ciona > 0).astype(float)
-        # N = 213
-        # rank_ciona = 203
 
     else:
         raise ValueError("This graph_str connectome is not an option. "
@@ -122,9 +156,9 @@ def get_microbiome_weight_matrix(graph_str):
         # R. Lim, J.J.T. Cabatbat, T.L.P. Martin, H. Kim, S. Kim, J. Sung,
         # C.-M. Ghim and P.-J. Kim. Large- scale metabolic interaction network
         # of the mouse and human gut microbiota. Scientific Data, 7, 204, 2020.
-        dict = scipy.io.loadmat(path_str+'MicrobiomeNetworks.mat')
-        P = dict['complementarity']
-        Q = dict['competition']
+        dictionary = scipy.io.loadmat(path_str+'MicrobiomeNetworks.mat')
+        P = dictionary['complementarity']
+        Q = dictionary['competition']
 
         # These are the parameters mentionned in p.28 of the SI
         omegaP = 30

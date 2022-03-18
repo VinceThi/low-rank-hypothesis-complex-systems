@@ -22,7 +22,7 @@ from tkinter import messagebox
 
 plot_time_series = True
 compute_error = False
-plot_weight_matrix_bool = False
+plot_weight_matrix_bool = True
 integrate_complete_dynamics = True
 integrate_reduced_dynamics = True
 integrate_reduced_dynamics_tensor = True

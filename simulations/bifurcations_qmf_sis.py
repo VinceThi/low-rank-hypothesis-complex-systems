@@ -18,7 +18,7 @@ import tkinter.simpledialog
 from tkinter import messagebox
 
 plot_time_series = False
-plot_weight_matrix_bool = False
+plot_weight_matrix_bool = True
 
 """ Time parameters """
 t0, t1, dt = 0, 30, 0.1

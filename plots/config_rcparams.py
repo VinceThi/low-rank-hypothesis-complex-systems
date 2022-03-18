@@ -119,7 +119,7 @@ plt.rcParams['grid.alpha'] = 1.0      # transparency, between 0.0 and 1.0
 
 """ Legend """
 plt.rcParams['legend.loc'] = "best"           # "upper right"
-plt.rcParams['legend.frameon'] = False         # if True, draw the legend on a background patch
+plt.rcParams['legend.frameon'] = False        # if True, draw the legend on a background patch
 plt.rcParams['legend.framealpha'] = 0.9       # legend patch transparency
 plt.rcParams['legend.facecolor'] = "inherit"  # inherit from axes.facecolor; or color spec
 plt.rcParams['legend.edgecolor'] = dark_grey  # background patch boundary color

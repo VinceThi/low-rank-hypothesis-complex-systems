@@ -9,6 +9,7 @@ from singular_values.compute_effective_ranks import computeEffectiveRanks
 from singular_values.compute_svd import computeTruncatedSVD_more_positive
 from plots.config_rcparams import *
 from plots.plot_weight_matrix import plot_weight_matrix
+from plots.plot_singular_values import plot_singular_values
 from scipy.linalg import pinv, svdvals
 import networkx as nx
 from tqdm import tqdm
@@ -17,9 +18,10 @@ import json
 import tkinter.simpledialog
 from tkinter import messagebox
 
-plot_time_series = False
+plot_time_series = True
 compute_error = False
 plot_weight_matrix_bool = False
+plot_singvals_bool = False
 save_weight_matrix_no_d_reduction_matrix = False
 
 """ Time parameters """
@@ -27,7 +29,7 @@ t0, t1, dt = 0, 250, 0.2
 timelist = np.linspace(t0, t1, int(t1 / dt))
 
 """ Graph parameters """
-graph_str = "ciona"
+graph_str = "celegans_signed"
 
 if graph_str == "SBM":
     n1 = 60
@@ -59,15 +61,23 @@ else:
 if plot_weight_matrix_bool:
     plot_weight_matrix(A)
 
+if plot_singvals_bool:
+    plot_singular_values(svdvals(A))
+
 
 """ Dynamical parameters """
 dynamics_str = "wilson_cowan"
 D = np.eye(N)
-a = 0.1
+# a = 0.1
+# b = 1
+# c = 3
+a = 1
 b = 1
-c = 3
+c = -3
 
-coupling_constants = np.linspace(12, 15, 50)  # ciona weighted
+coupling_constants = np.linspace(0.01, 0.5, 20)  # c. elegans signed
+# coupling_constants = np.linspace(12, 15, 50)  # ciona weighted
+
 # Notes when W is not normalized by the largest singular value
 # coupling_constants = np.linspace(0.35, 0.9, 10)  # celegans,ciona,zebrafish
 # coupling_constants = np.linspace(0.5, 8.5, 100)# mouse_meso (not connex ?)
@@ -76,14 +86,14 @@ coupling_constants = np.linspace(12, 15, 50)  # ciona weighted
 
 
 """ SVD and dimension reduction """
-n = 20  # Dimension of the reduced dynamics
+n = 5  # Dimension of the reduced dynamics
 Un, Sn, Vhn = computeTruncatedSVD_more_positive(A, n)
 L, M = Un@Sn, Vhn
 print("\n", computeEffectiveRanks(svdvals(A), graph_str, N))
 print(f"\nDimension of the reduced system n = {n} \n")
 
-W = A/Sn[0][0]  # We normalize the network by the largest singular value
-L = L/Sn[0][0]
+W = A  # /Sn[0][0]  # We normalize the network by the largest singular value
+L = L  # /Sn[0][0]
 
 Mp = pinv(M)
 s = np.array([np.eye(n, n)[0, :]])
@@ -99,11 +109,14 @@ timestr_M_D = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")
 x_forward_equilibrium_points_list = []
 redx_forward_equilibrium_points_list = []
 
-x0 = -10*np.random.random(N)
-redx0 = M @ x0
+# x0 = -10*np.random.random(N)
+# redx0 = M @ x0
 print("\n Iterating on coupling constants for equilibrium point diagram(f) \n")
 for coupling in tqdm(coupling_constants):
 
+    x0 = np.random.random(N)
+    redx0 = M @ x0
+    
     # Integrate complete dynamics
     args_dynamics = (coupling, D, a, b, c)
     x = np.array(integrate_dopri45(t0, t1, dt, wilson_cowan,
@@ -113,7 +126,7 @@ for coupling in tqdm(coupling_constants):
     # /!\ Look carefully if the dynamics reach an equilibrium point
     equilibrium_point = x_glob[-1]
     x_forward_equilibrium_points_list.append(equilibrium_point)
-    x0 = x[-1, :]
+    # x0 = x[-1, :]
 
     # Integrate reduced dynamics
     args_reduced_dynamics = (M, coupling, calD, a, b, c)
@@ -122,7 +135,7 @@ for coupling in tqdm(coupling_constants):
     # args_reduced_dynamics = (coupling, M, Mp, D, a, b, c)
     # redx = np.array(integrate_dopri45(t0, t1, dt, reduced_wilson_cowan,
     #                                   W, redx0, *args_reduced_dynamics))
-    redx0 = redx[-1, :]
+    # redx0 = redx[-1, :]
 
     # Get global observables
     redX_glob = np.zeros(len(redx[:, 0]))
@@ -240,7 +253,7 @@ if messagebox.askyesno("Python",
     timestr = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")
 
     parameters_dictionary = {"graph_str": graph_str, "a": a, "b": b, "c": c,
-                             "D": D.tolist, "n": n, "N": N,
+                             "D": D.tolist(), "n": n, "N": N,
                              "t0": t0, "t1": t1, "dt": dt,
                              "coupling_constants": coupling_constants.tolist()}
 

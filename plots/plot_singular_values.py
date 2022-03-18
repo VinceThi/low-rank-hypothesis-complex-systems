@@ -13,12 +13,13 @@ from singular_values.compute_effective_ranks import computeERank, \
 
 
 def plot_singular_values(singularValues,
-                         plot_effective_ranks=True,
-                         plot_cum_explained_var=False):
+                         effective_ranks=True,
+                         cum_explained_var=False,
+                         ysemilog=False):
 
     singularValues = np.sort(singularValues)[::-1]
 
-    if plot_effective_ranks:
+    if effective_ranks:
         numberSingularValues = len(singularValues)
         rank = computeRank(singularValues)
         stableRank = computeStableRank(singularValues)
@@ -40,17 +41,17 @@ def plot_singular_values(singularValues,
         print(f"Elbow position = {elbowPosition}")
         print(f"Erank = {erank}")
 
-    if plot_cum_explained_var:
+    if cum_explained_var:
         cumulative_explained_variance = []
         for r in range(1, len(singularValues) + 1):
             # explained_variance.append(S[r]**2/np.sum(S**2))
             cumulative_explained_variance.append(
                 np.sum(singularValues[0:r]**2) / np.sum(singularValues**2))
 
-    if plot_cum_explained_var:
+    if cum_explained_var:
         plt.figure(figsize=(8, 4))
         ax1 = plt.subplot(121)
-        if plot_effective_ranks:
+        if effective_ranks:
             plt.axvline(x=rank, linestyle="--",
                         color=reduced_grey, label="Rank")
             plt.axvline(x=stableRank, linestyle="--",
@@ -80,6 +81,11 @@ def plot_singular_values(singularValues,
         ticks = ax1.get_xticks()
         ticks[ticks.tolist().index(0)] = 1
         plt.xticks(ticks[ticks > 0])
+        if ysemilog:
+            plt.ylim([0.01*np.min(singularValues), 1.5])
+            ax1.set_yscale('log')
+            plt.tick_params(axis='y', which='both', left=True,
+                            right=False, labelbottom=False)
 
         ax2 = plt.subplot(122)
         plt.scatter(np.arange(1, len(singularValues) + 1, 1),
@@ -96,7 +102,7 @@ def plot_singular_values(singularValues,
 
     else:
         fig, ax = plt.subplots(1, figsize=(3, 2.8))
-        if plot_effective_ranks:
+        if effective_ranks:
             plt.axvline(x=rank, linestyle="--",
                         color=reduced_grey, label="Rank")
             plt.axvline(x=stableRank, linestyle="--",
@@ -127,6 +133,11 @@ def plot_singular_values(singularValues,
         ticks = [i for i in ticks
                  if -0.1*len(singularValues) < i < 1.1*len(singularValues)]
         plt.xticks(ticks)
+        if ysemilog:
+            plt.ylim([0.01*np.min(singularValues), 1.5])
+            ax.set_yscale('log')
+            plt.tick_params(axis='y', which='both', left=True,
+                            right=False, labelbottom=False)
         plt.show()
 
 
