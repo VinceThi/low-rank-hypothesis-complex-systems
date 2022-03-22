@@ -18,7 +18,7 @@ import json
 import tkinter.simpledialog
 from tkinter import messagebox
 
-plot_time_series = True
+plot_time_series = False
 compute_error = False
 plot_weight_matrix_bool = False
 plot_singvals_bool = False
@@ -68,14 +68,11 @@ if plot_singvals_bool:
 """ Dynamical parameters """
 dynamics_str = "wilson_cowan"
 D = np.eye(N)
-# a = 0.1
-# b = 1
-# c = 3
-a = 1
+a = 0.1
 b = 1
-c = -3
+c = 3
 
-coupling_constants = np.linspace(0.01, 0.5, 20)  # c. elegans signed
+coupling_constants = np.linspace(0.01, 0.2, 50)  # c. elegans signed
 # coupling_constants = np.linspace(12, 15, 50)  # ciona weighted
 
 # Notes when W is not normalized by the largest singular value
@@ -86,7 +83,7 @@ coupling_constants = np.linspace(0.01, 0.5, 20)  # c. elegans signed
 
 
 """ SVD and dimension reduction """
-n = 5  # Dimension of the reduced dynamics
+n = 40  # Dimension of the reduced dynamics
 Un, Sn, Vhn = computeTruncatedSVD_more_positive(A, n)
 L, M = Un@Sn, Vhn
 print("\n", computeEffectiveRanks(svdvals(A), graph_str, N))
@@ -109,13 +106,10 @@ timestr_M_D = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")
 x_forward_equilibrium_points_list = []
 redx_forward_equilibrium_points_list = []
 
-# x0 = -10*np.random.random(N)
-# redx0 = M @ x0
+x0 = -10*np.random.random(N)
+redx0 = M @ x0
 print("\n Iterating on coupling constants for equilibrium point diagram(f) \n")
 for coupling in tqdm(coupling_constants):
-
-    x0 = np.random.random(N)
-    redx0 = M @ x0
     
     # Integrate complete dynamics
     args_dynamics = (coupling, D, a, b, c)
@@ -126,7 +120,7 @@ for coupling in tqdm(coupling_constants):
     # /!\ Look carefully if the dynamics reach an equilibrium point
     equilibrium_point = x_glob[-1]
     x_forward_equilibrium_points_list.append(equilibrium_point)
-    # x0 = x[-1, :]
+    x0 = x[-1, :]
 
     # Integrate reduced dynamics
     args_reduced_dynamics = (M, coupling, calD, a, b, c)
@@ -135,7 +129,7 @@ for coupling in tqdm(coupling_constants):
     # args_reduced_dynamics = (coupling, M, Mp, D, a, b, c)
     # redx = np.array(integrate_dopri45(t0, t1, dt, reduced_wilson_cowan,
     #                                   W, redx0, *args_reduced_dynamics))
-    # redx0 = redx[-1, :]
+    redx0 = redx[-1, :]
 
     # Get global observables
     redX_glob = np.zeros(len(redx[:, 0]))
@@ -151,9 +145,9 @@ for coupling in tqdm(coupling_constants):
         linewidth = 0.3
         redlinewidth = 2
         plt.subplot(111)
-        # for j in range(0, N):
-        #     plt.plot(timelist, x[:, j], color=reduced_first_community_color,
-        #              linewidth=linewidth)
+        for j in range(0, N):
+            plt.plot(timelist, x[:, j], color=reduced_first_community_color,
+                     linewidth=linewidth)
         for nu in range(n):
             plt.plot(timelist, M[nu, :]@x.T, color=first_community_color,
                      linewidth=redlinewidth)

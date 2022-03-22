@@ -24,6 +24,10 @@ def wilson_cowan(t, x, W, coupling, D, a, b, c):
     return -D@x + (1 - a*x)/(1+np.exp(-b*(coupling*W@x-c)))
 
 
+def rnn(t, x, W, coupling, D):
+    return -D@x + np.tanh(coupling*W@x)
+
+
 def kuramoto_sakaguchi(t, theta, W, coupling, D, alpha):
     return np.diag(D) + coupling*(np.cos(theta+alpha)*(W@np.sin(theta))
                                   - np.sin(theta+alpha)*(W@np.cos(theta)))

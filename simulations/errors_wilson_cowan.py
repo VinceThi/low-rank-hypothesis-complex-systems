@@ -14,7 +14,7 @@ import json
 import tkinter.simpledialog
 from tkinter import messagebox
 
-plot_singvals = False
+plot_singvals = True
 
 """ Graph parameters """
 graph_str = "celegans_signed"
@@ -36,15 +36,14 @@ if plot_singvals:
                          ysemilog=True)
 
 N_arange = np.arange(1, N, 1)
-nb_samples = 1000
+nb_samples = 100
 error_array = np.zeros((nb_samples, N))
 error_upper_bound_array = np.zeros((nb_samples, N))
 for n in tqdm(N_arange):
 
     Vhn = Vh[:n, :]
-    D_sign = np.diag(-(np.sum(Vhn, axis=1) < 0).astype(float)) \
-        + np.diag((np.sum(Vhn, axis=1) >= 0).astype(float))
-    M = D_sign@Vhn
+    # D_sign = np.diag(-(np.sum(Vhn, axis=1) < 0).astype(float)) + np.diag((np.sum(Vhn, axis=1) >= 0).astype(float))
+    M = Vhn
     W = A   # /S[0]  # We normalize the network by the largest singular value
     Mp = pinv(M)
     x_samples = np.random.uniform(0, 1, (N, nb_samples))

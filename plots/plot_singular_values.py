@@ -101,7 +101,8 @@ def plot_singular_values(singularValues,
         plt.show()
 
     else:
-        fig, ax = plt.subplots(1, figsize=(3, 2.8))
+        # fig, ax = plt.subplots(1, figsize=(3, 2.8))
+        fig, ax = plt.subplots(1, figsize=(6, 3.8))
         if effective_ranks:
             plt.axvline(x=rank, linestyle="--",
                         color=reduced_grey, label="Rank")
@@ -149,8 +150,8 @@ def plot_singular_values_given_effective_ranks(singularValues, effectiveRanks):
     line, = ax1.plot(range(1, np.int(effectiveRanks['rank']+1)),
                      singularValues, linestyle='None',
                      color=next(colors), marker='o')
-    header = ['Name', 'Size', 'Rank', 'Optimal threshold', 'Optimal shrinkage',
-              'Erank', 'Elbow', 'Energy ratio', 'Stable rank']
+    # header =['Name', 'Size', 'Rank', 'Optimal threshold','Optimal shrinkage',
+    #           'Erank', 'Elbow', 'Energy ratio', 'Stable rank']
     ax1.axvline(x=effectiveRanks['rank'], linestyle="--",
                 color=reduced_grey, label="Rank")
     ax1.axvline(x=effectiveRanks['Stable Rank'], linestyle="-.",

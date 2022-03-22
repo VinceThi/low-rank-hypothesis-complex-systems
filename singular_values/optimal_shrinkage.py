@@ -223,7 +223,7 @@ def optimal_shrinkage(singvals, beta, loss, sigma=None):
 
       U, S, Vh = np.linalg.svd(Y)
       shrink_s = optimal_shrinkage(S, m/n, 'operator')
-      Xhat = U@np.diag(shrink_s)@Vh;
+      Xhat = U@np.diag(shrink_s)@Vh
 
       where you can replace 'op' with one of the other losses.
       if the noise level sigma is known, in the third line use instead

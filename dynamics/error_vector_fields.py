@@ -44,8 +44,58 @@ def relative_error_vector_fields(M, vfield_true, vfield_approximate,
         return diff/normalization
 
 
-# -------------------------------- Errors SIS ---------------------------------
+# ------------------------- Errors Wilson-Cowan -------------------------------
+def sigmoid(x):
+    return 1/(1+np.exp(-x))
 
+
+def jacobian_x_wilson_cowan(x, W, coupling, D, a, b, c):
+    return -D - a*np.diag(sigmoid(b*(coupling*W@x-c)))
+
+
+def jacobian_y_wilson_cowan(x, W, coupling, a, b, c):
+    return b*coupling*(np.eye(len(x)) - a*np.diag(x))\
+           * (sigmoid(b*(coupling*W@x-c))*(1 - sigmoid(b*(coupling*W@x-c))))
+
+
+# ------------------------------ Errors RNN -----------------------------------
+def jacobian_y_rnn(y, coupling):
+    return 4*coupling*(np.eye(len(y)))\
+           * (sigmoid(2*coupling*y)*(1 - sigmoid(2*coupling*y)))
+
+
+def y_prime_SIS(x, W, M, coupling, sign):
+    P = pinv(M)@M
+    chi = (np.eye(len(x)) - P)@x
+    d = np.diag(W@chi)**(-1)\
+        * (sigmoid(2*coupling*W@x) - sigmoid(2*coupling*W@P@x))
+    return np.log((1+sign*np.sqrt(1 - 4*d))/(1-sign*np.sqrt(1 - 4*d))) / \
+        (2*coupling)
+
+
+def error_upper_bound_rnn(x, y_prime, coupling, D, n, s, M):
+    """
+    :param x: (N-dim array) position in
+    :param y_prime: (N dim array) point between Wx and WPx
+    :param coupling: (float) infection rate
+    :param D: (NxN array) recovery rate diagonal matrix
+    :param n: (int) Dimension of the reduced system
+    :param s: (N-dim array) Singular values of W
+    :param M: (nxN array )Reduction matrix = V_n^T = n-truncated, transposed,
+                          right singular vector of the weight matrix W
+    :return: (float)
+    Upper bound on the error between the vector field of the N-dimensional
+    qmf sis dynamics and its least-square optimal reduction
+
+    """
+    P = pinv(M)@M
+    chi = (np.eye(len(x)) - P)@x
+    Jx = -D
+    Jy = jacobian_y_rnn(y_prime, coupling)
+    return (norm(M@Jx@chi) + s[n]*norm(M@Jy, ord=2)*norm(x))/np.sqrt(n)
+
+
+# -------------------------------- Errors SIS ---------------------------------
 def jacobian_x_SIS(x, W, coupling, D):
     return -D - coupling*np.diag(W@x)
 
@@ -119,3 +169,6 @@ def error_upper_bound_SIS_no_eckart(x, x_prime, W, coupling, D, n, M):
     return (norm(M@Jx@chi)
             + norm(M@Jy, ord=2) *
             norm(W@(np.eye(len(x)) - P), ord=2)*norm(x))/np.sqrt(n)
+
+
+

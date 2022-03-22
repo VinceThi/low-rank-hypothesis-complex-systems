@@ -230,4 +230,25 @@ def reduced_wilson_cowan_vector_field(t, X, W, coupling, M, Mp, D, a, b, c):
     return M@wilson_cowan(t, Mp@X, W, coupling, D, a, b, c)
 
 
+def reduced_rnn_vector_field(t, X, W, coupling, M, Mp, D):
+    """
+    Reduced recurrent neural network dynamics
+    :param t: (float) time
+    :param X: (n-dim array) Reduced firing-rate (activity) trajectory
+    :param W: (N x N array) Weight matrix
+    :param coupling: (float) Coupling constant
+    :param M: (n x N array) Reduction (lumping) matrix
+    :param Mp: (n x N array) Moore-Penrose pseudoinv. of the reduction matrix
+    :param D: (N x N array) parameter matrix (typically diagonal) of
+                            inverse time constant
+    :param a: (float) related to the refractory fraction of neuron to fire
+    :param b: (float) steepness of the logistic curve
+    :param c: (float) midpoint of the logistic curve
+
+    :return: (n-dim array)
+     Vector field of the reduced Wilson-Cowan dynamics
+    """
+    return M@rnn(t, Mp@X, W, coupling, D)
+
+
 

@@ -220,3 +220,24 @@ def get_epidemiological_weight_matrix(graph_str):
                          "get_epidemiological_weight_matrix")
 
     return A
+
+
+def get_learned_weight_matrix(graph_str):
+    path_str = f"C:/Users/thivi/Documents/GitHub/low-dimension-hypothesis/" \
+               f"graphs/graph_data/learned/{graph_str}/"
+
+    if graph_str == "zebrafish_rnn":
+        W = np.load(path_str + "zebrafish1-presz-model.npz")["J"]
+
+    elif graph_str == "mouse_rnn":
+        W = np.load(path_str + "mouse-tle1-model.npz")["J"]
+
+    elif graph_str == "mouse_control_rnn":
+        W = np.load(path_str + "mouse-control1-model.npz")["J"]
+
+    else:
+        raise ValueError("This graph_str learned is not an option. "       
+                         "See the documentation of"
+                         "get_learned_weight_matrix")
+
+    return W
