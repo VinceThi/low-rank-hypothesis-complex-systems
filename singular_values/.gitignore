@@ -7,3 +7,5 @@ Icon*
 
 graph_data/erreur_optht_plante/
 graph_data/erreur_valeur_singuliere_infinie/
+__pycache__/
+
