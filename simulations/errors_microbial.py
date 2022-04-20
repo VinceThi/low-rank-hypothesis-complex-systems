@@ -14,10 +14,10 @@ import json
 import tkinter.simpledialog
 from tkinter import messagebox
 
-# TODO normalize the network and find the right coupling range.
-# TODO Go back the the equations and change the timescale for instance
+# TODO normalize the network and find the right coupling range ?
+# TODO Go back the the equations and change the timescale for instance <<<<<<<<<<<---------- ESPECIALLY THIS !
 # TODO - The optimal threshold in the gut micro is 0.67, why ? A mistake ?
-# TODO What is the domain of the dynamics !? I didn't even look
+# TODO What is the domain of the dynamics !? I didn't even look. It's not bounded by 1 ! ^^^^ adimensionalize the dynamics
 
 """ Graph parameters """
 graph_str = "gut"
@@ -37,16 +37,16 @@ U, S, Vh = np.linalg.svd(A)
 
 plot_singular_values(S)
 
-nb_samples = 100
+nb_samples = 10
 mean_error_list = []
 for n in tqdm(range(1, N, 1)):
     Vhn = Vh[:n, :]
     D_sign = np.diag(-(np.sum(Vhn, axis=1) < 0).astype(float)) \
-        + np.diag((np.sum(Vhn, axis=1) >= 0).astype(float))
-    M = D_sign@Vhn
+             + np.diag((np.sum(Vhn, axis=1) >= 0).astype(float))
+    M = D_sign @ Vhn
     W = A  # / S[0]  # We normalize the network by the largest singular value
     Mp = pinv(M)
-    calD = M@D@Mp
+    calD = M @ D @ Mp
     x_samples = np.random.uniform(0, 1, (N, nb_samples))
     min_coupling = 0.1
     max_coupling = 5
@@ -57,14 +57,14 @@ for n in tqdm(range(1, N, 1)):
         x = x_samples[:, i]
         coupling = coupling_samples[i]
         error_list.append(rmse(
-            M@microbial(t, x, W, coupling, D, a, b, c),
-            reduced_microbial_vector_field(t, M@x, W, coupling,
+            M @ microbial(t, x, W, coupling, D, a, b, c),
+            reduced_microbial_vector_field(t, M @ x, W, coupling,
                                            M, Mp, D, a, b, c)))
     mean_error_list.append(np.mean(error_list))
 
 fig = plt.figure(figsize=(4, 4))
 plt.subplot(111)
-plt.scatter(np.arange(1, len(mean_error_list)+1, 1), mean_error_list,
+plt.scatter(np.arange(1, len(mean_error_list) + 1, 1), mean_error_list,
             color=first_community_color, s=5)
 ylab = plt.ylabel(f'Mean RMSE between\n the vector fields')
 plt.xlabel('Dimension $n$')
@@ -89,15 +89,15 @@ if messagebox.askyesno("Python",
                             f" {max_coupling}, nb_samples)"}
 
     fig.savefig(path + f'{timestr}_{file}_vector_field_rmse_error_vs_n'
-                f'_{dynamics_str}_{graph_str}.pdf')
+                       f'_{dynamics_str}_{graph_str}.pdf')
     fig.savefig(path + f'{timestr}_{file}_vector_field_rmse_error_vs_n'
                        f'_{dynamics_str}_{graph_str}.png')
     with open(path + f'{timestr}_{file}'
-              f'_mean_error_list'
-              f'_complete_{dynamics_str}_{graph_str}.json', 'w') \
+                     f'_mean_error_list'
+                     f'_complete_{dynamics_str}_{graph_str}.json', 'w') \
             as outfile:
         json.dump(mean_error_list, outfile)
     with open(path + f'{timestr}_{file}'
-              f'_{dynamics_str}_{graph_str}_parameters_dictionary.json',
+                     f'_{dynamics_str}_{graph_str}_parameters_dictionary.json',
               'w') as outfile:
         json.dump(parameters_dictionary, outfile)

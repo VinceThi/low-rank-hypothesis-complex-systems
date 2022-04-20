@@ -22,17 +22,17 @@ from tkinter import messagebox
 
 plot_time_series = True
 compute_error = False
-plot_weight_matrix_bool = True
+plot_weight_matrix_bool = False
 integrate_complete_dynamics = True
-integrate_reduced_dynamics = True
-integrate_reduced_dynamics_tensor = True
-forward_branch = False
-backward_branch = True
+integrate_reduced_dynamics = False
+integrate_reduced_dynamics_tensor = False
+forward_branch = True
+backward_branch = False
 
 # Desmos exploration: https://www.desmos.com/calculator/pdtj9p2mdi
 
 """ Time parameters """
-t0, t1, dt = 0, 1.5, 0.00005     # 0, 4, 0.0005
+t0, t1, dt = 0, 1.5, 0.0005     # 0, 4, 0.0005
 # 0, 3.5, 0.0009  # minimum for t1: 4 for "gut" network
 timelist = np.linspace(t0, t1, int(t1 / dt))
 
@@ -74,7 +74,7 @@ if plot_weight_matrix_bool:
 dynamics_str = "microbial"
 # For real gut microbiome network
 a, b, c, D = 5, 13, 10/3, 30*np.eye(N)
-coupling_constants = np.linspace(0.1, 5, 50)   # (2.5, 2.9, 50)  # (0.5, 3, 50)
+coupling_constants = np.linspace(0.1, 5, 10)   # (2.5, 2.9, 50)  # (0.5, 3, 50)
 
 # a, b, c, D = 1/4, 13/3, 1/3, 10*np.eye(N)
 
@@ -165,21 +165,22 @@ if forward_branch:
                     plt.plot(timelist, x[:, j],
                              color=reduced_first_community_color,
                              linewidth=linewidth)
-            for nu in range(n):
-                # f integrate_complete_dynamics:
-                plt.plot(timelist, M[nu, :]@x.T,
-                         color=first_community_color,
-                         linewidth=redlinewidth)
-                # if integrate_reduced_dynamics:
-                plt.plot(timelist, redx[:, nu],
-                         color=second_community_color,
-                         linewidth=redlinewidth, linestyle="--")
-            # if integrate_complete_dynamics:
-            plt.plot(timelist, x_glob,
-                     linewidth=redlinewidth, color="r")
-            # if integrate_reduced_dynamics:
-            plt.plot(timelist, redX_glob,
-                     linewidth=redlinewidth, color="g")
+            if integrate_reduced_dynamics or integrate_reduced_dynamics_tensor:
+                for nu in range(n):
+                    # f integrate_complete_dynamics:
+                    plt.plot(timelist, M[nu, :]@x.T,
+                             color=first_community_color,
+                             linewidth=redlinewidth)
+                    # if integrate_reduced_dynamics:
+                    plt.plot(timelist, redx[:, nu],
+                             color=second_community_color,
+                             linewidth=redlinewidth, linestyle="--")
+            if integrate_complete_dynamics:
+                plt.plot(timelist, x_glob,
+                         linewidth=redlinewidth, color="r")
+            if integrate_reduced_dynamics or integrate_reduced_dynamics_tensor:
+                plt.plot(timelist, redX_glob,
+                         linewidth=redlinewidth, color="g")
             ylab = plt.ylabel('$X_{\\mu}$', labelpad=20)
             ylab.set_rotation(0)
             plt.tight_layout()
@@ -242,24 +243,23 @@ if backward_branch:
                     plt.plot(timelist, x[:, j],
                              color=reduced_first_community_color,
                              linewidth=linewidth)
-            for nu in range(n):
-                # if integrate_complete_dynamics:
-                plt.plot(timelist, M[nu, :]@x.T,
-                         color=first_community_color,
-                         linewidth=redlinewidth)
-                # if integrate_reduced_dynamics:
-                plt.plot(timelist, redx[:, nu],
-                         color=second_community_color,
-                         linewidth=redlinewidth, linestyle="--")
-            # if integrate_complete_dynamics:
-            plt.plot(timelist, x_glob,
-                     linewidth=redlinewidth, color="r")
-            # if integrate_reduced_dynamics:
-            plt.plot(timelist, redX_glob,
-                     linewidth=redlinewidth, color="g")
-            # plt.ylim([-0.2, 1.2])
-            # ylab = plt.ylabel('$x_i$', fontsize=fontsize, labelpad=20)
-            ylab = plt.ylabel('$X_{\\mu}$')
+            if integrate_reduced_dynamics or integrate_reduced_dynamics_tensor:
+                for nu in range(n):
+                    # f integrate_complete_dynamics:
+                    plt.plot(timelist, M[nu, :] @ x.T,
+                             color=first_community_color,
+                             linewidth=redlinewidth)
+                    # if integrate_reduced_dynamics:
+                    plt.plot(timelist, redx[:, nu],
+                             color=second_community_color,
+                             linewidth=redlinewidth, linestyle="--")
+            if integrate_complete_dynamics:
+                plt.plot(timelist, x_glob,
+                         linewidth=redlinewidth, color="r")
+            if integrate_reduced_dynamics or integrate_reduced_dynamics_tensor:
+                plt.plot(timelist, redX_glob,
+                         linewidth=redlinewidth, color="g")
+            ylab = plt.ylabel('$X_{\\mu}$', labelpad=20)
             ylab.set_rotation(0)
             plt.tight_layout()
             plt.show()

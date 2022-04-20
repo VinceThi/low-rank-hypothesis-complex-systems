@@ -2,7 +2,8 @@
 # @author: Vincent Thibeault
 
 import numpy as np
-from numpy.linalg import pinv, solve, norm
+from numpy.linalg import solve, norm
+from scipy.optimize import least_squares
 
 
 def mse(a, b):
@@ -11,10 +12,6 @@ def mse(a, b):
 
 def rmse(a, b):
     return np.sqrt(np.mean((a - b)**2))
-
-
-def rmse_compatibility_equation(M, X):
-    return rmse(M@X, M@X@pinv(M)@M)
 
 
 def relative_error_vector_fields(M, vfield_true, vfield_approximate,
@@ -44,55 +41,67 @@ def relative_error_vector_fields(M, vfield_true, vfield_approximate,
         return diff/normalization
 
 
-# ------------------------- Errors Wilson-Cowan -------------------------------
-def sigmoid(x):
-    return 1/(1+np.exp(-x))
-
-
-def jacobian_x_wilson_cowan(x, W, coupling, D, a, b, c):
-    return -D - a*np.diag(sigmoid(b*(coupling*W@x-c)))
-
-
-def jacobian_y_wilson_cowan(x, W, coupling, a, b, c):
-    return b*coupling*(np.eye(len(x)) - a*np.diag(x))\
-           * (sigmoid(b*(coupling*W@x-c))*(1 - sigmoid(b*(coupling*W@x-c))))
-
-
-# ------------------------------ Errors RNN -----------------------------------
-def jacobian_y_rnn(y, coupling):
-    return 4*coupling*(np.eye(len(y)))\
-           * (sigmoid(2*coupling*y)*(1 - sigmoid(2*coupling*y)))
-
-
-def y_prime_SIS(x, W, M, coupling, sign):
-    P = pinv(M)@M
-    chi = (np.eye(len(x)) - P)@x
-    d = np.diag(W@chi)**(-1)\
-        * (sigmoid(2*coupling*W@x) - sigmoid(2*coupling*W@P@x))
-    return np.log((1+sign*np.sqrt(1 - 4*d))/(1-sign*np.sqrt(1 - 4*d))) / \
-        (2*coupling)
-
-
-def error_upper_bound_rnn(x, y_prime, coupling, D, n, s, M):
+def error_vector_fields_upper_bound(x, Jx, Jy, s, M, P):
     """
-    :param x: (N-dim array) position in
-    :param y_prime: (N dim array) point between Wx and WPx
-    :param coupling: (float) infection rate
-    :param D: (NxN array) recovery rate diagonal matrix
-    :param n: (int) Dimension of the reduced system
+    :param x: (N-dim array) point in R^N
+    :param Jx: (NxN array) jacobian matrix with derivatives in x
+    :param Jy: (NxN array) jacobian matrix with derivatives in y = Wx
     :param s: (N-dim array) Singular values of W
-    :param M: (nxN array )Reduction matrix = V_n^T = n-truncated, transposed,
+    :param M: (nxN array) Reduction matrix = V_n^T = n-truncated, transposed,
                           right singular vector of the weight matrix W
-    :return: (float)
-    Upper bound on the error between the vector field of the N-dimensional
-    qmf sis dynamics and its least-square optimal reduction
+    :param P: (NxN array) Projector M^+ M = np.linalg.pinv(M)@M
 
+    :return: (float)
+    Upper bound on the error between the vector field of a N-dimensional
+    dynamics on network and its least-square optimal reduction.
+
+    The upper bound involves the triangle inequality, the induced spectral
+    norm, and the submultiplicativity.
     """
-    P = pinv(M)@M
-    chi = (np.eye(len(x)) - P)@x
-    Jx = -D
-    Jy = jacobian_y_rnn(y_prime, coupling)
+    n, N = np.shape(M)
+    chi = (np.eye(N) - P)@x
+    # print(s[n]*norm(M@Jy, ord=2)*norm(x), s[n], norm(M@Jy, ord=2), norm(x))
     return (norm(M@Jx@chi) + s[n]*norm(M@Jy, ord=2)*norm(x))/np.sqrt(n)
+
+
+def error_vector_fields_upper_bound_triangle(x, Jx, Jy, W, M, P):
+    """
+    :param x: (N-dim array) point in R^N
+    :param Jx: (NxN array) jacobian matrix with derivatives in x
+    :param Jy: (NxN array) jacobian matrix with derivatives in y = Wx
+    :param W: (NxN array) Weight matrix
+    :param M: (nxN array )Reduction matrix
+    :param P: (NxN array) Projector M^+ M = np.linalg.pinv(M)@M
+
+    :return: (float)
+    Upper bound on the error between the vector field of a N-dimensional
+    dynamics on network and its least-square optimal reduction.
+    The upper bound involves only the triangle inequality.
+    """
+    n, N = np.shape(M)
+    chi = (np.eye(N) - P)@x
+    return (norm(M@Jx@chi) + norm(M@Jy@W@chi))/np.sqrt(n)
+
+
+def error_vector_fields_upper_bound_induced_norm(x, Jx, Jy, W, M, P):
+    """
+    :param x: (N-dim array) point in R^N
+    :param Jx: (NxN array) jacobian matrix with derivatives in x
+    :param Jy: (NxN array) jacobian matrix with derivatives in y = Wx
+    :param W: (NxN array) Weight matrix
+    :param M: (nxN array )Reduction matrix
+    :param P: (NxN array) Projector M^+ M = np.linalg.pinv(M)@M
+
+    :return: (float)
+    Upper bound on the error between the vector field of a N-dimensional
+    dynamics on network and its least-square optimal reduction.
+    The upper bound involves the triangle inequality and the induced spectral
+    norm for the second term.
+    """
+    n, N = np.shape(M)
+    chi = (np.eye(N) - P)@x
+    return (norm(M@Jx@chi) +
+            norm(M@Jy@W@(np.eye(N)-P), ord=2)*norm(x))/np.sqrt(n)
 
 
 # -------------------------------- Errors SIS ---------------------------------
@@ -104,71 +113,92 @@ def jacobian_y_SIS(x, coupling):
     return coupling*(np.eye(len(x)) - np.diag(x))
 
 
-def x_prime_SIS(x, W, M):
-    P = pinv(M)@M
+def x_prime_SIS(x, W, P):
     chi = (np.eye(len(x)) - P)@x
     A = np.diag(chi)@W + np.diag(W@chi)
     b = x*(W@x) - (P@x)*(W@P@x)
     return solve(A, b)
 
 
-def error_upper_bound_SIS(x, x_prime, W, coupling, D, n, s, M):
-    """
-    :param x: (N-dim array) position in
-    :param x_prime: (N dim array) point between x and Px
-    :param W: (NxN array) Weight matrix
-    :param coupling: (float) infection rate
-    :param D: (NxN array) recovery rate diagonal matrix
-    :param n: (int) Dimension of the reduced system
-    :param s: (N-dim array) Singular values of W
-    :param M: (nxN array )Reduction matrix = V_n^T = n-truncated, transposed,
-                          right singular vector of the weight matrix W
-    :return: (float)
-    Upper bound on the error between the vector field of the N-dimensional
-    qmf sis dynamics and its least-square optimal reduction
+# ------------------------------ Errors RNN -----------------------------------
+def sigmoid(x):
+    return 1/(1+np.exp(-x))
 
-    """
-    P = pinv(M)@M
+
+def derivative_sigmoid(x):
+    return sigmoid(x)*(1 - sigmoid(x))
+
+
+def jacobian_y_rnn(dsigmoid, coupling):
+    return 4*coupling*np.diag(dsigmoid)
+
+
+def derivative_sigmoid_prime_rnn(x, W, P, coupling):
     chi = (np.eye(len(x)) - P)@x
-    Jx = jacobian_x_SIS(x_prime, W, coupling, D)
-    Jy = jacobian_y_SIS(x_prime, coupling)
-    return (norm(M@Jx@chi) + s[n]*norm(M@Jy, ord=2)*norm(x))/np.sqrt(n)
+    Wchi = W@chi
+    if np.allclose(Wchi, np.zeros(len(Wchi))):
+        """ In this case, we can set d to 0 (or any other finite value) because
+        the (n = r = rank) (r+1)-th singular value (norm of Wchi) is 0 too. """
+        d = np.zeros(len(Wchi))
+    else:
+        d = Wchi**(-1)*(sigmoid(2*coupling*W@x)
+                        - sigmoid(2*coupling*W@P@x)) / (2*coupling)
+    return d
 
 
-def error_upper_bound_SIS_no_triangle(x, x_prime, W, coupling, D, n, M):
-    P = pinv(M)@M
+# ------------------------- Errors Wilson-Cowan -------------------------------
+def jacobian_x_wilson_cowan(x, W, coupling, D, a, b, c):
+    return -D - a*np.diag(sigmoid(b*(coupling*W@x-c)))
+
+
+def jacobian_y_wilson_cowan(x, W, coupling, a, b, c):
+    return b*coupling*(np.eye(len(x)) - a*np.diag(x)) * \
+           derivative_sigmoid(b*(coupling*W@x-c))
+
+
+def f_wilson_cowan(x_prime, x, W, P, coupling, a, b, c):
+    chi = (np.eye(len(x)) - P) @ x
+    q = b*(coupling*W@x-c)
+    q_tilde = b*(coupling*W@P@x-c)
+    q_prime = b*(coupling*W@x_prime-c)
+    delta = (1 - a*x)*sigmoid(q) - (1 - a*P@x)*sigmoid(q_tilde)
+    beta = -a*chi + b*coupling*(W@chi)*(1 - a*x_prime)
+    alpha = b*coupling*(W@chi)*(1 - a*x_prime)
+    return alpha*sigmoid(q_prime)**2 - beta*sigmoid(q_prime) + delta
+
+
+def x_prime_wilson_cowan(position, W, P, coupling, a, b, c):
+    # The problem is that there are many solutions for xp and
+    # we might not find the xp that minimizes the upper bound
+    N = len(position)
+    x0 = np.random.uniform(0, 1, N)
+    return least_squares(f_wilson_cowan, x0=x0,
+                         bounds=(np.zeros(N), np.ones(N)),
+                         ftol=1e-5, xtol=1e-5, gtol=1e-5,
+                         args=(position, W, P, coupling, a, b, c)).x
+
+
+def jacobian_y_approx_wilson_cowan(dsigmoid, coupling, b):
+    """ This is only valid for a small enough constant 'a'. See
+     test_dsig_prime_Jx_Jy_wilson_cowan in
+     tests/test_dynamics/test_error_vector_field """
+    return b*coupling*np.diag(dsigmoid)
+
+
+def derivative_sigmoid_prime_wilson_cowan(x, W, P, coupling, b, c):
+    """ This is only valid for a small enough constant 'a'. See
+     test_dsig_prime_Jx_Jy_wilson_cowan in
+     tests/test_dynamics/test_error_vector_field """
     chi = (np.eye(len(x)) - P)@x
-    Jx = jacobian_x_SIS(x_prime, W, coupling, D)
-    Jy = jacobian_y_SIS(x_prime, coupling)
-    # This is exact (verified numerically)
-    return (norm(M@Jx@chi + M@Jy@W@(np.eye(len(x)) - P)@x))/np.sqrt(n)
-
-
-def error_upper_bound_SIS_no_induced_norm(x, x_prime, W, coupling, D, n, M):
-    P = pinv(M)@M
-    chi = (np.eye(len(x)) - P)@x
-    Jx = jacobian_x_SIS(x_prime, W, coupling, D)
-    Jy = jacobian_y_SIS(x_prime, coupling)
-    return (norm(M@Jx@chi) + norm(M@Jy@W@(np.eye(len(x)) - P)@x))/np.sqrt(n)
-
-
-def error_upper_bound_SIS_no_submul(x, x_prime, W, coupling, D, n, M):
-    P = pinv(M)@M
-    chi = (np.eye(len(x)) - P)@x
-    Jx = jacobian_x_SIS(x_prime, W, coupling, D)
-    Jy = jacobian_y_SIS(x_prime, coupling)
-    return (norm(M@Jx@chi)
-            + norm(M@Jy@W@(np.eye(len(x)) - P), ord=2)*norm(x))/np.sqrt(n)
-
-
-def error_upper_bound_SIS_no_eckart(x, x_prime, W, coupling, D, n, M):
-    P = pinv(M)@M
-    chi = (np.eye(len(x)) - P)@x
-    Jx = jacobian_x_SIS(x_prime, W, coupling, D)
-    Jy = jacobian_y_SIS(x_prime, coupling)
-    return (norm(M@Jx@chi)
-            + norm(M@Jy, ord=2) *
-            norm(W@(np.eye(len(x)) - P), ord=2)*norm(x))/np.sqrt(n)
-
+    Wchi = W@chi + 1e-9
+    # print(Wchi)
+    if np.allclose(Wchi, np.zeros(len(Wchi))):
+        """ In this case, we can set d to 0 (or any other finite value) because
+        the (n = r = rank) (r+1)-th singular value (norm of Wchi) is 0 too. """
+        d = np.zeros(len(Wchi))
+    else:
+        d = Wchi**(-1)*(sigmoid(b*(coupling*W@x-c))
+                        - sigmoid(b*(coupling*W@P@x-c)))/(b*coupling)
+    return d
 
 

@@ -7,7 +7,6 @@ from dynamics.error_vector_fields import *
 from singular_values.optimal_shrinkage import optimal_shrinkage
 from singular_values.compute_effective_ranks import computeRank
 from graphs.get_real_networks import *
-from scipy.linalg import pinv
 from tqdm import tqdm
 from plots.config_rcparams import *
 from plots.plot_singular_values import plot_singular_values
@@ -27,9 +26,6 @@ N = len(A[0])  # Dimension of the complete dynamics
 """ Dynamical parameters """
 dynamics_str = "rnn"
 t = 0  # Time is not involved in the vector-field error computation
-D = np.eye(N)/0.625
-# tau = 0.625 in Hadjiabadi et al. Maximally selective
-# single-cell target for circuit control in epilepsy models
 
 """ SVD """
 U, S, Vh = np.linalg.svd(A)
@@ -48,9 +44,11 @@ We remove it to do a semilog plot.
 See https://www.youtube.com/watch?v=ydxy3fEar9M for transforming an error for    
 a semilog plot.                                                                  
 """
-nb_samples = 100
+nb_samples = 1000
 error_array = np.zeros((nb_samples, len(N_arange)))
 error_upper_bound_array = np.zeros((nb_samples, len(N_arange)))
+# error_upper_bound_triangle_array = np.zeros((nb_samples, len(N_arange)))
+# error_upper_bound_induced_array = np.zeros((nb_samples, len(N_arange)))
 for n in tqdm(N_arange):
 
     Vhn = Vh[:n, :]
@@ -58,53 +56,80 @@ for n in tqdm(N_arange):
         + np.diag((np.sum(Vhn, axis=1) >= 0).astype(float))
     M = D_sign@Vhn
     W = A   # /S[0]  # We normalize the network by the largest singular value
-    Mp = pinv(M)
-    x_samples = np.random.uniform(0, 1, (N, nb_samples))
+    Mp = np.linalg.pinv(M)
+    P = Mp@M
+    x_samples = np.random.uniform(-1, 1, (N, nb_samples))
+    # tau = 0.625 in Hadjiabadi et al. Maximally selective
+    # single-cell target for circuit control in epilepsy models
     min_coupling, max_coupling = 0.1/0.625, 3/0.625
     coupling_samples = np.random.uniform(min_coupling, max_coupling,
                                          nb_samples)
+    mean_D, std_D = 1/0.625, 0.001
     for i in range(0, nb_samples):
         x = x_samples[:, i]
         coupling = coupling_samples[i]
+        D = np.diag(np.random.normal(mean_D, std_D, N))
         error_array[i, n-1] = \
             rmse(M@rnn(t, x, W, coupling, D),
                  reduced_rnn_vector_field(t, M@x, W, coupling, M, Mp, D))
-        # xp = x_prime_SIS(x, W, M)
-        # error_upper_bound_array[i, n-1] = \
-        #     error_upper_bound_SIS(x, xp, W, coupling, D, n, S/S[0], M)
+
+        dsig_prime = derivative_sigmoid_prime_rnn(x, W, P, coupling)
+        Jx = -D
+        Jy = jacobian_y_rnn(dsig_prime, coupling)
+        error_upper_bound_array[i, n-1] = \
+            error_vector_fields_upper_bound(x, Jx, Jy, shrink_s, M, P)
+
+        # error_upper_bound_triangle_array[i, n-1] = \
+        #     error_vector_fields_upper_bound_triangle(x, Jx, Jy, W, M, P)
+        # error_upper_bound_induced_array[i, n-1] = \
+        #     error_vector_fields_upper_bound_induced_norm(x, Jx, Jy, W, M, P)
+
+        # print(norm(M@Jy@W@(np.eye(N) - P)@x),
+        #       norm(M@Jy@W@(np.eye(N) - P), ord=2)*norm(x),
+        #       norm(M@Jy, ord=2)*norm(W@(np.eye(N) - P), ord=2)*norm(x),
+        #       norm(Jy, ord=2))
 
 mean_error = np.mean(error_array, axis=0)
 mean_log10_error = np.log10(mean_error)
 relative_std_semilogplot_error = \
-    np.std(error_array, axis=0) / (np.log(10) * mean_error)
+    np.std(error_array, axis=0) / (np.log(10)*mean_error)
 fill_between_error_1 = 10**(
         mean_log10_error - relative_std_semilogplot_error)
 fill_between_error_2 = 10**(
         mean_log10_error + relative_std_semilogplot_error)
 
-# mean_upper_bound_error = np.mean(error_upper_bound_array[:, :-1], axis=0)
-# mean_log10_upper_bound_error = np.log10(mean_upper_bound_error)
-# relative_std_semilogplot_upper_bound_error = \
-#     np.std(error_upper_bound_array[:, :-1], axis=0) / \
-#     (np.log(10) * mean_upper_bound_error)
-# fill_between_ub1 = 10**(mean_log10_upper_bound_error -
-#                         relative_std_semilogplot_upper_bound_error)
-# fill_between_ub2 = 10**(mean_log10_upper_bound_error +
-#                         relative_std_semilogplot_upper_bound_error)
+mean_upper_bound_error = np.mean(error_upper_bound_array, axis=0)
+mean_log10_upper_bound_error = np.log10(mean_upper_bound_error)
+relative_std_semilogplot_upper_bound_error = \
+    np.std(error_upper_bound_array, axis=0) / \
+    (np.log(10) * mean_upper_bound_error)
+fill_between_ub1 = 10**(mean_log10_upper_bound_error -
+                        relative_std_semilogplot_upper_bound_error)
+fill_between_ub2 = 10**(mean_log10_upper_bound_error +
+                        relative_std_semilogplot_upper_bound_error)
+
+# mean_upper_bound_triangle_error = \
+#     np.mean(error_upper_bound_triangle_array, axis=0)
+# mean_upper_bound_induced_error = \
+#     np.mean(error_upper_bound_induced_array, axis=0)
 
 fig = plt.figure(figsize=(4, 4))
 ax = plt.subplot(111)
-ax.scatter(N_arange, mean_error, s=5, color=deep[3],
-           label="RMSE $\\mathcal{E}_f\,(x)$")
 # for i in range(1, nb_samples):
 #     ax.scatter(N_arange, error_array[i, :],
 #                color=deep[3], s=5, alpha=0.1)
-# ax.plot(N_arange, mean_upper_bound_error, color=dark_grey,
-#         label="Upper bound")
+ax.scatter(N_arange, mean_error, s=5, color=deep[3],
+           label="RMSE $\\mathcal{E}_f\,(x)$")
+ax.plot(N_arange, mean_upper_bound_error, color=dark_grey,
+        label="Upper bound")
+# ax.plot(N_arange, mean_upper_bound_triangle_error, color=deep[4],
+#         label="Upper bound (triangle)")
+# ax.plot(N_arange, mean_upper_bound_induced_error, color=deep[6],
+#         label="Upper bound (triangle+induced)")
 ax.fill_between(N_arange, fill_between_error_1, fill_between_error_2,
                 color=deep[3], alpha=0.5)
-# ax.fill_between(N_arange, fill_between_ub1, fill_between_ub2,
-#                 color=dark_grey, alpha=0.5)
+ax.fill_between(N_arange, fill_between_ub1, fill_between_ub2,
+                color=dark_grey, alpha=0.5)
 plt.xlabel('Dimension $n$')
 ticks = ax.get_xticks()
 ticks[ticks.tolist().index(0)] = 1
@@ -130,11 +155,12 @@ if messagebox.askyesno("Python",
     timestr = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")
 
     parameters_dictionary = {
-        "graph_str": graph_str, "D": D.tolist(), "N": N,
-        "nb_samples": nb_samples,
+        "graph_str": graph_str, "N": N,   # "D": D.tolist(),
+        "nb_samples": nb_samples, "N_arange": N_arange.tolist(),
         "x_samples": "np.random.uniform(0, 1, (N, nb_samples))",
         "coupling_samples": f"np.random.uniform({min_coupling},"
-                            f" {max_coupling}, nb_samples)"}
+                            f" {max_coupling}, nb_samples)",
+        "D_samples": f"np.diag(np.random.normal({mean_D}, {std_D}, N))"}
 
     fig.savefig(path + f'{timestr}_{file}_vector_field_rmse_error_vs_n'
                 f'_{dynamics_str}_{graph_str}.pdf')

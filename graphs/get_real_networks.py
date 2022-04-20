@@ -5,6 +5,9 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import scipy.io
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+pd.options.mode.chained_assignment = None  # default='warn'
 
 
 def get_connectome_weight_matrix(graph_name):

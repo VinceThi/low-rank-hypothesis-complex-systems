@@ -13,7 +13,7 @@ import json
 import tkinter.simpledialog
 from tkinter import messagebox
 
-plot_singvals = True
+plot_singvals = False
 
 """ Graph parameters """
 graph_str = "high_school_proximity"
@@ -35,10 +35,8 @@ N_arange = np.arange(1, N, 1)
 nb_samples = 1000
 error_array = np.zeros((nb_samples, N))
 error_upper_bound_array = np.zeros((nb_samples, N))
-# error_no_triangle_upper_bound_array = np.zeros((nb_samples, N))
-# error_no_induced_upper_bound_array = np.zeros((nb_samples, N))
-# error_no_submul_upper_bound_array = np.zeros((nb_samples, N))
-# error_no_eckart_upper_bound_array = np.zeros((nb_samples, N))
+error_upper_bound_triangle_array = np.zeros((nb_samples, N))
+error_upper_bound_induced_array = np.zeros((nb_samples, N))
 for n in tqdm(N_arange):
 
     Vhn = Vh[:n, :]
@@ -46,28 +44,34 @@ for n in tqdm(N_arange):
         + np.diag((np.sum(Vhn, axis=1) >= 0).astype(float))
     M = D_sign@Vhn
     W = A/S[0]  # We normalize the network by the largest singular value
-    Mp = pinv(M)
+    Mp = np.linalg.pinv(M)
+    P = Mp@M
     x_samples = np.random.uniform(0, 1, (N, nb_samples))
     min_coupling, max_coupling = 0.01, 4
     coupling_samples = np.random.uniform(min_coupling, max_coupling,
                                          nb_samples)
+    mean_D, std_D = 1, 0.001
     for i in range(0, nb_samples):
         x = x_samples[:, i]
         coupling = coupling_samples[i]
-        xp = x_prime_SIS(x, W, M)
+        D = np.diag(np.random.normal(mean_D, std_D, N))
+
+        # RMSE
         error_array[i, n-1] = \
             rmse(M@qmf_sis(t, x, W, coupling, D),
                  reduced_qmf_sis_vector_field(t, M@x, W, coupling, M, Mp, D))
+
+        # Upper bound RMSE
+        xp = x_prime_SIS(x, W, P)
+        chi = (np.eye(N) - P)@x
+        Jx = jacobian_x_SIS(xp, W, coupling, D)
+        Jy = jacobian_y_SIS(xp, coupling)
         error_upper_bound_array[i, n-1] = \
-            error_upper_bound_SIS(x, xp, W, coupling, D, n, S/S[0], M)
-        # error_no_triangle_upper_bound_array[i, n-1] = \
-        #     error_upper_bound_SIS_no_triangle(x, xp, W, coupling, D, n, M)
-        # error_no_induced_upper_bound_array[i, n-1] = \
-        #     error_upper_bound_SIS_no_induced_norm(x, xp, W,coupling, D, n, M)
-        # error_no_submul_upper_bound_array[i, n-1] = \
-        #     error_upper_bound_SIS_no_submul(x, xp, W, coupling, D, n, M)
-        # error_no_eckart_upper_bound_array[i, n-1] = \
-        #     error_upper_bound_SIS_no_eckart(x, xp, W, coupling, D, n, M)
+            error_vector_fields_upper_bound(x, Jx, Jy, S/S[0], M, P)
+        error_upper_bound_triangle_array[i, n-1] = \
+            error_vector_fields_upper_bound_triangle(x, Jx, Jy, W, M, P)
+        error_upper_bound_induced_array[i, n-1] = \
+            error_vector_fields_upper_bound_induced_norm(x, Jx, Jy, W, M, P)
 
 
 """                                                                              
@@ -97,14 +101,10 @@ fill_between_ub1 = 10**(mean_log10_upper_bound_error -
 fill_between_ub2 = 10**(mean_log10_upper_bound_error +
                         relative_std_semilogplot_upper_bound_error)
 
-# mean_no_triangle_upper_bound_error =\
-#     np.mean(error_no_triangle_upper_bound_array[:, :-1], axis=0)
-# mean_no_induced_upper_bound_error =\
-#     np.mean(error_no_induced_upper_bound_array[:, :-1], axis=0)
-# mean_no_submul_upper_bound_error =\
-#     np.mean(error_no_submul_upper_bound_array[:, :-1], axis=0)
-# mean_no_eckart_upper_bound_error =\
-#     np.mean(error_no_eckart_upper_bound_array[:, :-1], axis=0)
+mean_upper_bound_triangle_error =\
+    np.mean(error_upper_bound_triangle_array[:, :-1], axis=0)
+mean_upper_bound_induced_error =\
+    np.mean(error_upper_bound_induced_array[:, :-1], axis=0)
 
 fig = plt.figure(figsize=(4, 4))
 ax = plt.subplot(111)
@@ -124,14 +124,10 @@ ax.scatter(N_arange, mean_error, s=5, color=deep[3],
            label="RMSE $\\mathcal{E}_f\,(x)$")
 ax.plot(N_arange, mean_upper_bound_error, color=dark_grey,
         label="Upper bound")
-# ax.plot(N_arange, mean_no_triangle_upper_bound_error, color=deep[7],
-#         label="Upper bound (no triangle)")
-# ax.plot(N_arange, mean_no_induced_upper_bound_error, color=deep[4],
-#         label="Upper bound (no induced)")
-# ax.plot(N_arange, mean_no_submul_upper_bound_error, color=deep[5],
-#         label="Upper bound (no submul)")
-# ax.plot(N_arange, mean_no_eckart_upper_bound_error, color=deep[6],
-#         label="Upper bound (no eckart)")
+ax.plot(N_arange, mean_upper_bound_triangle_error, color=deep[4],
+        label="Upper bound (triangle)")
+ax.plot(N_arange, mean_upper_bound_induced_error, color=deep[6],
+        label="Upper bound (triangle+induced)")
 ax.fill_between(N_arange, fill_between_error_1, fill_between_error_2,
                 color=deep[3], alpha=0.5)
 ax.fill_between(N_arange, fill_between_ub1, fill_between_ub2,
@@ -161,11 +157,12 @@ if messagebox.askyesno("Python",
     timestr = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")
 
     parameters_dictionary = {
-        "graph_str": graph_str, "D": D.tolist(), "N": N,
-        "nb_samples": nb_samples,
+        "graph_str": graph_str, "N": N,
+        "nb_samples": nb_samples, "N_arange": N_arange.tolist(),
         "x_samples": "np.random.uniform(0, 1, (N, nb_samples))",
         "coupling_samples": f"np.random.uniform({min_coupling},"
-                            f" {max_coupling}, nb_samples)"}
+                            f" {max_coupling}, nb_samples)",
+        "D_samples": f"np.diag(np.random.normal({mean_D}, {std_D}, N))"}
 
     fig.savefig(path + f'{timestr}_{file}_vector_field_rmse_error_vs_n'
                 f'_{dynamics_str}_{graph_str}.pdf')

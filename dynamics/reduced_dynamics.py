@@ -107,7 +107,7 @@ def reduced_wilson_cowan(t, X, L, M, coupling, calD, a, b, c):
     :param coupling: (float) Coupling constant
     :param calD: (nxn array) reduced matrix (typically diagonal) of
                              inverse time constant
-    :param a: (float) related to the refractory fraction of neuron to fire
+    :param a: (float) related to the refractory period of the neuron
     :param b: (float) steepness of the logistic curve
     :param c: (float) midpoint of the logistic curve
 
@@ -220,7 +220,7 @@ def reduced_wilson_cowan_vector_field(t, X, W, coupling, M, Mp, D, a, b, c):
     :param Mp: (n x N array) Moore-Penrose pseudoinv. of the reduction matrix
     :param D: (N x N array) parameter matrix (typically diagonal) of
                             inverse time constant
-    :param a: (float) related to the refractory fraction of neuron to fire
+    :param a: (float) related to the refractory period of the neuron
     :param b: (float) steepness of the logistic curve
     :param c: (float) midpoint of the logistic curve
 

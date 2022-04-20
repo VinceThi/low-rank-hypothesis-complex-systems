@@ -68,11 +68,11 @@ if plot_singvals_bool:
 """ Dynamical parameters """
 dynamics_str = "wilson_cowan"
 D = np.eye(N)
-a = 0.1
+a = 1
 b = 1
 c = 3
 
-coupling_constants = np.linspace(0.01, 0.2, 50)  # c. elegans signed
+coupling_constants = np.linspace(0.01, 1, 10)  # c. elegans signed
 # coupling_constants = np.linspace(12, 15, 50)  # ciona weighted
 
 # Notes when W is not normalized by the largest singular value

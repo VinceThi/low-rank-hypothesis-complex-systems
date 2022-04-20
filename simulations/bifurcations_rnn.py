@@ -30,11 +30,11 @@ plot_singvals_bool = False
 save_weight_matrix_no_d_reduction_matrix = False
 
 """ Time parameters """
-t0, t1, dt = 0, 250, 0.4
+t0, t1, dt = 0, 300, 0.2
 timelist = np.linspace(t0, t1, int(t1 / dt))
 
 """ Graph parameters """
-graph_str = "mouse_control_rnn"
+graph_str = "mouse_rnn"
 A = get_learned_weight_matrix(graph_str)
 U, S, Vh = np.linalg.svd(A)
 shrink_s = optimal_shrinkage(S, 1, 'operator')
@@ -53,7 +53,7 @@ dynamics_str = "rnn"
 D = np.eye(N)/0.625
 # tau = 0.625 in Hadjiabadi et al. Maximally selective
 # single-cell target for circuit control in epilepsy models
-coupling_constants = np.linspace(1.8, 2, 20)/0.625
+coupling_constants = np.linspace(1, 2, 20)/0.625
 
 
 """ SVD and dimension reduction """
