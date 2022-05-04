@@ -74,7 +74,7 @@ if plot_weight_matrix_bool:
 dynamics_str = "microbial"
 # For real gut microbiome network
 a, b, c, D = 5, 13, 10/3, 30*np.eye(N)
-coupling_constants = np.linspace(0.1, 5, 10)   # (2.5, 2.9, 50)  # (0.5, 3, 50)
+coupling_constants = np.linspace(4.9, 5, 10)   # (2.5, 2.9, 50)  # (0.5, 3, 50)
 
 # a, b, c, D = 1/4, 13/3, 1/3, 10*np.eye(N)
 

@@ -5,6 +5,7 @@ import numpy as np
 import os
 import pandas as pd
 import seaborn as sns
+import tabulate
 from plots.config_rcparams import *
 from singular_values.compute_effective_ranks import computeERank, \
     computeStableRank, findElbowPosition, computeRank,\
@@ -32,14 +33,13 @@ def plot_singular_values(singularValues,
         percentage_threshold = "%.0f" % (threshold*100)
         energyRatio = computeEffectiveRankEnergyRatio(singularValues,
                                                       threshold=threshold)
-
-        print(f"Number of singular values = {numberSingularValues}")
-        print(f"Stable rank = {stableRank}")
-        print(f"Optimal threshold = {optimalThreshold}")
-        print(f"Optimal shrinkage = {optimalShrinkage}")
-        print(f"Energy ratio = {energyRatio}")
-        print(f"Elbow position = {elbowPosition}")
-        print(f"Erank = {erank}")
+        header = ['Size', 'Rank', 'Optimal threshold',
+                  'Optimal shrinkage',
+                  'Erank', 'Elbow', 'Energy ratio', 'Stable rank']
+        properties = [[numberSingularValues,
+                       rank, optimalThreshold, optimalShrinkage,
+                       erank, elbowPosition, energyRatio, stableRank]]
+        print("\n\n\n\n", tabulate.tabulate(properties, headers=header))
 
     if cum_explained_var:
         cumulative_explained_variance = []
@@ -124,9 +124,12 @@ def plot_singular_values(singularValues,
             plt.axvline(x=optimalThreshold, linestyle="--",
                         color=deep[5],
                         label=f"Optimal threshold")
+        # ax.scatter(np.arange(1, len(singularValues) + 1, 1),
+        #            singularValues / singularValues[0], s=10)
+        # plt.ylabel("Normalized singular\n values $\\sigma_i/\\sigma_1$")
         ax.scatter(np.arange(1, len(singularValues) + 1, 1),
-                   singularValues/singularValues[0], s=10)
-        plt.ylabel("Normalized singular\n values $\\sigma_i/\\sigma_1$")
+                   singularValues, s=10)
+        plt.ylabel("Singular\n values $\\sigma_i$")
         plt.xlabel("Index $i$")
         plt.legend(loc=1, fontsize=8)
         ticks = ax.get_xticks()

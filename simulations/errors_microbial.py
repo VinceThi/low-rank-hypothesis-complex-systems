@@ -5,7 +5,6 @@ from dynamics.dynamics import microbial
 from dynamics.reduced_dynamics import reduced_microbial_vector_field
 from dynamics.error_vector_fields import *
 from graphs.get_real_networks import *
-from scipy.linalg import pinv
 from tqdm import tqdm
 from plots.config_rcparams import *
 from plots.plot_singular_values import plot_singular_values
@@ -42,12 +41,39 @@ mean_error_list = []
 for n in tqdm(range(1, N, 1)):
     Vhn = Vh[:n, :]
     D_sign = np.diag(-(np.sum(Vhn, axis=1) < 0).astype(float)) \
-             + np.diag((np.sum(Vhn, axis=1) >= 0).astype(float))
+        + np.diag((np.sum(Vhn, axis=1) >= 0).astype(float))
     M = D_sign @ Vhn
     W = A  # / S[0]  # We normalize the network by the largest singular value
-    Mp = pinv(M)
-    calD = M @ D @ Mp
+    Mp = np.linalg.pinv(M)
+    calD = M@D@Mp
     x_samples = np.random.uniform(0, 1, (N, nb_samples))
+
+    # Test zone
+    # -----------------------------------
+    xtest = x_samples[:, 0]
+    gamma = 1
+    P = Mp @ M
+    Dchi = np.diag((np.eye(N) - P)@xtest)
+    Dchinv = np.diag(((np.eye(N) - P)@xtest)**(-1))
+    DWchi = np.diag(W@(np.eye(N) - Mp @ M)@xtest)
+    d = b*(xtest**2 - (P@xtest)**2) + c*(xtest**3 - (P@xtest)**3)\
+        + gamma*(xtest*(W@xtest) - (P@xtest)*(W@P@xtest))
+    print(f"\n\nmax a ={np.max(3*c*Dchi@xtest**2)}\n\n",
+          f"max b = {np.max((2*b*Dchi + gamma*DWchi)@xtest)}\n\n",
+          f"max bcoup = {np.max(gamma*Dchi@W@xtest)}\n\n",
+          f"max c = {np.max(d)}")
+    print(f"\n\nmean a ={np.mean(3*c*Dchi@xtest**2)}\n\n",
+          f"mean b = {np.mean((2*b*Dchi + gamma*DWchi)@xtest)}\n\n",
+          f"mean bcoup = {np.mean(gamma*Dchi@W@xtest)}\n\n",
+          f"mean c = {np.mean(d)}")
+
+    # print(f"\n\nmax a ={np.max(xtest**2)}\n\n",
+    #       f"max b = {np.max(Dchinv@(2*b*Dchi  + gamma*Dchi@W + gamma*DWchi)@xtest/(3*c))}\n\n",
+    #       f"max c = {np.max(Dchinv@d/(3*c))}")
+    # print(f"\n\nmean a ={np.mean(xtest**2)}\n\n",
+    #       f"mean b = {np.mean(Dchinv@(2*b*Dchi  + gamma*Dchi@W + gamma*DWchi)@xtest/(3*c))}\n\n",
+    #       f"mean c = {np.mean(Dchinv@d/(3*c))}")
+    # -----------------------------------
     min_coupling = 0.1
     max_coupling = 5
     coupling_samples = np.random.uniform(min_coupling, max_coupling,
