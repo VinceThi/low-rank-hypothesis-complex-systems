@@ -16,7 +16,8 @@ def get_connectome_weight_matrix(graph_name):
     graph_name (str): "mouse_meso", "zebrafish_meso", "celegans",
                       "celegans_signed", "drosophila", "ciona"
     """
-    path_str = "C:/Users/thivi/Documents/GitHub/low-dimension-hypothesis/" \
+    path_str = "C:/Users/thivi/Documents/GitHub/" \
+               "low-rank-hypothesis-complex-systems/" \
                "graphs/graph_data/connectomes/"
 
     if graph_name == "celegans":
@@ -77,6 +78,7 @@ def get_connectome_weight_matrix(graph_name):
                                                create_using=Graphtype)
         A = nx.to_numpy_array(G_drosophila, weight='weight')
         # N = 21733
+        # srank = 11.5811
 
     elif graph_name == "ciona":
         A_from_xlsx = pd.read_excel(path_str +
@@ -100,6 +102,13 @@ def get_connectome_weight_matrix(graph_name):
         A = (np.loadtxt(path_str + "ABA_weight_mouse.txt")).astype(float)
         # N = 213
         # rank = 185
+
+    elif graph_name == "mouse_voxel":
+        # Coletta et al., "Network structure of the mouse brain
+        #  connectome with voxel resolution"
+
+        dict = scipy.io.loadmat(path_str + 'full_connectome_no_thr.mat')
+        A = dict['full_connectome_no_thr']
 
     elif graph_name == "zebrafish_meso":
         # Kunst et al.
@@ -150,14 +159,15 @@ def get_connectome_weight_matrix(graph_name):
 
 def get_microbiome_weight_matrix(graph_str):
 
-    path_str = f"C:/Users/thivi/Documents/GitHub/low-dimension-hypothesis/" \
+    path_str = f"C:/Users/thivi/Documents/GitHub/" \
+               f"low-rank-hypothesis-complex-systems/" \
                f"graphs/graph_data/microbiomes/{graph_str}/"
 
     if graph_str == "gut":
         # See p.27-28 of the supplementary information of
         # Reviving a failed network through microscopic interventions
         # R. Lim, J.J.T. Cabatbat, T.L.P. Martin, H. Kim, S. Kim, J. Sung,
-        # C.-M. Ghim and P.-J. Kim. Large- scale metabolic interaction network
+        # C.-M. Ghim and P.-J. Kim. Large-scale metabolic interaction network
         # of the mouse and human gut microbiota. Scientific Data, 7, 204, 2020.
         dictionary = scipy.io.loadmat(path_str+'MicrobiomeNetworks.mat')
         P = dictionary['complementarity']
@@ -178,7 +188,8 @@ def get_microbiome_weight_matrix(graph_str):
 
 def get_foodweb_weight_matrix(graph_str):
 
-    path_str = f"C:/Users/thivi/Documents/GitHub/low-dimension-hypothesis/" \
+    path_str = f"C:/Users/thivi/Documents/GitHub/" \
+               f"low-rank-hypothesis-complex-systems/" \
                f"graphs/graph_data/foodwebs/{graph_str}/"
 
     if graph_str == "little_rock":
@@ -208,7 +219,8 @@ def get_foodweb_weight_matrix(graph_str):
 
 
 def get_epidemiological_weight_matrix(graph_str):
-    path_str = f"C:/Users/thivi/Documents/GitHub/low-dimension-hypothesis/" \
+    path_str = f"C:/Users/thivi/Documents/GitHub/" \
+               f"low-rank-hypothesis-complex-systems/" \
                f"graphs/graph_data/epidemiological/{graph_str}/"
 
     if graph_str == "high_school_proximity":
@@ -226,7 +238,8 @@ def get_epidemiological_weight_matrix(graph_str):
 
 
 def get_learned_weight_matrix(graph_str):
-    path_str = f"C:/Users/thivi/Documents/GitHub/low-dimension-hypothesis/" \
+    path_str = f"C:/Users/thivi/Documents/GitHub/" \
+               f"low-rank-hypothesis-complex-systems/" \
                f"graphs/graph_data/learned/{graph_str}/"
 
     if graph_str == "zebrafish_rnn":

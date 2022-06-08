@@ -120,6 +120,52 @@ def x_prime_SIS(x, W, P):
     return solve(A, b)
 
 
+# -------------------------- Errors microbial ---------------------------------
+def jacobian_x_microbial(x, W, coupling, D, b, c):
+    return -D + np.diag(2*b*x + 3*c*x**2 + coupling*(W@x))
+
+
+def jacobian_y_microbial(x, coupling):
+    return coupling*np.diag(x)
+
+
+# def x_prime_microbial(x, W, P, coupling, b, c):
+#     """ This is a crude approximation of x' """
+#     p = P@x
+#     chi = x - p
+#     Wchi = W@chi
+#     A = 3*c*chi
+#     B = 2*b*np.diag(chi) + coupling*np.diag(Wchi)
+#     # ^ We have neglected the coupling of the quadratic equations
+#     C = b*(p**2 - x**2) + c*(p**3 - x**3) + coupling*(p*(W@p) - x*(W@x))
+#     # print(coupling*chi)
+#     # print(f"A = {A}", f"\n\nC= {C}", f"\n\nB^2 - 4AC = {B**2 - 4*A*C}")
+#     # print(f"\n\nxprime = {(-B + np.sqrt(B**2 - 4*A*C))/(2*A)}")
+#
+#     # Warning: The absolute value in the square root is imposed to guarantee
+#     # a real solution.
+#     return (-B + np.sqrt(np.abs(B**2 - 4*A*C)))/(2*A)
+
+
+def x_prime_microbial(x, W, P, coupling, b, c):
+    """ This is a crude approximation of x' """
+    p = P@x
+    chi = x - p
+    A = 3*c*chi
+    C = b*(x**2 - p**2) + c*(x**3 - p**3) + coupling*(x*(W@x) - p*(W@p))
+    print(C/A)
+    return np.sqrt(np.abs(C/A))
+
+
+def coupled_quadratic_equations_microbial(xp, x, W, P, coupling, b, c):
+    p = P@x
+    chi = x - p
+    A = 3*c*chi
+    B = 2*b*np.diag(chi) + coupling*np.diag(chi)@W + coupling*np.diag(W@chi)
+    C = b*(x**2 - p**2) + c*(x**3 - p**3) + coupling*(x*(W@x) - p*(W@p))
+    return A@xp**2 + B@xp - C
+
+
 # ------------------------------ Errors RNN -----------------------------------
 def sigmoid(x):
     return 1/(1+np.exp(-x))

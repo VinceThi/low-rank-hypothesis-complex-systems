@@ -32,8 +32,14 @@ backward_branch = False
 # Desmos exploration: https://www.desmos.com/calculator/pdtj9p2mdi
 
 """ Time parameters """
-t0, t1, dt = 0, 1.5, 0.0005     # 0, 4, 0.0005
-# 0, 3.5, 0.0009  # minimum for t1: 4 for "gut" network
+# Three setup for for "gut" network
+# 1.
+# t0, t1, dt = 0, 4, 0.0001 ou 0, 1.5, 0.0001
+# 2.
+t0, t1, dt = 0, 3000, 0.5
+# 3.
+# t0, t1, dt = 0, 6, 0.001
+
 timelist = np.linspace(t0, t1, int(t1 / dt))
 
 """ Graph parameters """
@@ -65,6 +71,8 @@ if graph_str == "SBM":
 else:
     A = get_microbiome_weight_matrix(graph_str)
     N = len(A[0])
+    # B = np.where(A > 0, A, 0)
+    # print(np.sum(B, axis=1))
 
 if plot_weight_matrix_bool:
     plot_weight_matrix(A)
@@ -73,9 +81,20 @@ if plot_weight_matrix_bool:
 """ Dynamical parameters """
 dynamics_str = "microbial"
 # For real gut microbiome network
-a, b, c, D = 5, 13, 10/3, 30*np.eye(N)
-coupling_constants = np.linspace(4.9, 5, 10)   # (2.5, 2.9, 50)  # (0.5, 3, 50)
+# 1.
+# a, b, c, D = 5, 13, 10/3, 30*np.eye(N)
+# coupling_constants =  np.linspace(0.5, 3, 50)
 
+# 2.
+a, b, c, D = 0.00005, 0.1, 0.9, 0.01*np.eye(N)
+coupling_constants = np.linspace(1.5, 4.5, 10)
+
+# 3.
+# a, b, c, D = 0, 0.15, 72, 0.0002*np.eye(N)
+# coupling_constants = np.linspace(25, 40, 5)
+
+# a, b, c, D = 0.00005, 0.01, 0.1, 0.9*np.eye(N)
+# coupling_constants = np.linspace(5, 50, 5)
 # a, b, c, D = 1/4, 13/3, 1/3, 10*np.eye(N)
 
 
@@ -85,7 +104,11 @@ Un, Sn, M = computeTruncatedSVD_more_positive(A, n)
 print("\n", computeEffectiveRanks(svdvals(A), graph_str, N))
 print(f"\nDimension of the reduced system n = {n} \n")
 
-W = A  # /Sn[0][0]  # We normalize the network by the largest singular value
+# 1.
+# W = A
+
+# 2. and 3.
+W = A/Sn[0][0]  # We normalize the network by the largest singular value
 
 Mp = pinv(M)
 s = np.array([np.eye(n, n)[0, :]])
@@ -127,7 +150,7 @@ if forward_branch:
             """ /!\ Look carefully if the dynamics reach an eq. point """
             equilibrium_point = x_glob[-1]
             x_forward_equilibrium_points_list.append(equilibrium_point)
-            x0 = x[-1, :]
+            # x0 = x[-1, :]
 
         """ Integrate reduced dynamics """
         if integrate_reduced_dynamics:
@@ -175,12 +198,13 @@ if forward_branch:
                     plt.plot(timelist, redx[:, nu],
                              color=second_community_color,
                              linewidth=redlinewidth, linestyle="--")
-            if integrate_complete_dynamics:
-                plt.plot(timelist, x_glob,
-                         linewidth=redlinewidth, color="r")
-            if integrate_reduced_dynamics or integrate_reduced_dynamics_tensor:
-                plt.plot(timelist, redX_glob,
-                         linewidth=redlinewidth, color="g")
+            # if integrate_complete_dynamics:
+            #     plt.plot(timelist, x_glob,
+            #              linewidth=redlinewidth, color="r")
+            # if integrate_reduced_dynamics or
+            #  integrate_reduced_dynamics_tensor:
+            #     plt.plot(timelist, redX_glob,
+            #              linewidth=redlinewidth, color="g")
             ylab = plt.ylabel('$X_{\\mu}$', labelpad=20)
             ylab.set_rotation(0)
             plt.tight_layout()
@@ -277,12 +301,13 @@ if integrate_complete_dynamics:
     if backward_branch:
         plt.plot(coupling_constants, x_backward_equilibrium_points_list,
                  color=first_community_color)
-if forward_branch:
-    plt.plot(coupling_constants, redx_forward_equilibrium_points_list,
-             color=second_community_color, label="Reduced")
-if backward_branch:
-    plt.plot(coupling_constants, redx_backward_equilibrium_points_list,
-             color=second_community_color)
+if integrate_reduced_dynamics:
+    if forward_branch:
+        plt.plot(coupling_constants, redx_forward_equilibrium_points_list,
+                 color=second_community_color, label="Reduced")
+    if backward_branch:
+        plt.plot(coupling_constants, redx_backward_equilibrium_points_list,
+                 color=second_community_color)
 ylab = plt.ylabel('Global activity equilibrium point $X^*$')
 plt.xlabel('Coupling constant')
 # plt.ylim([-0.02, 1.02])
@@ -296,7 +321,8 @@ if messagebox.askyesno("Python",
     window = tkinter.Tk()
     window.withdraw()  # hides the window
     file = tkinter.simpledialog.askstring("File: ", "Enter your file name")
-    path = f'C:/Users/thivi/Documents/GitHub/low-dimension-hypothesis/' \
+    path = f'C:/Users/thivi/Documents/GitHub/' \
+           f'low-rank-hypothesis-complex-systems/' \
            f'simulations/simulations_data/{dynamics_str}_data/'
     timestr = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")
 

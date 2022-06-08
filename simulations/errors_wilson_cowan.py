@@ -8,12 +8,13 @@ from graphs.get_real_networks import *
 from tqdm import tqdm
 from plots.config_rcparams import *
 from plots.plot_singular_values import plot_singular_values
+from singular_values.compute_effective_ranks import computeEffectiveRanks
 import time
 import json
 import tkinter.simpledialog
 from tkinter import messagebox
 
-plot_singvals = False
+plot_singvals = True
 
 """ Graph parameters """
 graph_str = "celegans_signed"
@@ -29,10 +30,12 @@ t = 0  # Time is not involved in the vector-field error computation
 # c = 3
 
 """ SVD """
-U, S, Vh = np.linalg.svd(A)
+# U, S, Vh = np.linalg.svd(A)
+U, S, Vh = 0, 0, 0
 if plot_singvals:
-    plot_singular_values(S, effective_ranks=True, cum_explained_var=False,
-                         ysemilog=True)
+    print(computeEffectiveRanks(S, graph_str, N))
+    plot_singular_values(S, effective_ranks=False, cum_explained_var=False,
+                         ysemilog=False)
 
 N_arange = np.arange(1, N, 1)
 nb_samples = 1000
@@ -183,7 +186,8 @@ if messagebox.askyesno("Python",
     window = tkinter.Tk()
     window.withdraw()  # hides the window
     file = tkinter.simpledialog.askstring("File: ", "Enter your file name")
-    path = f'C:/Users/thivi/Documents/GitHub/low-dimension-hypothesis/' \
+    path = f'C:/Users/thivi/Documents/GitHub/' \
+           f'low-rank-hypothesis-complex-systems/' \
            f'simulations/simulations_data/{dynamics_str}_data/' \
            f'vector_field_errors/'
     timestr = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")

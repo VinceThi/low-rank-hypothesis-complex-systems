@@ -42,18 +42,18 @@ def computeRank(singularValues, tolerance=1e-13):
     return len(singularValues[singularValues > tolerance])
 
 
-def computeERank(singularValues):
+def computeERank(singularValues, tolerance=1e-13):
     """Effective rank based on the definition using spectral entropy
      (https://ieeexplore.ieee.org/document/7098875
       and doi:10.1186/1745-6150-2-2). """
     # We use the convention 0*log(0)=0 so we remove the zero singular values
-    singularValues = singularValues[singularValues > 1e-13]
+    singularValues = singularValues[singularValues > tolerance]
     normalizedSingularValues = singularValues / np.sum(singularValues)
     return np.exp(-np.sum(normalizedSingularValues
                           * np.log(normalizedSingularValues)))
 
 
-def findElbowPosition(singularValues):
+def findEffectiveRankElbow(singularValues):
     """Effective rank based on the elbow method."""
     # Coordinates of the diagonal line y = 1 - x  using ax + by + c = 0.
     a, b, c = 1, 1, -1
@@ -65,10 +65,15 @@ def findElbowPosition(singularValues):
 
     # See https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
     # Line_defined_by_an_equation
+    # Distance between the diagonal line y = 1 - x, passing through the
+    # largest and the smallest singular value, and the position (x_i, y_i)
+    # of the i-th singular value
     distanceToDiagonal = np.abs(a*x + b*y + c) / np.sqrt(a**2 + b**2)
 
     # Returns the index of the largest distance (rank must be larger than 0).
-    return np.argmax(distanceToDiagonal) + 1
+    elbowPosition = np.argmax(distanceToDiagonal) + 1  # + 1 for indices
+    return elbowPosition - 1
+    # - 1 to have the effective rank/nb of significant singvals
 
 
 def computeEffectiveRankEnergyRatio(singularValues, threshold=0.9):
@@ -76,6 +81,9 @@ def computeEffectiveRankEnergyRatio(singularValues, threshold=0.9):
     normalizedCumulSquaredSingularValues = np.cumsum(np.square(singularValues))
     normalizedCumulSquaredSingularValues /= \
         normalizedCumulSquaredSingularValues[-1]
+    # Below, this is the min of the argmax. See the note in the documentation
+    # of np.argmax: "In case of multiple occurrences of the maximum values,
+    # the indices corresponding to the first occurrence are returned."
     return np.argmax(normalizedCumulSquaredSingularValues > threshold) + 1
 
 
@@ -113,7 +121,7 @@ def computeEffectiveRanks(singularValues, matrixName, size):
                   computeOptimalThreshold(singularValues),
                   computeOptimalShrinkage(singularValues),
                   computeERank(singularValues),
-                  findElbowPosition(singularValues),
+                  findEffectiveRankElbow(singularValues),
                   computeEffectiveRankEnergyRatio(singularValues,
                                                   threshold=0.9),
                   computeStableRank(singularValues)]]
@@ -160,7 +168,7 @@ def computeEffectiveRanksManyNetworks():
                               computeOptimalThreshold(singularValues),
                               computeOptimalShrinkage(singularValues),
                               computeERank(singularValues),
-                              findElbowPosition(singularValues),
+                              findEffectiveRankElbow(singularValues),
                               computeEffectiveRankEnergyRatio(singularValues,
                                                               threshold=0.9),
                               computeStableRank(singularValues)]

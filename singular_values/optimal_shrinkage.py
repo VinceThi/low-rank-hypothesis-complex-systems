@@ -206,10 +206,10 @@ def optimal_shrinkage(singvals, beta, loss, sigma=None):
     :param beta: aspect ratio m/n of the m-by-n matrix whose singular values
                 are given
     :param loss: loss function for which the shrinkage should be optimal
-                presently implmented: 'frobenius' (Frobenius or square
-                                                   Frobenius norm loss = MSE)
-                                      'nuclear' (nuclear norm loss)
-                                      'operator'  (operator norm loss)
+                presently implemented: 'frobenius' (Frobenius or square
+                                                    Frobenius norm loss = MSE)
+                                       'nuclear' (nuclear norm loss)
+                                       'operator'  (operator norm loss)
     :param sigma: (optional) noise standard deviation (of each entry of the
                 noise matrix) if this argument is not provided, the noise
                 level is estimated from the data.

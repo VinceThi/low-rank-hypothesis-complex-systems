@@ -5,7 +5,8 @@ from dynamics.dynamics import rnn
 from dynamics.reduced_dynamics import reduced_rnn_vector_field
 from dynamics.error_vector_fields import *
 from singular_values.optimal_shrinkage import optimal_shrinkage
-from singular_values.compute_effective_ranks import computeRank
+from singular_values.compute_effective_ranks import computeRank, \
+    computeEffectiveRanks
 from graphs.get_real_networks import *
 from tqdm import tqdm
 from plots.config_rcparams import *
@@ -16,7 +17,7 @@ import tkinter.simpledialog
 from tkinter import messagebox
 
 
-plot_singvals = False
+plot_singvals = True
 
 """ Graph parameters """
 graph_str = "mouse_control_rnn"
@@ -30,7 +31,8 @@ t = 0  # Time is not involved in the vector-field error computation
 """ SVD """
 U, S, Vh = np.linalg.svd(A)
 if plot_singvals:
-    plot_singular_values(S, effective_ranks=True, cum_explained_var=False,
+    print(computeEffectiveRanks(S, graph_str, N))
+    plot_singular_values(S, effective_ranks=False, cum_explained_var=False,
                          ysemilog=False)
 shrink_s = optimal_shrinkage(S, 1, 'operator')
 A = U@np.diag(shrink_s)@Vh
@@ -149,7 +151,8 @@ if messagebox.askyesno("Python",
     window = tkinter.Tk()
     window.withdraw()  # hides the window
     file = tkinter.simpledialog.askstring("File: ", "Enter your file name")
-    path = f'C:/Users/thivi/Documents/GitHub/low-dimension-hypothesis/' \
+    path = f'C:/Users/thivi/Documents/GitHub/' \
+           f'low-rank-hypothesis-complex-systems/' \
            f'simulations/simulations_data/{dynamics_str}_data/' \
            f'vector_field_errors/'
     timestr = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")

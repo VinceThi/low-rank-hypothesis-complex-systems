@@ -8,7 +8,7 @@ import seaborn as sns
 import tabulate
 from plots.config_rcparams import *
 from singular_values.compute_effective_ranks import computeERank, \
-    computeStableRank, findElbowPosition, computeRank,\
+    computeStableRank, findEffectiveRankElbow, computeRank,\
     computeEffectiveRankEnergyRatio, \
     computeOptimalShrinkage, computeOptimalThreshold
 
@@ -21,24 +21,22 @@ def plot_singular_values(singularValues,
     singularValues = np.sort(singularValues)[::-1]
 
     if effective_ranks:
-        numberSingularValues = len(singularValues)
         rank = computeRank(singularValues)
         stableRank = computeStableRank(singularValues)
         optimalThreshold = computeOptimalThreshold(singularValues)
         norm_str = 'frobenius'
         optimalShrinkage = computeOptimalShrinkage(singularValues)
-        elbowPosition = findElbowPosition(singularValues)
+        elbowRank = findEffectiveRankElbow(singularValues)
         erank = computeERank(singularValues)
         threshold = 0.9
         percentage_threshold = "%.0f" % (threshold*100)
         energyRatio = computeEffectiveRankEnergyRatio(singularValues,
                                                       threshold=threshold)
-        header = ['Size', 'Rank', 'Optimal threshold',
+        header = ['Rank', 'Optimal threshold',
                   'Optimal shrinkage',
                   'Erank', 'Elbow', 'Energy ratio', 'Stable rank']
-        properties = [[numberSingularValues,
-                       rank, optimalThreshold, optimalShrinkage,
-                       erank, elbowPosition, energyRatio, stableRank]]
+        properties = [[rank, optimalThreshold, optimalShrinkage,
+                       erank, elbowRank, energyRatio, stableRank]]
         print("\n\n\n\n", tabulate.tabulate(properties, headers=header))
 
     if cum_explained_var:
@@ -57,7 +55,7 @@ def plot_singular_values(singularValues,
             plt.axvline(x=stableRank, linestyle="--",
                         color=deep[0],
                         label="Stable rank")
-            plt.axvline(x=elbowPosition, linestyle="--",
+            plt.axvline(x=elbowRank, linestyle="--",
                         color=deep[1],
                         label="Elbow position")
             plt.axvline(x=erank, linestyle="--",
@@ -109,9 +107,9 @@ def plot_singular_values(singularValues,
             plt.axvline(x=stableRank, linestyle="--",
                         color=deep[0],
                         label="Stable rank")
-            plt.axvline(x=elbowPosition, linestyle="--",
+            plt.axvline(x=elbowRank, linestyle="--",
                         color=deep[1],
-                        label="Elbow position")
+                        label="Elbow rank")
             plt.axvline(x=erank, linestyle="--",
                         color=deep[2],
                         label="erank")

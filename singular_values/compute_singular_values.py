@@ -40,9 +40,10 @@ def computeSingularValues():
 
             A = gt.adjacency(theGraph, weight=weights)
 
-            numericalZero = 1e-13
             singularValues = la.svdvals(A.toarray())
-            singularValues = singularValues[singularValues > numericalZero]
+            # It's safer to keep all the computed singular values
+            # numericalZero = 1e-13
+            # singularValues = singularValues[singularValues > numericalZero]
 
             with open(singularValuesFilename, 'wb') as singularValuesFile:
                 singularValuesFile.write('# Singular values\n'.encode('ascii'))

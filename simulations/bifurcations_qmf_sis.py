@@ -129,7 +129,8 @@ if messagebox.askyesno("Python",
     window = tkinter.Tk()
     window.withdraw()  # hides the window
     file = tkinter.simpledialog.askstring("File: ", "Enter your file name")
-    path = f'C:/Users/thivi/Documents/GitHub/low-dimension-hypothesis/' \
+    path = f'C:/Users/thivi/Documents/GitHub/' \
+           f'low-rank-hypothesis-complex-systems/' \
            f'simulations/simulations_data/{dynamics_str}_data/'
     timestr = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")
 
