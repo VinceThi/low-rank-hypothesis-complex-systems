@@ -91,6 +91,10 @@ def computeStableRank(singularValues):
     return np.sum(singularValues*singularValues) / np.max(singularValues)**2
 
 
+def computeNuclearRank(singularValues):
+    return np.sum(singularValues) / np.max(singularValues)
+
+
 def computeOptimalThreshold(singularValues):
     """ Optimal threshold for a given norm for a square matrix with gaussian
      noise (see Gavish, Donoho, 2014) """
@@ -115,7 +119,7 @@ def computeEffectiveRanks(singularValues, matrixName, size):
             ranks.
     """
     header = ['Name', 'Size', 'Rank', 'Optimal threshold', 'Optimal shrinkage',
-              'Erank', 'Elbow', 'Energy ratio', 'Stable rank']
+              'Erank', 'Elbow', 'Energy ratio', 'Stable rank', 'Nuclear rank']
     properties = [[matrixName, size,
                   computeRank(singularValues),
                   computeOptimalThreshold(singularValues),
@@ -124,7 +128,8 @@ def computeEffectiveRanks(singularValues, matrixName, size):
                   findEffectiveRankElbow(singularValues),
                   computeEffectiveRankEnergyRatio(singularValues,
                                                   threshold=0.9),
-                  computeStableRank(singularValues)]]
+                  computeStableRank(singularValues),
+                  computeNuclearRank(singularValues)]]
     return tabulate.tabulate(properties, headers=header)
 
 
@@ -142,7 +147,7 @@ def computeEffectiveRanksManyNetworks():
     if not os.path.isfile(effectiveRanksFilename):
         header = ['Name', 'Size', 'Rank', 'Optimal threshold',
                   'Optimal shrinkage', 'Erank', 'Elbow',
-                  'Energy ratio', 'Stable rank']
+                  'Energy ratio', 'Stable rank', 'Nuclear rank']
         effectiveRanksDF = pd.DataFrame(columns=header)
         effectiveRanksList = []
     else:
@@ -171,7 +176,8 @@ def computeEffectiveRanksManyNetworks():
                               findEffectiveRankElbow(singularValues),
                               computeEffectiveRankEnergyRatio(singularValues,
                                                               threshold=0.9),
-                              computeStableRank(singularValues)]
+                              computeStableRank(singularValues),
+                              computeNuclearRank(singularValues)]
             effectiveRanksList.append(effectiveRanks)
 
     effectiveRanksDF = pd.DataFrame(effectiveRanksList, columns=header)

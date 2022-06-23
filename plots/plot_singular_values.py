@@ -2,11 +2,14 @@
 # @author: Antoine Allard <antoineallard.info> and Vincent Thibeault
 from itertools import cycle
 import numpy as np
+from scipy.linalg import svdvals
 import os
 import pandas as pd
 import seaborn as sns
 import tabulate
 from plots.config_rcparams import *
+import time
+import networkx as nx
 from singular_values.compute_effective_ranks import computeERank, \
     computeStableRank, findEffectiveRankElbow, computeRank,\
     computeEffectiveRankEnergyRatio, \
@@ -17,6 +20,7 @@ def plot_singular_values(singularValues,
                          effective_ranks=True,
                          cum_explained_var=False,
                          ysemilog=False):
+    """ Scree plot of the singular values """
 
     singularValues = np.sort(singularValues)[::-1]
 
@@ -141,6 +145,68 @@ def plot_singular_values(singularValues,
             plt.tick_params(axis='y', which='both', left=True,
                             right=False, labelbottom=False)
         plt.show()
+
+
+def plot_singular_values_histogram(singularValues,
+                                   nb_bins=1000,
+                                   bar_color="#064878",
+                                   xlabel="Normalized singular"
+                                          " values $\\sigma$",
+                                   ylabel="Spectral density $\\rho(\\sigma)$"):
+    # axvline_color="#ef8a62"
+    # for i, sigma in enumerate(singularValues):
+    #     c = axvline_color
+    #     if isinstance(axvline_color, list):
+    #         c = axvline_color[i]
+    #     ax.axvline(sigma, color=c, zorder=0)
+    plt.figure(figsize=(6, 4))
+    weights = np.ones_like(singularValues) / float(len(singularValues))
+    plt.hist(singularValues/np.max(singularValues), bins=nb_bins,
+             color=bar_color, edgecolor=None,
+             linewidth=1, weights=weights)
+    plt.tick_params(axis='both', which='major')
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel, labelpad=20)
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_singular_values_histogram_random_networks(random_graph_generator,
+                                                   random_graph_args,
+                                                   nb_networks=1000,
+                                                   nb_bins=1000,
+                                                   bar_color="#064878",
+                                                   xlabel="Singular"
+                                                          " values $\\sigma$",
+                                                   ylabel="Spectral density"
+                                                          " $\\rho(\\sigma)$"):
+    from singular_values.marchenko_pastur_pdf import marchenko_pastur_pdf
+    plt.figure(figsize=(6, 4))
+    t0 = time.clock()
+    singularValues = np.array([])
+    i = 0
+    for k in range(0, nb_networks):
+        A = nx.to_numpy_array(random_graph_generator(*random_graph_args))
+        singularValues_instance = svdvals(A)
+        singularValues = np.concatenate((singularValues,
+                                         singularValues_instance))
+        i += 1
+    print((time.clock()-t0)/60, "minutes to process")
+    weights = np.ones_like(singularValues) / float(len(singularValues))
+    # N = random_graph_args[0]
+    # p = 0.1
+    # var = N*p*(1-p)
+    # x = np.linspace(0.01, 2*np.sqrt(var) - 0.0001, 1000)
+    # plt.plot(x, marchenko_pastur_pdf(x, var, 1), "#111111")
+    # plt.plot(x, np.sqrt((4*var - x)/x)/(2*np.pi*var))
+    plt.hist(singularValues, bins=nb_bins,
+             color=bar_color, edgecolor=None,
+             linewidth=1, weights=weights)
+    plt.tick_params(axis='both', which='major')
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel, labelpad=20)
+    plt.tight_layout()
+    plt.show()
 
 
 def plot_singular_values_given_effective_ranks(singularValues, effectiveRanks):

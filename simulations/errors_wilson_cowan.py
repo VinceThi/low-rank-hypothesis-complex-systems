@@ -20,6 +20,8 @@ plot_singvals = True
 graph_str = "celegans_signed"
 A = get_connectome_weight_matrix(graph_str)
 N = len(A[0])  # Dimension of the complete dynamics
+# from plots.plot_weight_matrix import plot_weight_matrix
+# plot_weight_matrix(A)
 
 """ Dynamical parameters """
 dynamics_str = "wilson_cowan"

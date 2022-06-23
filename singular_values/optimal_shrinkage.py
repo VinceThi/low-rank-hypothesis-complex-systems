@@ -15,14 +15,19 @@ Available at: https://purl.stanford.edu/vg705qn9070
 
 See also the thesis of P.O. Perry : https://arxiv.org/pdf/0909.3052.pdf
 
+Finally, we correct the error for the optimal singular value shrinkage for
+operator norm loss with the Theorem 3.1 of
+
+W. Leeb, "Optimal singular value shrinkage for operator norm loss:
+ Extending to non-square matrices", Stat. Probab. Lett., 186, 2022.
+
 We modified the code in our style and made few modifications.
 """
 
 import numpy as np
 import logging
 import warnings
-from scipy import integrate
-
+from singular_values.marchenko_pastur_pdf import median_marcenko_pastur
 
 # Create logger
 log = logging.getLogger(__name__)
@@ -39,42 +44,6 @@ def optimal_SVHT_coef_sigma_unknown(beta):
     """ Implement Equation (5) of Gavish, Donoho (2014).
     Ref: https://github.com/erichson/optht  """
     return 0.56*beta**3 - 0.95*beta**2 + 1.82*beta + 1.43
-
-
-def marcenko_pastur_distribution(x, topSpec, botSpec, beta):
-    """ Ref: https://github.com/erichson/optht """
-    if (topSpec - x) * (x - botSpec) > 0:
-        return np.sqrt((topSpec - x)*(x - botSpec))/(beta*x)/(2*np.pi)
-    else:
-        return 0
-
-
-def median_marcenko_pastur(beta):
-    """ Compute median of Marcenko-Pastur distribution.
-    Ref: https://github.com/erichson/optht """
-    botSpec = lobnd = (1 - np.sqrt(beta))**2
-    topSpec = hibnd = (1 + np.sqrt(beta))**2
-    change = 1
-
-    while change & ((hibnd - lobnd) > .001):
-        change = 0
-        x = np.linspace(lobnd, hibnd, 10)
-        y = np.zeros_like(x)
-        for i in range(len(x)):
-            yi = integrate.quad(marcenko_pastur_distribution,
-                                x[i], topSpec,
-                                args=(topSpec, botSpec, beta))[0]
-            y[i] = 1.0 - yi
-
-        if np.any(y < 0.5):
-            lobnd = np.max(x[y < 0.5])
-            change = 1
-
-        if np.any(y > 0.5):
-            hibnd = np.min(x[y > 0.5])
-            change = 1
-
-    return (hibnd + lobnd) / 2.
 
 
 def optimal_threshold(singvals, beta, sigma=None, target_rank=False):
@@ -177,8 +146,12 @@ def optimal_shrinker_frobenius(y, beta):
 
 def optimal_shrinker_operator(y, beta):
     """ Equation (9) in Optimal Shrinkage of Singular Values of Gavish and
-        Donoho 2017 """
-    return np.maximum(inverse_asymptotic_singvals(y, beta), np.zeros(len(y)))
+        Donoho 2017 for square matrices and the correction of William Leeb,
+        "Optimal singular value shrinkage for operator norm loss:
+        Extending to non-square matrices", 2022. """
+    t = inverse_asymptotic_singvals(y, beta)
+    eta = t*np.sqrt((t**2 + np.min(1, beta))/(t**2 + np.max(1, beta)))
+    return np.maximum(eta, np.zeros(len(y)))
 
 
 def optimal_shrinker_nuclear(y, beta):
@@ -269,7 +242,7 @@ def optimal_shrinkage(singvals, beta, loss, sigma=None):
             shrinked_singvals[
                 np.where((x**4 - np.sqrt(beta)*x*y - beta) <= 0)] = 0
             # See Eq. (10) of the paper    ^
-        elif loss == 'operator':
+        elif loss == 'operator':  # with the correction of W. Leeb, 2022
             shrinked_singvals = sigma*optimal_shrinker_operator(y, beta)
         else:
             raise ValueError("Unknown loss."

@@ -2,18 +2,26 @@
 # @author: Vincent Thibeault
 
 import scipy.linalg as la
-from plots.plot_singular_values import plot_singular_values
-from sklearn.utils.extmath import randomized_svd
+import matplotlib.pyplot as plt
+from plots.plot_singular_values import plot_singular_values, \
+    plot_singular_values_histogram
+# from sklearn.utils.extmath import randomized_svd
 from graphs.get_real_networks import get_connectome_weight_matrix
 from singular_values.compute_effective_ranks import *
 
-compute_singvals = False
-
-networkName = "mouse_voxel"  # "drosophila"
+networkName = "celegans_signed"
+# "zebrafish_meso", "drosophila","mouse_voxel",
 singularValuesFilename = 'properties/' + networkName \
                          + '_singular_values.txt'
 
-if compute_singvals:
+if networkName == "drosophila":
+    N = 21733
+    singularValues = np.loadtxt(singularValuesFilename)
+elif networkName == "mouse_voxel":
+    N = 15314
+    singularValues = np.loadtxt(singularValuesFilename)
+
+else:
     W = get_connectome_weight_matrix(networkName)
     N = len(W[0])
     # U, singularValues, Vh = randomized_svd(W, 200)
@@ -22,17 +30,17 @@ if compute_singvals:
     with open(singularValuesFilename, 'wb') as singularValuesFile:
         singularValuesFile.write('# Singular values\n'.encode('ascii'))
         np.savetxt(singularValuesFile, singularValues)
-else:
-    if networkName == "drosophila":
-        N = 21733
-    elif networkName == "mouse_voxel":
-        N = 15314
 
-    singularValues = np.loadtxt(singularValuesFilename)
 
 print(computeEffectiveRanks(singularValues, networkName, N))
 
-plot_singular_values(singularValues, effective_ranks=0)
+plt.figure(figsize=(6, 4))
+
+# plot_singular_values(singularValues, effective_ranks=0)
+
+plot_singular_values_histogram(singularValues,
+                               bar_color="#064878",
+                               nbins=100)
 
 
 """ To keep for the svg save ... """

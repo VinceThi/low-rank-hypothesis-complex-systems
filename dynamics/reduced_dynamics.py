@@ -36,7 +36,7 @@ def reduced_microbial(t, X, calW_tensor3, coupling,
     :param a: See below
     :param b: See below
     :param c: See below
-    The correspondances with Sanhedrai et al., Nat. Phys. 2022, is
+    The correspondances with Sanhedrai et al., Nat. Phys. 2022, are
     a = F, b = B(1 + K/C), c = B/C, D = BK*np.eye(N)
     F: migration rate
     B: Logistic growth rate

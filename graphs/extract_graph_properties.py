@@ -66,6 +66,12 @@ def analyzeGraph(networkFilename):
 
     averageDegree = density * (nbVertices - 1)
 
+    # TODO we should also add a column for "Signed", "Multilayer" + remove tag
+    # TODO we should deal with the tag "Projection", "Timestamps", "Temporal"
+    # TODO we should also include the tag that I've introduced in the script "plot_fig_1_effective_rank_vs_rank_scatterplot"
+    # TODO we should add our connectomes, learned net.,... to graphs/graph_data/graph_properties.txt and singular_values/properties/effective_ranks.txt
+    # TODO we could include larger networks in Netzschleuder, but it's not necessary (we have already the drosophila and mouse_voxel)
+
     invalidWeightTags = ['Weighted', 'Unweighted', 'Metadata', 'Multigraph']
     tags = [tag for tag in theGraph.gp.tags if tag not in invalidWeightTags]
     tags = ','.join(tag for tag in tags)
