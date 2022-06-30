@@ -107,7 +107,7 @@ def optimal_threshold(singvals, beta, sigma=None, target_rank=False):
             warnings.warn("The noise was predicted to be zero, because"
                           " the median of the singular values is 0."
                           " The rank of the original matrix is returned.")
-            return len(singvals[singvals > 1e-13])
+            return np.nan  # len(singvals[singvals > 1e-13])
     else:
         log.info('Sigma known.')
         # Compute optimal ``w(beta)``
@@ -230,10 +230,12 @@ def optimal_shrinkage(singvals, beta, loss, sigma=None):
         warnings.warn("The noise was predicted to be zero, because"
                       " the median of the singular values is 0. The original"
                       " singular values are returned.")
-        return singvals
+        return np.nan   # singvals
     else:
         y = singvals/sigma
         x = inverse_asymptotic_singvals(y, beta)
+
+        print(sigma)
 
         if loss == 'frobenius':
             shrinked_singvals = sigma*optimal_shrinker_frobenius(y, beta)

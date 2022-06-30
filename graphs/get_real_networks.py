@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import scipy.io
 import warnings
+from graphs.weight_split_nws import unpack
 warnings.simplefilter(action='ignore', category=FutureWarning)
 pd.options.mode.chained_assignment = None  # default='warn'
 
@@ -107,8 +108,8 @@ def get_connectome_weight_matrix(graph_name):
         # Coletta et al., "Network structure of the mouse brain
         #  connectome with voxel resolution"
 
-        dict = scipy.io.loadmat(path_str + 'full_connectome_no_thr.mat')
-        A = dict['full_connectome_no_thr']
+        dictionary = scipy.io.loadmat(path_str + 'full_connectome_no_thr.mat')
+        A = dictionary['full_connectome_no_thr']
 
     elif graph_name == "zebrafish_meso":
         # Kunst et al.
@@ -240,20 +241,156 @@ def get_epidemiological_weight_matrix(graph_str):
 def get_learned_weight_matrix(graph_str):
     path_str = f"C:/Users/thivi/Documents/GitHub/" \
                f"low-rank-hypothesis-complex-systems/" \
-               f"graphs/graph_data/learned/{graph_str}/"
+               f"graphs/graph_data/learned/"
 
-    if graph_str == "zebrafish_rnn":
-        W = np.load(path_str + "zebrafish1-presz-model.npz")["J"]
+    if graph_str == "zebrafish_rnn":        # From Hadjiabadi et al. (2021)
+        # https://data.mendeley.com/datasets/dghdz45rfd/2
+        W = np.load(path_str + f"{graph_str}/"
+                    + "zebrafish1-presz-model.npz")["J"]
 
     elif graph_str == "mouse_rnn":
-        W = np.load(path_str + "mouse-tle1-model.npz")["J"]
+        # From Hadjiabadi et al. (2021)
+        # https://data.mendeley.com/datasets/dghdz45rfd/2
+        W = np.load(path_str + f"{graph_str}/" + "mouse-tle1-model.npz")["J"]
 
     elif graph_str == "mouse_control_rnn":
-        W = np.load(path_str + "mouse-control1-model.npz")["J"]
+        # From Hadjiabadi et al. (2021)
+        # https://data.mendeley.com/datasets/dghdz45rfd/2
+        W = np.load(path_str + f"{graph_str}/"
+                    + "mouse-control1-model.npz")["J"]
+
+    elif graph_str in ["00001", "00100", "00200", "00300", "00400",
+                       "00500", "00600", "00700", "00800", "00900"]:
+        # Data from https://github.com/gabrieleilertsen/nws
+
+        # theta is the notation of the paper : "Classifying the classifier:
+        #  Dissecting the weight space of neural networks" of
+        # G. Eilertsen et al.
+        theta = np.fromfile(path_str+f"cnn/cnn_nws_main_{graph_str}_020.bin",
+                            'double')
+        meta = pd.read_csv(path_str+f"cnn/meta_{graph_str}.csv")
+        # About the data
+        # with pd.option_context('display.max_rows', None,
+        #                        'display.max_columns', None):
+        #     print(meta)
+        fsize = meta["filter_size"][0]
+        ldepth = [meta["depth_conv"][0], meta["depth_fc"][0]]
+        lwidth = [meta["width_conv"][0], meta["width_fc"][0]]
+
+        (conv, fc) = unpack(theta, fsize, ldepth, lwidth)
+        # From Gabriel Eilertsen :
+        # Here, conv and fc are lists with the separate layer weights for
+        # convolutional and fully connected layers, respectively. fc holds
+        # layers through the first index, i.e. fc[0,:] are the weights for
+        # the first fully connected layer, where fc[0,0] is the weight matrix,
+        #  fc[0,1] is the bias vector, and fc[0,2:] are weights for batch
+        # normalization.
+
+        weight_matrix_list = fc[:, 0]
+
+        # We now regroup the weights between each layer in one large square
+        # matrix characterizing the network structure of the
+        # fully-connected layers
+
+        # 1- getting block diagonal matrix
+        W = scipy.linalg.block_diag(*weight_matrix_list)
+        nb_neurons_in_first, nb_neurons_in_last = \
+            weight_matrix_list[0].shape[0], weight_matrix_list[-1].shape[-1]
+
+        # 2- adding first columns of zeros
+        W = np.concatenate([np.zeros((W.shape[0], nb_neurons_in_first)), W],
+                           axis=1)
+
+        # 3- adding last row of zeros
+        W = np.concatenate([W, np.zeros((nb_neurons_in_last, W.shape[-1]))],
+                           axis=0)
+        # ^ This is a multipartite directed network
 
     else:
         raise ValueError("This graph_str learned is not an option. "       
-                         "See the documentation of"
+                         "See the documentation of "
                          "get_learned_weight_matrix")
 
+    return W
+
+
+def get_economic_weight_matrix(graph_str):
+    path_str = f"C:/Users/thivi/Documents/GitHub/" \
+               f"low-rank-hypothesis-complex-systems/" \
+               f"graphs/graph_data/economic/"
+    if graph_str == "AT_2008":
+        """Wachs, J., Fazekas, M. & Kertész, J. Corruption risk in
+         contracting markets: a network science perspective.                                            
+         Int J Data Sci Anal (2020). 10.1007/s41060-019-00204-1"""
+        # Directed, Weighted, Bipartite, Temporal
+        G = nx.read_gml(path_str + f'country_year_networks/{graph_str}.gml')
+        W = nx.to_numpy_array(G)
+
+    elif graph_str == "CY_2015":
+        """Wachs, J., Fazekas, M. & Kertész, J. Corruption risk in
+         contracting markets: a network science perspective. 
+         Int J Data Sci Anal (2020). 10.1007/s41060-019-00204-1"""
+        # Directed, Weighted, Bipartite, Temporal
+        G = nx.read_gml(path_str + f'country_year_networks/{graph_str}.gml')
+        W = nx.to_numpy_array(G)
+
+    elif graph_str == "EE_2010":
+        """Wachs, J., Fazekas, M. & Kertész, J. Corruption risk in
+         contracting markets: a network science perspective. 
+         Int J Data Sci Anal (2020). 10.1007/s41060-019-00204-1"""
+        # Directed, Weighted, Bipartite
+        G = nx.read_gml(path_str + f'country_year_networks/{graph_str}.gml')
+        W = nx.to_numpy_array(G)
+
+    elif graph_str == "PT_2009":
+        """Wachs, J., Fazekas, M. & Kertész, J. Corruption risk in
+         contracting markets: a network science perspective. 
+         Int J Data Sci Anal (2020). 10.1007/s41060-019-00204-1"""
+        # Directed, Weighted, Bipartite
+        G = nx.read_gml(path_str + f'country_year_networks/{graph_str}.gml')
+        W = nx.to_numpy_array(G)
+
+    elif graph_str == "SI_2016":
+        """Wachs, J., Fazekas, M. & Kertész, J. Corruption risk in            
+         contracting markets: a network science perspective.                  
+         Int J Data Sci Anal (2020). 10.1007/s41060-019-00204-1"""
+        # Directed, Weighted, Bipartite
+        G = nx.read_gml(path_str + f'country_year_networks/{graph_str}.gml')
+        W = nx.to_numpy_array(G)
+
+    elif graph_str == "financial_institution07-Apr-1999":
+        """ https://doi.org/10.1371/journal.pone.0198807 """
+        # Undirected, Weighted
+        G = nx.read_weighted_edgelist(
+            path_str + f"investor_nokia/{graph_str}.txt", delimiter=',',
+            create_using=nx.Graph)
+        W = nx.to_numpy_array(G)
+
+    elif graph_str == "households_04-Sep-1998":
+        """ https://doi.org/10.1371/journal.pone.0198807 """
+        # Undirected, Weighted
+        G = nx.read_weighted_edgelist(
+            path_str + f"investor_nokia/{graph_str}.txt", delimiter=',',
+            create_using=nx.Graph)
+        W = nx.to_numpy_array(G)
+
+    elif graph_str == "households_09-Jan-2002":
+        """ https://doi.org/10.1371/journal.pone.0198807 """
+        # Undirected, Weighted
+        G = nx.read_weighted_edgelist(
+            path_str + f"investor_nokia/{graph_str}.txt", delimiter=',',
+            create_using=nx.Graph)
+        W = nx.to_numpy_array(G)
+
+    elif graph_str == "non_financial_institution04-Jan-2001":
+        """ https://doi.org/10.1371/journal.pone.0198807 """
+        # Undirected, Weighted
+        G = nx.read_weighted_edgelist(
+            path_str + f"investor_nokia/{graph_str}.txt", delimiter=',',
+            create_using=nx.Graph)
+        W = nx.to_numpy_array(G)
+    else:
+        raise ValueError("This graph_str economic is not an option. "       
+                         "See the documentation of "
+                         "get_economic_weight_matrix")
     return W

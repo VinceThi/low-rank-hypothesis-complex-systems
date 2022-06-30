@@ -3,6 +3,7 @@
 """
 We modify the code of Ben Erichson at https://github.com/erichson/optht,
 which is a Python traduction of the Matlab script optimal_SVHT_coef.m from
+Gavish and Donoho 2017.
 """
 import numpy as np
 from scipy.integrate import quad
