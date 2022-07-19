@@ -17,7 +17,7 @@ def random_graph_generators(graph_str, N):
     elif graph_str == "SBM":
         generator = nx.stochastic_block_model
         pq = [[0.4, 0.1], [0.05, 0.2]]
-        sizes = [1 - N// 4, N // 4]
+        sizes = [1 - N//4, N // 4]
         args = (N, pq,
                 sizes)  # TODO verify
 
@@ -32,8 +32,8 @@ def random_graph_generators(graph_str, N):
 
     elif graph_str == "barabasi_albert":
         generator = nx.barabasi_albert_graph
-        k = 1
-        args = (N, k)
+        m = 30
+        args = (N, m)
 
     elif graph_str == "hard_configuration":
         generator = nx.configuration_model

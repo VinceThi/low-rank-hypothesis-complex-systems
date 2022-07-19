@@ -37,15 +37,16 @@ N_arange_microbial = np.arange(1, len(A_microbial[0])+1, 1)
 
 
 """ RNN """
-path_error_rnn = "2022_03_25_16h19min32sec_1000_samples_RMSE_vector_field" \
-                 "_rnn_mouse_control_rnn.json"
-path_upper_bound_rnn = "2022_03_25_16h19min32sec_1000_samples_upper_bound" \
-                       "_RMSE_vector_field_rnn_mouse_control_rnn.json"
+path_error_rnn = "2022_07_12_15h51min54sec_1000_samples_frobenius_shrinkage" \
+                 "_RMSE_vector_field_rnn_mouse_control_rnn.json"
+path_upper_bound_rnn = "2022_07_12_15h51min54sec_1000_samples_frobenius" \
+                       "_shrinkage_upper_bound_RMSE_vector_field_rnn" \
+                       "_mouse_control_rnn.json"
 graph_str = "mouse_control_rnn"
 A_rnn = get_learned_weight_matrix(graph_str)
 N = len(A_rnn[0])  # Dimension of the complete dynamics  669
 U, S, Vh = np.linalg.svd(A_rnn)
-shrink_s = optimal_shrinkage(S, 1, 'operator')
+shrink_s = optimal_shrinkage(S, 1, 'frobenius')
 A_rnn = U@np.diag(shrink_s)@Vh
 N_arange_rnn = np.arange(1, len(A_rnn[0])+1, 1)
 
@@ -90,7 +91,7 @@ def plot_singvals(ax, singularValues, ylabel_bool=False):
 
 
 def plot_error(ax, dynamics_str, path_error, path_upper_bound, N_arange,
-               xlabel_bool=False):
+               xlabel_bool=True):
 
     """ Warning: For the sake of vizualisation, we set the 0 values to the
     minimum value of the log scale and add a 0 value on the y-axis. Symlog
@@ -163,7 +164,6 @@ def plot_error(ax, dynamics_str, path_error, path_upper_bound, N_arange,
     ax.fill_between(N_arange, fill_between_ub1, fill_between_ub2,
                     color=dark_grey, alpha=0.5)
 
-
     # if ylabel_bool:
     #    ybox1 = TextArea("$\\langle \\mathcal{E}_f \\rangle_x$ ",
     #                     textprops=dict(color=deep[3], size=15, rotation=90,
@@ -200,10 +200,27 @@ def plot_error(ax, dynamics_str, path_error, path_upper_bound, N_arange,
     if dynamics_str is not "rnn":
         if xlabel_bool:
             plt.xlabel('Dimension $n$')
-        ticks = ax.get_xticks()
-        ticks[ticks.tolist().index(0)] = 1
-        ticks = [i for i in ticks
-                 if -0.1*len(N_arange) < i < 1.1*len(N_arange)]
+    #     ticks = ax.get_xticks()
+    #     print(ticks)
+    #     ticks[ticks.tolist().index(0)] = 1
+    #     ticks = [i for i in ticks
+    #              if -0.1*len(N_arange) < i < 1.1*len(N_arange)]
+    #     print(ticks)
+    #     plt.xticks(ticks)
+    if dynamics_str == "qmf_sis" or dynamics_str == "wilson_cowan":
+        ticks = ax.get_xticks().tolist()
+        ticks[ticks.index(0)] = 1
+        ticks += [100, 200, 300]
+        # ticks = [i for i in ticks
+        #          if -0.1*len(N_arange) < i < 1.1*len(N_arange)]
+        plt.xticks(ticks)
+
+    if dynamics_str == "microbial":
+        ticks = ax.get_xticks().tolist()
+        ticks[ticks.index(0)] = 1
+        ticks += [250, 500, 750]
+        # ticks = [i for i in ticks
+        #          if -0.1*len(N_arange) < i < 1.1*len(N_arange)]
         plt.xticks(ticks)
 
     ax.set_ylim([0.75*ymin, ymax])
@@ -215,39 +232,51 @@ def plot_error(ax, dynamics_str, path_error, path_upper_bound, N_arange,
 
 
 """ -----------------------  Figure 3 ------------------------------------- """
-fig = plt.figure(figsize=(6, 5.5))  # 5, 4.5))
+# fig = plt.figure(figsize=(6, 5.5))  # 5, 4.5))
+fig = plt.figure(figsize=(11, 3))
 
 title_pad = -12
+letter_posx, letter_posy = -0.27, 1.08
 
 # --------------------------- SIS ---------------------------------------------
-ax1 = plt.subplot(221)
-ax1.set_title("(a) SIS", fontsize=fontsize_legend, pad=title_pad)
+ax1 = plt.subplot(141)
+ax1.set_title("SIS", fontsize=fontsize_legend,
+              pad=title_pad)
 plot_error(ax1, "qmf_sis", path_error_sis, path_upper_bound_sis, N_arange_sis)
 plot_singvals(ax1, S_sis)
+ax1.set_xlabel('Dimension $n$')
+ax1.text(letter_posx, letter_posy, "a", fontweight="bold",
+         horizontalalignment="center", verticalalignment="top",
+         transform=ax1.transAxes)
 
 
 # ----------------------- Wilson-Cowan-----------------------------------------
-ax2 = plt.subplot(222)
-ax2.set_title("(b) Wilson-Cowan", fontsize=fontsize_legend, pad=title_pad)
+ax2 = plt.subplot(142)
+ax2.set_title("Wilson-Cowan", fontsize=fontsize_legend,
+              pad=title_pad)
 plot_error(ax2, "wilson_cowan", path_error_wc,
            path_upper_bound_wc, N_arange_wc)
 plot_singvals(ax2, S_wc)
+ax2.text(letter_posx, letter_posy, "b", fontweight="bold",
+         horizontalalignment="center", verticalalignment="top",
+         transform=ax2.transAxes)
 
 
 # --------------------------- RNN ---------------------------------------------
-ax3 = plt.subplot(223)
+ax3 = plt.subplot(143)
 divider = make_axes_locatable(ax3)
 ax32 = divider.new_horizontal(size="100%", pad=0.1)
 fig.add_axes(ax32)
 plot_error(ax3, "rnn", path_error_rnn,
-           path_upper_bound_rnn, N_arange_rnn,
-           xlabel_bool=True)
+           path_upper_bound_rnn, N_arange_rnn)
 plot_singvals(ax3, shrink_s)
 ax3.set_xlim(-10, 120)
 plot_error(ax32, "rnn", path_error_rnn,
-           path_upper_bound_rnn, N_arange_rnn,
-           xlabel_bool=True)
+           path_upper_bound_rnn, N_arange_rnn)
 plot_singvals(ax32, shrink_s)
+ax3.text(letter_posx-0.2, letter_posy, "c", fontweight="bold",
+         horizontalalignment="center", verticalalignment="top",
+         transform=ax3.transAxes)
 ax32.set_xlim(630, 670)
 ax32.tick_params(left=False, labelleft=False)
 ax32.set_yticks([])
@@ -257,7 +286,7 @@ kwargs = dict(transform=ax32.transAxes, color=dark_grey, clip_on=False)
 ax32.plot((-d, +d), (-d, +d), zorder=10, linewidth=1.5, **kwargs)
 kwargs.update(transform=ax3.transAxes)
 ax3.plot((1 - d, 1 + d), (-d, d), zorder=10, linewidth=1.5, **kwargs)
-ax32.text(605, 100, "(c) Chaotic RNN", fontsize=12)
+ax32.text(605, 100, "Chaotic RNN", fontsize=12)
 ax3.text(-120/3.3, 0.0000035, "0 -")
 ax3.set_xlabel('Dimension $n$')
 ax3.xaxis.set_label_coords(1.1, -0.16)
@@ -272,11 +301,15 @@ ax32.set_xticks([650])
 
 
 # ------------------------ Microbial ------------------------------------------
-ax4 = plt.subplot(224)
-ax4.set_title("(d) Population", fontsize=fontsize_legend, pad=title_pad)
+ax4 = plt.subplot(144)
+ax4.set_title("Population", fontsize=fontsize_legend,
+              pad=title_pad)
 plot_error(ax4, "microbial", path_error_microbial,
-           path_upper_bound_microbial, N_arange_microbial, xlabel_bool=True)
+           path_upper_bound_microbial, N_arange_microbial)
 plot_singvals(ax4, S_microbial)
+ax4.text(letter_posx, letter_posy, "d", fontweight="bold",
+         horizontalalignment="center", verticalalignment="top",
+         transform=ax4.transAxes)
 
 # handles, labels = ax1.get_legend_handles_labels()
 # fig.legend(handles, labels, loc=(0.3, 0.95))

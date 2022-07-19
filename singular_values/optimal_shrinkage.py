@@ -46,7 +46,7 @@ def optimal_SVHT_coef_sigma_unknown(beta):
     return 0.56*beta**3 - 0.95*beta**2 + 1.82*beta + 1.43
 
 
-def optimal_threshold(singvals, beta, sigma=None, target_rank=False):
+def optimal_threshold(singvals, beta, sigma=None, target_rank=True):
     """
     Compute optimal hard threshold for singular values.
     Off-the-shelf method for determining the optimal singular value truncation
@@ -63,10 +63,10 @@ def optimal_threshold(singvals, beta, sigma=None, target_rank=False):
     :param sigma:  real, optional
         Noise level if known.
     :param target_rank: bool
-        If False (default), the function return the optimal threshold. Else,
+        If False, the function return the optimal threshold. Else,
          it returns the optimal target rank.
     :return: cutoff or k : float and int respectively
-        Optimal threshold or optimal target rank.
+        Optimal threshold or optimal target rank respectively.
 
     Usage
     -----
@@ -91,7 +91,7 @@ def optimal_threshold(singvals, beta, sigma=None, target_rank=False):
         n = max(beta.shape)
         beta = m / n
 
-    if beta < 0 or beta > 1:
+    if beta <= 0 or beta > 1:
         raise ValueError('Parameter `beta` must be in (0,1].')
 
     if sigma is None:
@@ -102,12 +102,15 @@ def optimal_threshold(singvals, beta, sigma=None, target_rank=False):
         # Compute the optimal ``w(beta)``
         coef = optimal_SVHT_coef_sigma_known(beta) / \
             np.sqrt(median_marcenko_pastur(beta))
-        cutoff = coef * np.median(singvals)
-        if np.allclose(cutoff, 0) and np.allclose(np.median(singvals), 0):
-            warnings.warn("The noise was predicted to be zero, because"
-                          " the median of the singular values is 0."
-                          " The rank of the original matrix is returned.")
-            return np.nan  # len(singvals[singvals > 1e-13])
+        median_singvals = np.median(singvals)
+        if median_singvals < 1e-13:
+            """ If the median is smaller than 1e-13, we compute the median
+             of the singular values greater than 1e-13. This is a way 
+             to have a non-zero cutoff. If cutoff=0, the the function would 
+             essentially return the numerical rank f the matrix. """
+            median_singvals = np.median(singvals[singvals > 1e-13])
+        cutoff = coef*median_singvals
+
     else:
         log.info('Sigma known.')
         # Compute optimal ``w(beta)``
@@ -121,6 +124,8 @@ def optimal_threshold(singvals, beta, sigma=None, target_rank=False):
         if greater_than_cutoff[0].size > 0:
             k = np.max(greater_than_cutoff) + 1
         else:
+            warnings.warn("From optimal_shrinkage.py in function"
+                          " optimal_threshold. The predicted threshold is 0.")
             k = 0
         log.info(f'Target rank: {k}')
         return k
@@ -140,18 +145,28 @@ def inverse_asymptotic_singvals(y, beta):
 
 def optimal_shrinker_frobenius(y, beta):
     """ Equation (7) in Optimal Shrinkage of Singular Values of Gavish and
-        Donoho 2017 """
+        Donoho 2017. The np.maximum below allows to satisfy the two cases
+        y > 1 + sqrt(beta) and y <= 1 = sqrt(beta) in Equation (7) and
+        consequently, to avoid negative values in np.sqrt:
+        (y^2 - beta - 1)^2 - 4 beta > 0
+        y^2 > beta + 2 sqrt(beta) +  1 = (1 + sqrt(beta))^2
+        y > 1 + sqrt(beta)
+        and else, the function returns 0 as desired.
+    """
     return np.sqrt(np.maximum(((y**2-beta-1)**2 - 4*beta), np.zeros(len(y))))/y
 
 
 def optimal_shrinker_operator(y, beta):
     """ Equation (9) in Optimal Shrinkage of Singular Values of Gavish and
-        Donoho 2017 for square matrices and the correction of William Leeb,
+        Donoho 2017 for square matrices and the correction of
+        William Leeb, Equation (3.1) in Theorem 3.1 of the paper
         "Optimal singular value shrinkage for operator norm loss:
         Extending to non-square matrices", 2022. """
     t = inverse_asymptotic_singvals(y, beta)
-    eta = t*np.sqrt((t**2 + np.min(1, beta))/(t**2 + np.max(1, beta)))
-    return np.maximum(eta, np.zeros(len(y)))
+    q = t[t > 1 + np.sqrt(beta)]
+    r = q*np.sqrt((q**2 + np.min([1, beta]))/(q**2 + np.max([1, beta])))
+    s = t[t <= 1 + np.sqrt(beta)]
+    return np.block([r, np.zeros(len(s))])
 
 
 def optimal_shrinker_nuclear(y, beta):
@@ -161,7 +176,7 @@ def optimal_shrinker_nuclear(y, beta):
         f = (inverse_asymptotic_singvals(y, beta)**4
              - np.sqrt(beta)*inverse_asymptotic_singvals(y, beta)*y - beta) / \
             ((inverse_asymptotic_singvals(y, beta)**2)*y)
-    return np.maximum(np.zeros(len(y)), f)
+    return f  # np.maximum(np.zeros(len(y)), f)
 
 
 def optimal_shrinkage(singvals, beta, loss, sigma=None):
@@ -178,7 +193,7 @@ def optimal_shrinkage(singvals, beta, loss, sigma=None):
                 on the data matrix
     :param beta: aspect ratio m/n of the m-by-n matrix whose singular values
                 are given
-    :param loss: loss function for which the shrinkage should be optimal
+    :param loss: loss function (norm) for which the shrinkage should be optimal
                 presently implemented: 'frobenius' (Frobenius or square
                                                     Frobenius norm loss = MSE)
                                        'nuclear' (nuclear norm loss)
@@ -224,33 +239,35 @@ def optimal_shrinkage(singvals, beta, loss, sigma=None):
     assert beta > 0
 
     if sigma is None:
-        sigma = np.median(singvals)/np.sqrt(median_marcenko_pastur(beta))
+        median_singvals = np.median(singvals)
+        if median_singvals < 1e-13:
+            """ If the median is smaller than 1e-13, we compute the median
+             of the singular values greater than 1e-13. This is a way 
+             to have a non-zero sigma. If sigma=0, the the function would 
+             essentially return the numerical rank f the matrix. """
+            median_singvals = np.median(singvals[singvals > 1e-13])
+        sigma = median_singvals/np.sqrt(median_marcenko_pastur(beta))
 
-    if np.allclose(sigma, 0) and np.allclose(np.median(singvals), 0):
-        warnings.warn("The noise was predicted to be zero, because"
-                      " the median of the singular values is 0. The original"
-                      " singular values are returned.")
-        return np.nan   # singvals
+    assert sigma > 0
+
+    y = singvals[singvals > 1e-13]/sigma
+    # singvals[singvals > 1e-13] to avoid any division by zero
+    x = inverse_asymptotic_singvals(y, beta)
+
+    if loss == 'frobenius':
+        shrinked_singvals = sigma*optimal_shrinker_frobenius(y, beta)
+    elif loss == 'nuclear':
+        shrinked_singvals = sigma*optimal_shrinker_nuclear(y, beta)
+        shrinked_singvals[
+            np.where((x**4 - np.sqrt(beta)*x*y - beta) <= 0)] = 0
+        # See Eq. (10) of the paper    ^
+    elif loss == 'operator':  # with the correction of W. Leeb, 2022
+        shrinked_singvals = sigma*optimal_shrinker_operator(y, beta)
     else:
-        y = singvals/sigma
-        x = inverse_asymptotic_singvals(y, beta)
+        raise ValueError("Unknown loss."
+                         " The Frobenius norm/loss 'frobenius',"
+                         " the nuclear norm/loss 'nuclear' and"
+                         " the operator (spectral) norm/loss 'operator' "
+                         " can be chosen.")
 
-        print(sigma)
-
-        if loss == 'frobenius':
-            shrinked_singvals = sigma*optimal_shrinker_frobenius(y, beta)
-        elif loss == 'nuclear':
-            shrinked_singvals = sigma*optimal_shrinker_nuclear(y, beta)
-            shrinked_singvals[
-                np.where((x**4 - np.sqrt(beta)*x*y - beta) <= 0)] = 0
-            # See Eq. (10) of the paper    ^
-        elif loss == 'operator':  # with the correction of W. Leeb, 2022
-            shrinked_singvals = sigma*optimal_shrinker_operator(y, beta)
-        else:
-            raise ValueError("Unknown loss."
-                             " The Frobenius norm/loss 'frobenius',"
-                             " the nuclear norm/loss 'nuclear' and"
-                             " the operator (spectral) norm/loss 'operator' "
-                             " can be chosen.")
-
-        return shrinked_singvals
+    return shrinked_singvals

@@ -66,6 +66,7 @@ def analyzeGraph(networkFilename):
 
     averageDegree = density * (nbVertices - 1)
 
+    """ Things that could be done to clean this script """
     # TODO we should also add a column for "Signed", "Multilayer" + remove tag
     # TODO we should deal with the tag "Projection", "Timestamps", "Temporal"
     # TODO we should also include the tag that I've introduced in the script "plot_fig_1_effective_rank_vs_rank_scatterplot"

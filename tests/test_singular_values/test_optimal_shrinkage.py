@@ -74,9 +74,10 @@ def test_optimal_shrinkage_nuclear_unknown_noise():
     assert np.allclose(shrinked_singvals_Python, shrinked_singvals_Matlab)
 
 
-def test_optimal_thresold_frobenius_unknown_noise():
-    hard_threshold_Python = np.round(optimal_threshold(S, 1), 2)
+def test_optimal_threshold_frobenius_unknown_noise():
+    hard_threshold_Python = np.round(optimal_threshold(S, 1, target_rank=0), 2)
     hard_threshold_Matlab = np.round(1.3255, 2)
+    print(hard_threshold_Matlab, hard_threshold_Python)
     assert np.allclose(hard_threshold_Python, hard_threshold_Matlab)
 
 

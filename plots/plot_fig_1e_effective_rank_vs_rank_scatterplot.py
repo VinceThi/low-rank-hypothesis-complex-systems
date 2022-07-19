@@ -75,7 +75,7 @@ graphPropDF.loc[graphPropDF['tags'] == "Social,Communication,Timestamps",
 
 effectiveRanksFilename = 'C:/Users/thivi/Documents/GitHub/' \
                          'low-rank-hypothesis-complex-systems/' \
-                         'singular_values/properties/effective_ranks.txt'
+                         'singular_values/properties/effective_ranks_first.txt'
 header = open(effectiveRanksFilename, 'r')\
     .readline().replace('#', ' ').split()
 effectiveRanksDF = pd.read_table(effectiveRanksFilename, names=header,
@@ -131,7 +131,8 @@ for networkName in effectiveRanksDF.index:
 # plt.plot([0, 1], [0, 1], linestyle='--', color="#CFCFCF")
 
 # plt.figure(figsize=(4, 4))
-plt.figure(figsize=(4.5, 4.5))
+# plt.figure(figsize=(4.5, 4.))
+plt.figure(figsize=(5, 5))
 
 total_number_networks = 0
 for i, cat in enumerate(reversed(validCategories)):
@@ -150,7 +151,7 @@ for i, cat in enumerate(reversed(validCategories)):
         rank_connectome = np.array([185, 15313, 71, 292, 21687])
         srank_connectome = np.array([3.61975, 8.04222, 1.80914,
                                      8.67117, 11.5811])
-        # optshrink_connectome = np.array([ , 2741, , , ,])
+
         # print(srank_connectome/N_connectomes)
         sns.scatterplot(x=rank_connectome/N_connectomes,
                         y=srank_connectome/N_connectomes, s=100,
@@ -161,6 +162,9 @@ for i, cat in enumerate(reversed(validCategories)):
         #                 edgecolor=colorMap[cat],
         #                 marker=markerMap[cat], label=cat.lower())
         # # ax=g.ax_joint)
+        nb_network_cat = len(effectiveRank[cat]) + len(other_connectomes)
+        print(f"{cat}: {nb_network_cat}"
+              f" networks")
 
     elif cat == "Learned":
         sns.scatterplot(x=rank[cat], y=effectiveRank[cat],
@@ -181,6 +185,8 @@ for i, cat in enumerate(reversed(validCategories)):
                         y=srank_learned / N_learned, s=100,
                         facecolor='None',
                         edgecolor=colorMap[cat], marker=markerMap[cat])
+        nb_network_cat = len(learned_networks)
+        print(f"{cat}: {nb_network_cat} networks")
 
     elif cat == "Economic":
         # Economic network from Netzschleuder
@@ -207,25 +213,34 @@ for i, cat in enumerate(reversed(validCategories)):
                         y=srank_economic / N_economic, s=100,
                         facecolor='None',
                         edgecolor=colorMap[cat], marker=markerMap[cat])
+        nb_network_cat = len(effectiveRank[cat]) + len(economic_networks)
+        print(f"{cat}: {nb_network_cat}"
+              f" networks")
 
     else:
         sns.scatterplot(x=rank[cat], y=effectiveRank[cat],
                         facecolor='None',
                         edgecolor=colorMap[cat], alpha=0.7,
                         marker=markerMap[cat])  # , ax=g.ax_joint)
-    cat = sorted(validCategories)[i]
+        nb_network_cat = len(effectiveRank[cat])
+        print(f"{cat}: {nb_network_cat} networks "
+              f"(all from Netzschleuder)")
+    # cat = sorted(validCategories)[i]
     sns.scatterplot(x=[0], y=[1.5], facecolor='None',
                     edgecolor=colorMap[cat],
-                    marker=markerMap[cat], label=cat,  # .lower(),
+                    marker=markerMap[cat],  # .lower(),to have lower case label
+                    label=cat + f" ({np.around(nb_network_cat/674*100, 1)}%)",
                     zorder=len(validCategories)-i)
-    # ax=g.ax_joint)
 
-    print(f"{cat}: {len(effectiveRank[cat])} networks from Netzschleuder")
     total_number_networks += len(effectiveRank[cat])
 
-print("Total number of networks = ",
-      total_number_networks + len(other_connectomes)
-      + len(learned_networks) + len(economic_networks))
+total_number_networks = total_number_networks + len(other_connectomes) \
+                        + len(learned_networks) + len(economic_networks)
+print(f"Total number of networks = {total_number_networks}")
+
+if total_number_networks != 674:
+    raise ValueError("One much change the number of networks 674 which is "
+                     "hard coded in other places in the script.")
 
 # g.ax_joint.legend(loc='upper left', frameon=False, fontsize='x-small')
 
@@ -246,8 +261,8 @@ plt.ylim(bottom=-0.01, top=0.22)
 # g.ax_joint.set_xlabel('Rank to dimension ratio')
 # g.ax_joint.set_ylabel('Effective rank to dimension ratio')
 
-plt.xlabel('Rank to dimension ratio')
-plt.ylabel('Effective rank to dimension ratio')
+plt.xlabel('Rank to dimension ratio rank/N')
+plt.ylabel('Effective rank to dimension ratio srank/N')
 plt.show()
 
 plt.savefig(figureFilenamePDF)  # , bbox_inches='tight')

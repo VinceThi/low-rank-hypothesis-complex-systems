@@ -34,14 +34,15 @@ if plot_singvals:
     print(computeEffectiveRanks(S, graph_str, N))
     plot_singular_values(S, effective_ranks=False, cum_explained_var=False,
                          ysemilog=False)
-shrink_s = optimal_shrinkage(S, 1, 'operator')
+shrink_s = optimal_shrinkage(S, 1, 'frobenius')
 A = U@np.diag(shrink_s)@Vh
 
-N_arange = np.arange(1, computeRank(shrink_s), 1)
+N_arange = np.arange(1, computeRank(shrink_s)+1, 1)
 """                                                                              
 Comment                                                                          
 -------                                                                          
-Above, we use computeRank(shrink_s) because the error 0 for n = rank. 
+Above, we use computeRank(shrink_s) because the error is 0 for n = rank in the
+case of a RNN. 
 We remove it to do a semilog plot.                                                            
 See https://www.youtube.com/watch?v=ydxy3fEar9M for transforming an error for    
 a semilog plot.                                                                  
@@ -57,7 +58,7 @@ for n in tqdm(N_arange):
     D_sign = np.diag(-(np.sum(Vhn, axis=1) < 0).astype(float)) \
         + np.diag((np.sum(Vhn, axis=1) >= 0).astype(float))
     M = D_sign@Vhn
-    W = A   # /S[0]  # We normalize the network by the largest singular value
+    W = A   # /S[0]  # To normalize the network by the largest singular value
     Mp = np.linalg.pinv(M)
     P = Mp@M
     x_samples = np.random.uniform(-1, 1, (N, nb_samples))
@@ -121,7 +122,7 @@ ax = plt.subplot(111)
 #     ax.scatter(N_arange, error_array[i, :],
 #                color=deep[3], s=5, alpha=0.1)
 ax.scatter(N_arange, mean_error, s=5, color=deep[3],
-           label="RMSE $\\mathcal{E}_f\,(x)$")
+           label="RMSE $\\mathcal{E}\,(x)$")
 ax.plot(N_arange, mean_upper_bound_error, color=dark_grey,
         label="Upper bound")
 # ax.plot(N_arange, mean_upper_bound_triangle_error, color=deep[4],

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @author: Gabriel Eilertsen
 """
-The paper related to the repo
+The paper below is related to the repository NWS.
 @article{EJRUY20,
          author  = "Eilertsen, Gabriel
           and J\"onsson, Daniel
@@ -101,7 +101,7 @@ def unpack(x, fsize, ldepth, lwidth, bn=True):
 
         sz[:2] = sz[:2] / 2
 
-    print('%d conv layers splitted (%d in total)' % (cc, ldepth[0]))
+    # print('%d conv layers splitted (%d in total)' % (cc, ldepth[0]))
 
     sz = np.prod(sz)
 
@@ -137,7 +137,7 @@ def unpack(x, fsize, ldepth, lwidth, bn=True):
 
     cc += 1
 
-    print('%d FC layers splitted (%d in total)' % (cc, ldepth[1]))
+    # print('%d FC layers splitted (%d in total)' % (cc, ldepth[1]))
 
     assert (ind[0] == len(x))
 

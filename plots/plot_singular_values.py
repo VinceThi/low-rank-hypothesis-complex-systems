@@ -13,7 +13,7 @@ import networkx as nx
 from singular_values.compute_effective_ranks import computeERank, \
     computeStableRank, findEffectiveRankElbow, computeRank,\
     computeEffectiveRankEnergyRatio, \
-    computeOptimalShrinkage, computeOptimalThreshold
+    computeOptimalShrinkage, computeOptimalThreshold, computeNuclearRank
 
 
 def plot_singular_values(singularValues,
@@ -27,6 +27,7 @@ def plot_singular_values(singularValues,
     if effective_ranks:
         rank = computeRank(singularValues)
         stableRank = computeStableRank(singularValues)
+        nuclearRank = computeNuclearRank(singularValues)
         optimalThreshold = computeOptimalThreshold(singularValues)
         norm_str = 'frobenius'
         optimalShrinkage = computeOptimalShrinkage(singularValues)
@@ -38,9 +39,10 @@ def plot_singular_values(singularValues,
                                                       threshold=threshold)
         header = ['Rank', 'Optimal threshold',
                   'Optimal shrinkage',
-                  'Erank', 'Elbow', 'Energy ratio', 'Stable rank']
+                  'Erank', 'Elbow', 'Energy ratio', 'Stable rank',
+                  'Nuclear Rank']
         properties = [[rank, optimalThreshold, optimalShrinkage,
-                       erank, elbowRank, energyRatio, stableRank]]
+                       erank, elbowRank, energyRatio, stableRank, nuclearRank]]
         print("\n\n\n\n", tabulate.tabulate(properties, headers=header))
 
     if cum_explained_var:
@@ -51,7 +53,7 @@ def plot_singular_values(singularValues,
                 np.sum(singularValues[0:r]**2) / np.sum(singularValues**2))
 
     if cum_explained_var:
-        plt.figure(figsize=(8, 4))
+        plt.figure(figsize=(6, 4))
         ax1 = plt.subplot(121)
         if effective_ranks:
             plt.axvline(x=rank, linestyle="--",
@@ -59,6 +61,9 @@ def plot_singular_values(singularValues,
             plt.axvline(x=stableRank, linestyle="--",
                         color=deep[0],
                         label="Stable rank")
+            plt.axvline(x=nuclearRank, linestyle="--",
+                        color=deep[6],
+                        label="Nuclear rank")
             plt.axvline(x=elbowRank, linestyle="--",
                         color=deep[1],
                         label="Elbow position")
@@ -111,6 +116,9 @@ def plot_singular_values(singularValues,
             plt.axvline(x=stableRank, linestyle="--",
                         color=deep[0],
                         label="Stable rank")
+            plt.axvline(x=nuclearRank, linestyle="--",
+                        color=deep[6],
+                        label="Nuclear rank")
             plt.axvline(x=elbowRank, linestyle="--",
                         color=deep[1],
                         label="Elbow rank")
@@ -180,7 +188,7 @@ def plot_singular_values_histogram_random_networks(random_graph_generator,
                                                           " values $\\sigma$",
                                                    ylabel="Spectral density"
                                                           " $\\rho(\\sigma)$"):
-    from singular_values.marchenko_pastur_pdf import marchenko_pastur_pdf
+    # from singular_values.marchenko_pastur_pdf import marchenko_pastur_pdf
     plt.figure(figsize=(6, 4))
     t0 = time.clock()
     singularValues = np.array([])
@@ -199,6 +207,37 @@ def plot_singular_values_histogram_random_networks(random_graph_generator,
     # x = np.linspace(0.01, 2*np.sqrt(var) - 0.0001, 1000)
     # plt.plot(x, marchenko_pastur_pdf(x, var, 1), "#111111")
     # plt.plot(x, np.sqrt((4*var - x)/x)/(2*np.pi*var))
+    plt.hist(singularValues, bins=nb_bins,
+             color=bar_color, edgecolor=None,
+             linewidth=1, weights=weights)
+    plt.tick_params(axis='both', which='major')
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel, labelpad=20)
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_singular_values_histogram_random_matrices(random_matrix_generator,
+                                                   random_matrix_args,
+                                                   nb_networks=1000,
+                                                   nb_bins=1000,
+                                                   bar_color="#064878",
+                                                   xlabel="Singular"
+                                                          " values $\\sigma$",
+                                                   ylabel="Spectral density"
+                                                          " $\\rho(\\sigma)$"):
+    plt.figure(figsize=(6, 4))
+    t0 = time.clock()
+    singularValues = np.array([])
+    i = 0
+    for k in range(0, nb_networks):
+        A = random_matrix_generator(*random_matrix_args)
+        singularValues_instance = svdvals(A)
+        singularValues = np.concatenate((singularValues,
+                                         singularValues_instance))
+        i += 1
+    print((time.clock()-t0)/60, "minutes to process")
+    weights = np.ones_like(singularValues) / float(len(singularValues))
     plt.hist(singularValues, bins=nb_bins,
              color=bar_color, edgecolor=None,
              linewidth=1, weights=weights)

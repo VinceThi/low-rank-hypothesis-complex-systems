@@ -20,6 +20,7 @@ plot_singvals = True
 graph_str = "celegans_signed"
 A = get_connectome_weight_matrix(graph_str)
 N = len(A[0])  # Dimension of the complete dynamics
+print(N)
 # from plots.plot_weight_matrix import plot_weight_matrix
 # plot_weight_matrix(A)
 
@@ -32,8 +33,8 @@ t = 0  # Time is not involved in the vector-field error computation
 # c = 3
 
 """ SVD """
-# U, S, Vh = np.linalg.svd(A)
-U, S, Vh = 0, 0, 0
+U, S, Vh = np.linalg.svd(A)
+# U, S, Vh = 0, 0, 0
 if plot_singvals:
     print(computeEffectiveRanks(S, graph_str, N))
     plot_singular_values(S, effective_ranks=False, cum_explained_var=False,

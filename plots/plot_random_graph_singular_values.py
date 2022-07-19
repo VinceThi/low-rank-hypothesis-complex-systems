@@ -11,7 +11,7 @@ from plots.plot_singular_values import \
 N = 500
 nb_networks = 100
 nb_bins = 100
-graph_str = "s1"
+graph_str = "barabasi_albert"
 G, args = random_graph_generators(graph_str, N)
 # import matplotlib.pyplot as plt
 # A = nx.to_numpy_array(G)
@@ -24,9 +24,9 @@ singularValues = svdvals(A)
 # import matplotlib.pyplot as plt
 # plt.scatter(np.arange(len(singularValues)), singularValues, s=10)
 # plt.show()
-# #plot_singular_values(singularValues)
+plot_singular_values(singularValues)
 
-plot_singular_values_histogram_random_networks(random_graph_generator=G,
-                                               random_graph_args=args,
-                                               nb_networks=nb_networks,
-                                               nb_bins=nb_bins)
+# plot_singular_values_histogram_random_networks(random_graph_generator=G,
+#                                                random_graph_args=args,
+#                                                nb_networks=nb_networks,
+#                                                nb_bins=nb_bins)
