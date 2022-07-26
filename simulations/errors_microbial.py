@@ -13,9 +13,6 @@ import json
 import tkinter.simpledialog
 from tkinter import messagebox
 
-# TODO - The optimal threshold in the gut micro is 0.67, why ? A mistake ?
-# TODO - plug x'_approx into the quadratic equation to see if near xero
-
 """ Graph parameters """
 graph_str = "gut"
 A = get_microbiome_weight_matrix(graph_str)
@@ -25,11 +22,11 @@ N = len(A[0])  # Dimension of the complete dynamics
 dynamics_str = "microbial"
 t = 0  # It is not involved in the error computation
 
-# 1.
+# 1. The ones used in SI and in Sanhedrai et al., Nat. Phys. (2022).
 # a, b, c, D = 5, 13, 10/3, 30*np.eye(N)
 
-# 2.
-# a, b, c, D = 0.00005, 0.1, 0.9, 0.01*np.eye(N)
+# 2. The ones used in the paper to compute the upper bound on the error.
+a, b, c, D = 0.00005, 0.1, 0.9, 0.01*np.eye(N)
 
 # 3.
 # a, b, c, D = 0, 0.15, 72, 0*np.eye(N)
@@ -116,17 +113,20 @@ for n in tqdm(N_arange):
 
         # Upper bound RMSE
         xp = x_prime_microbial(x, W, P, coupling, b, c)
-        chi = (np.eye(N) - P)@x
+        """ Test zone """
+        # print(xp)
+        # chi = (np.eye(N) - P)@x
         # print(
         #   coupled_quadratic_equations_microbial(xp, x, W, P, coupling, b, c))
-        p = P@x
-        AA = 3*c*chi
+        # p = P@x
+        # AA = 3*c*chi
         # print(np.shape(W@chi), chi)
         # print(np.diag(W@chi))
-        BB = 2*b*np.diag(chi) + coupling*np.diag(chi)@W + coupling*np.diag(W@chi)
-        CC = b*(x**2 - p**2) + c*(x**3 - p**3) + coupling*(x*(W@x) - p*(W@p))
-        print(f"<A> = {np.mean(AA)}, <B> = {np.mean(BB)}, <C> = {np.mean(CC)}")
-
+        # BB = 2*b*np.diag(chi) + coupling*np.diag(chi)@W
+        # + coupling*np.diag(W@chi)
+        # CC = b*(x**2 - p**2) + c*(x**3 - p**3) + coupling*(x*(W@x) - p*(W@p))
+        # print(f"<A> = {np.mean(AA)}, <B> = {np.mean(BB)},
+        #  <C> = {np.mean(CC)}")
         Jx = jacobian_x_microbial(xp, W, coupling, D, b, c)
         Jy = jacobian_y_microbial(xp, coupling)
         evec = error_vector_fields_upper_bound(x, Jx, Jy, S/S[0], M, P)

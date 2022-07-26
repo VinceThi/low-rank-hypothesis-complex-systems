@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @author: Vincent Thibeault
 
-from graphs.random_graph_generators import random_graph_generators
+from graphs.generate_random_graphs import random_graph_generators
 import networkx as nx
 from scipy.linalg import svdvals
 from plots.plot_singular_values import \

@@ -4,7 +4,7 @@
 import networkx as nx
 import numpy as np
 # from scipy.stats import powerlaw
-from graphs.s1_random_graph import s1_model
+from graphs.generate_s1_random_graph import s1_model
 
 
 def random_graph_generators(graph_str, N):
@@ -18,11 +18,11 @@ def random_graph_generators(graph_str, N):
         generator = nx.stochastic_block_model
         pq = [[0.4, 0.1], [0.05, 0.2]]
         sizes = [1 - N//4, N // 4]
-        args = (N, pq,
-                sizes)  # TODO verify
+        args = (N, pq, sizes)  # TODO verify
 
     elif graph_str == "DCSBM":
-        generator = nx.degree_corrected_stochastic_block_model  # TODO
+        # generator = nx.degree_corrected_stochastic_block_model  # TODO
+        generator = np.nan
 
     elif graph_str == "watts_strogatz":
         generator = nx.watts_strogatz_graph

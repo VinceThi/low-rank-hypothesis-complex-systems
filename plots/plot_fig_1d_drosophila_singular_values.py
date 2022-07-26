@@ -66,22 +66,22 @@ if plot_inset:
     normalized_singular_values = singularValues / singularValues[0]
     ax.scatter(np.arange(1, len(singularValues) + 1, 1),
                normalized_singular_values, s=10, color=deep[0])
-    plt.vlines(x=rank, ymin=normalized_singular_values[rank - 1], ymax=1,
-               linestyle="--", color=deep[9], label="rank")
     plt.vlines(x=srank, ymin=ymin, ymax=normalized_singular_values[10],
                linestyle="--", color=deep[1], label="srank")
     plt.vlines(x=nrank, ymin=ymin, ymax=normalized_singular_values[172],
                linestyle="--", color=deep[2], label="nrank")
-    plt.vlines(x=energy, ymin=ymin, ymax=normalized_singular_values[1062],
-               linestyle="--", color=deep[3], label="energy")
     plt.vlines(x=elbow, ymin=ymin, ymax=normalized_singular_values[723],
                linestyle="--", color=deep[4], label="elbow")
-    plt.vlines(x=erank, ymin=ymin, ymax=normalized_singular_values[6702],
-               linestyle="--", color=deep[5], label="erank")
+    plt.vlines(x=energy, ymin=ymin, ymax=normalized_singular_values[1062],
+               linestyle="--", color=deep[3], label="energy")
     plt.vlines(x=thrank, ymin=ymin, ymax=normalized_singular_values[4867],
                linestyle="--", color=deep[6], label="thrank")
     plt.vlines(x=shrank, ymin=ymin, ymax=normalized_singular_values[5542],
                linestyle="--", color=deep[7], label="shrank")
+    plt.vlines(x=erank, ymin=ymin, ymax=normalized_singular_values[6702],
+               linestyle="--", color=deep[5], label="erank")
+    plt.vlines(x=rank, ymin=normalized_singular_values[rank - 1], ymax=1,
+               linestyle="--", color=deep[9], label="rank")
     # ax.legend(loc="lower center", bbox_to_anchor=(0.65, 0, 0, 0))
     # ticks = ax.get_xticks()
     # ticks[ticks.tolist().index(0)] = 1
@@ -113,22 +113,22 @@ else:
     ax.scatter(zero_singvals_indices,
                1.1*ymin*np.ones(len(zero_singvals_indices)), s=10,
                color=deep[0])
-    plt.vlines(x=rank, ymin=normalized_singular_values[rank-1], ymax=1,
-               linestyle="--", color=deep[9], label="rank = 21687")
     plt.vlines(x=srank, ymin=ymin, ymax=normalized_singular_values[10],
                linestyle="--", color=deep[1], label="srank = 12")
     plt.vlines(x=nrank, ymin=ymin, ymax=normalized_singular_values[172],
                linestyle="--", color=deep[2], label="nrank = 173")
-    plt.vlines(x=energy, ymin=ymin, ymax=normalized_singular_values[1062],
-               linestyle="--", color=deep[3], label="energy = 1062")
     plt.vlines(x=elbow, ymin=ymin, ymax=normalized_singular_values[723],
                linestyle="--", color=deep[4], label="elbow = 724")
-    plt.vlines(x=erank, ymin=ymin, ymax=normalized_singular_values[6702],
-               linestyle="--", color=deep[5], label="erank = 6703")
+    plt.vlines(x=energy, ymin=ymin, ymax=normalized_singular_values[1062],
+               linestyle="--", color=deep[3], label="energy = 1062")
     plt.vlines(x=thrank, ymin=ymin, ymax=normalized_singular_values[4867],
                linestyle="--", color=deep[6], label="thrank = 4868")
     plt.vlines(x=shrank, ymin=ymin, ymax=normalized_singular_values[5542],
                linestyle="--", color=deep[7], label="shrank = 5543")
+    plt.vlines(x=erank, ymin=ymin, ymax=normalized_singular_values[6702],
+               linestyle="--", color=deep[5], label="erank = 6703")
+    plt.vlines(x=rank, ymin=normalized_singular_values[rank - 1], ymax=1,
+               linestyle="--", color=deep[9], label="rank = 21687")
 
     # ax.text(11.5811 / N + 300, normalized_singular_values[10],
     #         "11", fontsize=8, color=deep[1])
@@ -156,7 +156,7 @@ else:
 
     plt.ylabel("Normalized singular values $\sigma_i/\sigma_1$")
     plt.xlabel("Index $i$")
-    ax.legend(loc="lower center", bbox_to_anchor=(0.65, 0, 0, 0))
+    ax.legend(loc="lower center", bbox_to_anchor=(0.62, 0.04, 0, 0))
     ticks = ax.get_xticks()
     ticks[ticks.tolist().index(0)] = 1
     ticks = [i for i in ticks

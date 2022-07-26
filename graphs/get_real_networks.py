@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import scipy.io
 import warnings
-from graphs.weight_split_nws import unpack
+from graphs.split_weight_nws import unpack
 warnings.simplefilter(action='ignore', category=FutureWarning)
 pd.options.mode.chained_assignment = None  # default='warn'
 

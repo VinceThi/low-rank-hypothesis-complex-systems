@@ -94,7 +94,18 @@ effectiveRanksDF['x'] = effectiveRanksDF['rank'] / \
 effectiveRanksDF['y'] = effectiveRanksDF['stableRank'] / \
     effectiveRanksDF['nbVertices']
 
-# Valid categories, in order of priority.
+# --- Valid categories, in order of proportion
+# validCategories = ['Social', 'Interactome', 'Informational',
+#                    'Ecological', 'Connectome', 'Technological',
+#                    'Learned', 'Economic', 'Communication',
+#                    'Transportation']
+# markers = ['.', 'h', 'X', '^', '*', 'd', 'H', 'p', 'D', 'v']
+# colors = ["#C44E52", "#DD8452", "#55A868", "#DA8BC3", "#8172B3",
+#           "#CCB974", "#937860", "#64B5CD", "#8C8C8C",  "#4C72B0"]
+# facecolors = [None, None, None, None, None,
+#               None, None, None, None, None]
+
+# --- Valid categories, in order of priority.
 validCategories = ['Connectome', 'Interactome', 'Ecological',
                    'Communication', 'Economic', 'Learned',
                    'Transportation', 'Technological',
@@ -261,8 +272,10 @@ plt.ylim(bottom=-0.01, top=0.22)
 # g.ax_joint.set_xlabel('Rank to dimension ratio')
 # g.ax_joint.set_ylabel('Effective rank to dimension ratio')
 
-plt.xlabel('Rank to dimension ratio rank/N')
-plt.ylabel('Effective rank to dimension ratio srank/N')
+# plt.xlabel('Rank to dimension ratio rank/N')
+# plt.ylabel('Effective rank to dimension ratio srank/N')
+plt.xlabel('rank/N')
+plt.ylabel('srank/N')
 plt.show()
 
 plt.savefig(figureFilenamePDF)  # , bbox_inches='tight')

@@ -20,25 +20,30 @@ import json
 import tkinter.simpledialog
 from tkinter import messagebox
 
-plot_time_series = True
+plot_time_series = False
 compute_error = False
 plot_weight_matrix_bool = False
-integrate_complete_dynamics = True
-integrate_reduced_dynamics = False
+integrate_complete_dynamics = False
+integrate_reduced_dynamics = True
 integrate_reduced_dynamics_tensor = False
 forward_branch = True
-backward_branch = False
+backward_branch = True
 
 # Desmos exploration: https://www.desmos.com/calculator/pdtj9p2mdi
 
+setup = 1
+
 """ Time parameters """
 # Three setup for for "gut" network
-# 1.
-# t0, t1, dt = 0, 4, 0.0001 ou 0, 1.5, 0.0001
-# 2.
-t0, t1, dt = 0, 3000, 0.5
-# 3.
-# t0, t1, dt = 0, 6, 0.001
+if setup:
+    # 1. Useful to get the hysteresis
+    t0, t1, dt = 0, 4, 0.0001   # ou 0, 1.5, 0.0001
+elif setup == 2:
+    # 2. Useful for the parameters to get the upper bound
+    t0, t1, dt = 0, 3000, 0.5
+else:
+    # 3.
+    t0, t1, dt = 0, 6, 0.001
 
 timelist = np.linspace(t0, t1, int(t1 / dt))
 
@@ -81,17 +86,20 @@ if plot_weight_matrix_bool:
 """ Dynamical parameters """
 dynamics_str = "microbial"
 # For real gut microbiome network
-# 1.
-# a, b, c, D = 5, 13, 10/3, 30*np.eye(N)
-# coupling_constants =  np.linspace(0.5, 3, 50)
+if setup:
+    # 1.
+    a, b, c, D = 5, 13, 10/3, 30*np.eye(N)
+    coupling_constants = np.linspace(0.5, 3, 50)
 
-# 2.
-a, b, c, D = 0.00005, 0.1, 0.9, 0.01*np.eye(N)
-coupling_constants = np.linspace(1.5, 4.5, 10)
+elif setup == 2:
+    # 2. Parameters to have trajectories below 1  (this is ad hoc)
+    a, b, c, D = 0.00005, 0.1, 0.9, 0.01*np.eye(N)
+    coupling_constants = np.linspace(1.5, 2.5, 100)   # 4.5, 10)
 
-# 3.
-# a, b, c, D = 0, 0.15, 72, 0.0002*np.eye(N)
-# coupling_constants = np.linspace(25, 40, 5)
+else:
+    # 3.
+    a, b, c, D = 0, 0.15, 72, 0.0002*np.eye(N)
+    coupling_constants = np.linspace(25, 40, 5)
 
 # a, b, c, D = 0.00005, 0.01, 0.1, 0.9*np.eye(N)
 # coupling_constants = np.linspace(5, 50, 5)
@@ -99,16 +107,18 @@ coupling_constants = np.linspace(1.5, 4.5, 10)
 
 
 """ SVD and dimension reduction """
-n = 25  # Dimension of the reduced dynamics
+n = 76  # Dimension of the reduced dynamics
 Un, Sn, M = computeTruncatedSVD_more_positive(A, n)
 print("\n", computeEffectiveRanks(svdvals(A), graph_str, N))
 print(f"\nDimension of the reduced system n = {n} \n")
 
-# 1.
-# W = A
+if setup:
+    # 1.
+    W = A
 
-# 2. and 3.
-W = A/Sn[0][0]  # We normalize the network by the largest singular value
+else:
+    # 2. and 3.
+    W = A/Sn[0][0]  # We normalize the network by the largest singular value
 
 Mp = pinv(M)
 s = np.array([np.eye(n, n)[0, :]])

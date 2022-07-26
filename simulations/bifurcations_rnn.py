@@ -37,7 +37,7 @@ timelist = np.linspace(t0, t1, int(t1 / dt))
 graph_str = "mouse_rnn"
 A = get_learned_weight_matrix(graph_str)
 U, S, Vh = np.linalg.svd(A)
-shrink_s = optimal_shrinkage(S, 1, 'operator')
+shrink_s = optimal_shrinkage(S, 1, 'frobenius')
 A = U@np.diag(shrink_s)@Vh
 N = len(A[0])
 
@@ -53,7 +53,8 @@ dynamics_str = "rnn"
 D = np.eye(N)/0.625
 # tau = 0.625 in Hadjiabadi et al. Maximally selective
 # single-cell target for circuit control in epilepsy models
-coupling_constants = np.linspace(1, 2, 20)/0.625
+# coupling_constants = np.linspace(1, 2, 20)/0.625
+coupling_constants = np.linspace(1.8, 2, 4)/0.625 # chaotic
 
 
 """ SVD and dimension reduction """

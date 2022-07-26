@@ -18,7 +18,7 @@ def test_compare_optimal_shrinkage_and_threshold_random_matrix():
     # utiliser ortho np.random
     sigma = 2.5
     noise_level = sigma / np.sqrt(N)
-    W = L @ M + noise_level * prng.normal(0, 0.2, (N, N))
+    W = L@M + noise_level * prng.normal(0, 0.2, (N, N))
     U, S, Vh = np.linalg.svd(W)
 
     threshold_shrink_fro = computeOptimalShrinkage(S, 'frobenius')
@@ -27,15 +27,20 @@ def test_compare_optimal_shrinkage_and_threshold_random_matrix():
 
     hard_threshold_fro = np.round(optimal_threshold(S, 1), 2)
 
-    print(f"\n\nhard_thresold_fro = {hard_threshold_fro} \n\n",
-          f"threshold_shrink_fro = {threshold_shrink_fro} \n\n",
-          f"threshold_shrink_op =  {threshold_shrink_op}\n\n",
-          f"threshold_shrink_nuc = {threshold_shrink_nuc} \n\n")
-    assert 1  # np.allclose(20, threshold_shrink_fro)
+    # print(f"\n\nhard_thresold_fro = {hard_threshold_fro} \n\n",
+    #       f"threshold_shrink_fro = {threshold_shrink_fro} \n\n",
+    #       f"threshold_shrink_op =  {threshold_shrink_op}\n\n",
+    #       f"threshold_shrink_nuc = {threshold_shrink_nuc} \n\n")
+    assert np.allclose(20, hard_threshold_fro) \
+        and np.allclose(20, threshold_shrink_fro) \
+        and np.allclose(20, threshold_shrink_op) \
+        and np.allclose(20, threshold_shrink_nuc)
 
 
 def test_compare_optimal_shrinkage_and_threshold_drosophila():
-    path = "C:/Users/thivi/Documents/GitHub/low-dimension-hypothesis/" \
+    """ This test trivially pass. """
+    path = "C:/Users/thivi/Documents/GitHub/" \
+           "low-rank-hypothesis-complex-systems/" \
            "singular_values/properties/"
     networkName = "drosophila"
     singularValuesFilename = path + networkName + '_singular_values.txt'
