@@ -9,6 +9,9 @@ from graphs.generate_s1_random_graph import s1_model
 
 def random_graph_generators(graph_str, N):
 
+    assert N % 5 == 0
+    assert N % 2 == 0
+
     if graph_str == "gnp":
         generator = nx.fast_gnp_random_graph
         p = 0.1
@@ -16,13 +19,19 @@ def random_graph_generators(graph_str, N):
 
     elif graph_str == "SBM":
         generator = nx.stochastic_block_model
-        pq = [[0.4, 0.1], [0.05, 0.2]]
-        sizes = [1 - N//4, N // 4]
-        args = (N, pq, sizes)  # TODO verify
+        pq = [[0.40, 0.10, 0.30, 0.01, 0.001],
+              [0.05, 0.60, 0.20, 0.10, 0.05],
+              [0.20, 0.01, 0.70, 0.20, 0.01],
+              [0.15, 0.05, 0.05, 0.80, 0.01],
+              [0.01, 0.10, 0.05, 0.20, 0.50]]
+        sizes = [N//10, 2*N//5, N//10, N//5, N//5]
+        #                          directed+self-loops
+        args = (sizes, pq, None, None, True, True, True)
 
     elif graph_str == "DCSBM":
-        # generator = nx.degree_corrected_stochastic_block_model  # TODO
-        generator = np.nan
+        # generator = nx.degree_corrected_stochastic_block_model
+        # generator = np.nan
+        raise ValueError("DCSBM is not on networkx, but it is on graph tool.")
 
     elif graph_str == "watts_strogatz":
         generator = nx.watts_strogatz_graph
@@ -32,7 +41,7 @@ def random_graph_generators(graph_str, N):
 
     elif graph_str == "barabasi_albert":
         generator = nx.barabasi_albert_graph
-        m = 30
+        m = 2
         args = (N, m)
 
     elif graph_str == "hard_configuration":

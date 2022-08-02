@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 # @author: Vincent Thibeault
 """
-This is a Python traduction of the Matlab script optimal_shrinkage.m from
+This is a Python implementation of the Matlab script optimal_shrinkage.m from
 Gavish, Matan and Donoho, David. (2016). Code Supplement for
 "Optimal Shrinkage of Singular Values". Stanford Digital Repository.
 Available at: http://purl.stanford.edu/kv623gt2817
 
 We also merge the code of Ben Erichson at https://github.com/erichson/optht,
-which is a Python traduction of the Matlab script optimal_SVHT_coef.m from
+which is a Python implementation of the Matlab script optimal_SVHT_coef.m from
 
 Donoho, David and Gavish, Matan. (2014). Code supplement to "The Optimal Hard
 Threshold for Singular Values is 4/sqrt(3)". Stanford Digital Repository.
@@ -21,7 +21,7 @@ operator norm loss with the Theorem 3.1 of
 W. Leeb, "Optimal singular value shrinkage for operator norm loss:
  Extending to non-square matrices", Stat. Probab. Lett., 186, 2022.
 
-We modified the code in our style and made few modifications.
+We have modified the code in our style and made some modifications.
 """
 
 import numpy as np
@@ -183,7 +183,7 @@ def optimal_shrinkage(singvals, beta, loss, sigma=None):
     """
     Original documentation with the following modifications:
     - format, typo, notation adjustments
-    - Python traduction of the example
+    - Python translation of the example
 
     Perform optimal shrinkage (w.r.t one of a few possible losses) on data
     singular values, when the noise is assumed white, and the noise level is

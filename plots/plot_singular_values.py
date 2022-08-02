@@ -9,7 +9,11 @@ import seaborn as sns
 import tabulate
 from plots.config_rcparams import *
 import time
+import json
+import tkinter.simpledialog
+from tkinter import messagebox
 import networkx as nx
+from tqdm import tqdm
 from singular_values.compute_effective_ranks import computeERank, \
     computeStableRank, findEffectiveRankElbow, computeRank,\
     computeEffectiveRankEnergyRatio, \
@@ -81,7 +85,7 @@ def plot_singular_values(singularValues,
                         label=f"Optimal shrinkage ({norm_str})")
         ax1.scatter(np.arange(1, len(singularValues) + 1, 1),
                     singularValues/singularValues[0], s=10)
-        plt.ylabel("Normalized singular\n values $\\sigma_i/\\sigma_1$")
+        plt.ylabel("Rescaled singular\n values $\\sigma_i/\\sigma_1$")
         plt.xlabel("Index $i$")
         plt.legend(loc=1, fontsize=fontsize_legend)
         plt.tight_layout()
@@ -136,7 +140,7 @@ def plot_singular_values(singularValues,
                         label=f"Optimal threshold")
         # ax.scatter(np.arange(1, len(singularValues) + 1, 1),
         #            singularValues / singularValues[0], s=10)
-        # plt.ylabel("Normalized singular\n values $\\sigma_i/\\sigma_1$")
+        # plt.ylabel("Rescaled singular\n values $\\sigma_i/\\sigma_1$")
         ax.scatter(np.arange(1, len(singularValues) + 1, 1),
                    singularValues, s=10)
         plt.ylabel("Singular\n values $\\sigma_i$")
@@ -158,7 +162,7 @@ def plot_singular_values(singularValues,
 def plot_singular_values_histogram(singularValues,
                                    nb_bins=1000,
                                    bar_color="#064878",
-                                   xlabel="Normalized singular"
+                                   xlabel="Rescaled singular"
                                           " values $\\sigma$",
                                    ylabel="Spectral density $\\rho(\\sigma)$"):
     # axvline_color="#ef8a62"
@@ -189,17 +193,15 @@ def plot_singular_values_histogram_random_networks(random_graph_generator,
                                                    ylabel="Spectral density"
                                                           " $\\rho(\\sigma)$"):
     # from singular_values.marchenko_pastur_pdf import marchenko_pastur_pdf
-    plt.figure(figsize=(6, 4))
-    t0 = time.clock()
+    fig = plt.figure(figsize=(6, 4))
     singularValues = np.array([])
     i = 0
-    for k in range(0, nb_networks):
+    for k in tqdm(range(0, nb_networks)):
         A = nx.to_numpy_array(random_graph_generator(*random_graph_args))
         singularValues_instance = svdvals(A)
         singularValues = np.concatenate((singularValues,
                                          singularValues_instance))
         i += 1
-    print((time.clock()-t0)/60, "minutes to process")
     weights = np.ones_like(singularValues) / float(len(singularValues))
     # N = random_graph_args[0]
     # p = 0.1
@@ -215,6 +217,39 @@ def plot_singular_values_histogram_random_networks(random_graph_generator,
     plt.ylabel(ylabel, labelpad=20)
     plt.tight_layout()
     plt.show()
+    if messagebox.askyesno("Python",
+                           "Would you like to save the parameters,"
+                           " the data, and the plot?"):
+        window = tkinter.Tk()
+        window.withdraw()  # hides the window
+        file = tkinter.simpledialog.askstring("File: ", "Enter your file name")
+        path = "C:/Users/thivi/Documents/GitHub/" \
+               "low-rank-hypothesis-complex-systems/" \
+               "singular_values/properties/singular_values_random_graphs/"
+        timestr = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")
+        graph_str = random_graph_generator.__name__
+        parameters_dictionary = {"graph_str": graph_str,
+                                 "args graph gen": random_graph_args,
+                                 "nb_samples (nb_networks)": nb_networks,
+                                 "nb_bins hitogram": nb_bins}
+
+        fig.savefig(path + f'{timestr}_{file}_singular_values_histogram'
+                           f'_{graph_str}.pdf')
+        fig.savefig(path + f'{timestr}_{file}_singular_values_histogram'
+                           f'_{graph_str}.png')
+
+        with open(path + f'{timestr}_{file}_concatenated_singular_values'
+                         f'_{graph_str}.json', 'w') \
+                as outfile:
+            json.dump(singularValues.tolist(), outfile)
+        with open(path + f'{timestr}_{file}_weights_for_histogram'
+                         f'_{graph_str}.json', 'w') \
+                as outfile:
+            json.dump(weights.tolist(), outfile)
+        with open(path + f'{timestr}_{file}_singular_values_histogram'
+                         f'_{graph_str}_parameters_dictionary.json',
+                  'w') as outfile:
+            json.dump(parameters_dictionary, outfile)
 
 
 def plot_singular_values_histogram_random_matrices(random_matrix_generator,
@@ -227,16 +262,14 @@ def plot_singular_values_histogram_random_matrices(random_matrix_generator,
                                                    ylabel="Spectral density"
                                                           " $\\rho(\\sigma)$"):
     plt.figure(figsize=(6, 4))
-    t0 = time.clock()
     singularValues = np.array([])
     i = 0
-    for k in range(0, nb_networks):
+    for k in tqdm(range(0, nb_networks)):
         A = random_matrix_generator(*random_matrix_args)
         singularValues_instance = svdvals(A)
         singularValues = np.concatenate((singularValues,
                                          singularValues_instance))
         i += 1
-    print((time.clock()-t0)/60, "minutes to process")
     weights = np.ones_like(singularValues) / float(len(singularValues))
     plt.hist(singularValues, bins=nb_bins,
              color=bar_color, edgecolor=None,

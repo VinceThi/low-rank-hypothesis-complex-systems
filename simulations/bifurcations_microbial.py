@@ -20,29 +20,34 @@ import json
 import tkinter.simpledialog
 from tkinter import messagebox
 
-plot_time_series = False
+plot_time_series = True
 compute_error = False
 plot_weight_matrix_bool = False
-integrate_complete_dynamics = False
-integrate_reduced_dynamics = True
+integrate_complete_dynamics = True
+integrate_reduced_dynamics = False
 integrate_reduced_dynamics_tensor = False
 forward_branch = True
-backward_branch = True
+backward_branch = False
 
 # Desmos exploration: https://www.desmos.com/calculator/pdtj9p2mdi
 
+# It is more convenient to use the setup = 1 to get the bifurcation diagram
+# -------------------------------------------------------------------------
 setup = 1
 
 """ Time parameters """
 # Three setup for for "gut" network
-if setup:
+if setup == 1:
     # 1. Useful to get the hysteresis
-    t0, t1, dt = 0, 4, 0.0001   # ou 0, 1.5, 0.0001
+    t0, t1, dt = 0, 1.5, 0.0001   # or 0, 4, 0.0001
 elif setup == 2:
-    # 2. Useful for the parameters to get the upper bound
+    # 2. Useful for the parameters to have
+    #  trajectories approx. between 0 and 1
+    # Integration is more tedious in this setup.
+    # t0, t1, dt = 0, 3000, 0.5
     t0, t1, dt = 0, 3000, 0.5
 else:
-    # 3.
+    # 3. Other
     t0, t1, dt = 0, 6, 0.001
 
 timelist = np.linspace(t0, t1, int(t1 / dt))
@@ -86,15 +91,15 @@ if plot_weight_matrix_bool:
 """ Dynamical parameters """
 dynamics_str = "microbial"
 # For real gut microbiome network
-if setup:
+if setup == 1:
     # 1.
     a, b, c, D = 5, 13, 10/3, 30*np.eye(N)
-    coupling_constants = np.linspace(0.5, 3, 50)
+    coupling_constants = np.linspace(2.9, 3, 10)
 
 elif setup == 2:
     # 2. Parameters to have trajectories below 1  (this is ad hoc)
     a, b, c, D = 0.00005, 0.1, 0.9, 0.01*np.eye(N)
-    coupling_constants = np.linspace(1.5, 2.5, 100)   # 4.5, 10)
+    coupling_constants = np.linspace(1.5, 4.5, 10)
 
 else:
     # 3.
@@ -112,11 +117,11 @@ Un, Sn, M = computeTruncatedSVD_more_positive(A, n)
 print("\n", computeEffectiveRanks(svdvals(A), graph_str, N))
 print(f"\nDimension of the reduced system n = {n} \n")
 
-if setup:
+if setup == 1:
     # 1.
     W = A
 
-else:
+elif setup == 2:
     # 2. and 3.
     W = A/Sn[0][0]  # We normalize the network by the largest singular value
 

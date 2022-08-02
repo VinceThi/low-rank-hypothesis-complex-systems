@@ -8,45 +8,49 @@ from graphs.get_real_networks import *
 from tqdm import tqdm
 from plots.config_rcparams import *
 from plots.plot_singular_values import plot_singular_values
+from plots.plot_weight_matrix import plot_weight_matrix
 from singular_values.compute_effective_ranks import computeEffectiveRanks
 import time
 import json
 import tkinter.simpledialog
 from tkinter import messagebox
 
-plot_singvals = True
+plot_singvals = False
+plot_weight_matrix_bool = False
+# Choices of approximation_method: "least_squares", "small_a", or "max_x_Px"
+approximation_method = "least_squares"
+
 
 """ Graph parameters """
 graph_str = "celegans_signed"
 A = get_connectome_weight_matrix(graph_str)
 N = len(A[0])  # Dimension of the complete dynamics
-print(N)
-# from plots.plot_weight_matrix import plot_weight_matrix
-# plot_weight_matrix(A)
+if plot_weight_matrix_bool:
+    plot_weight_matrix(A)
 
 """ Dynamical parameters """
 dynamics_str = "wilson_cowan"
 t = 0  # Time is not involved in the vector-field error computation
-# D = np.eye(N)
-# a = 1
-# b = 1
-# c = 3
+# D, a, b, c = 1, 1, 3, np.eye(N)
 
 """ SVD """
 U, S, Vh = np.linalg.svd(A)
-# U, S, Vh = 0, 0, 0
+print(computeEffectiveRanks(S, graph_str, N))
+print("\n\n\n")
 if plot_singvals:
-    print(computeEffectiveRanks(S, graph_str, N))
     plot_singular_values(S, effective_ranks=False, cum_explained_var=False,
                          ysemilog=False)
 
-N_arange = np.arange(1, N, 1)
-nb_samples = 1000
+if approximation_method == "least_squares":
+    N_arange = np.array([1, 5, 9, 50, 100, 150, 200, 250, 280, 296])
+    nb_samples = 10
+else:
+    N_arange = np.arange(1, N, 1)  # We do not compute the case n = N
+    nb_samples = 1000
 error_array = np.zeros((nb_samples, len(N_arange)))
 error_upper_bound_array = np.zeros((nb_samples, len(N_arange)))
 # error_upper_bound_array2 = np.zeros((nb_samples, len(N_arange)))
-for n in tqdm(N_arange):
-
+for count, n in enumerate(tqdm(N_arange)):
     Vhn = Vh[:n, :]
     D_sign = np.diag(-(np.sum(Vhn, axis=1) < 0).astype(float))\
         + np.diag((np.sum(Vhn, axis=1) >= 0).astype(float))
@@ -75,106 +79,102 @@ for n in tqdm(N_arange):
         coupling = coupling_samples[i]
         a, b, c = a_samples[i], b_samples[i], c_samples[i]
         D = np.diag(np.random.normal(mean_D, std_D, N))
-        error_array[i, n-1] = \
+        error_array[i, count] = \
             rmse(M@wilson_cowan(t, x, W, coupling, D, a, b, c),
                  reduced_wilson_cowan_vector_field(t, M@x, W, coupling,
                                                    M, Mp, D, a, b, c))
 
-        """ Least-square method """
-        # xp = x_prime_wilson_cowan(x, W, P, coupling, a, b, c)
-        # # The problem is that there are many solutions for xp and
-        # # we might not find the xp that minimizes the upper bound.
-        # # At least, one can find a correct xp, up to some tolerance.
-        # Jx = jacobian_x_wilson_cowan(xp, W, coupling, D, a, b, c)
-        # Jy = jacobian_y_wilson_cowan(xp, W, coupling, a, b, c)
-        #
-        # error_upper_bound_array[i, n - 1] = \
-        #     error_vector_fields_upper_bound(x, Jx, Jy, S, M, P)
+        if approximation_method == "least_squares":
+            """ x' is found using a least-square method """
+            xp = x_prime_wilson_cowan(x, W, P, coupling, a, b, c)
+            Jx = jacobian_x_wilson_cowan(xp, W, coupling, D, a, b, c)
+            Jy = jacobian_y_wilson_cowan(xp, W, coupling, a, b, c)
 
-        """ Approximate method (parameter 'a' small) """
-        # # The problem is that for large n, the error depending on the
-        # # parameter 'a' become non negligeable and the approximate error
-        # # upper bound might be below the true error.
-        # dsigp = derivative_sigmoid_prime_wilson_cowan(x, W, P, coupling, b,c)
-        # Jx = -D
-        # Jy = jacobian_y_approx_wilson_cowan(dsigp, coupling, b)
-        # error_upper_bound_array[i, n - 1] = \
-        #     error_vector_fields_upper_bound(x, Jx, Jy, S, M, P)
+            error_upper_bound_array[i, count] = \
+                error_vector_fields_upper_bound(x, Jx, Jy, S, M, P)
 
-        """ Approximate method 2 : choose x' = x or Px"""
-        # Problem we do not know x', we naively choose the max in {x, Px}
-        # but it should be the max in the ***interval*** between x and Px.
-        # Yet, if x is close to Px, this is not a bad choice. This will happen
-        # especially for large n.
-        Jx = jacobian_x_wilson_cowan(x, W, coupling, D, a, b, c)
-        Jy = jacobian_y_wilson_cowan(x, W, coupling, a, b, c)
-        e_x = error_vector_fields_upper_bound(x, Jx, Jy, S, M, P)
+        elif approximation_method == "small_a":
+            """ Parameter 'a' is considered to be 0. """
+            # The problem is that for large n, the error depending on the
+            # parameter 'a' become non negligeable and the approximate error
+            # upper bound might be below the true error.
+            dsigp = derivative_sigmoid_prime_wilson_cowan(x, W, P,
+                                                          coupling, b, c)
+            Jx = -D
+            Jy = jacobian_y_approx_wilson_cowan(dsigp, coupling, b)
+            error_upper_bound_array[i, count] = \
+                error_vector_fields_upper_bound(x, Jx, Jy, S, M, P)
 
-        Jx_tilde = jacobian_x_wilson_cowan(P@x, W, coupling, D, a, b, c)
-        Jy_tilde = jacobian_y_wilson_cowan(P@x, W, coupling, a, b, c)
-        e_Px = error_vector_fields_upper_bound(P@x, Jx_tilde, Jy_tilde,
-                                               S, M, P)
-        error_upper_bound_array[i, n - 1] = max(e_x, e_Px)
+        elif approximation_method == "max_x_Px":
+            """ We choose x' as x or Px, choosing the one that gives the 
+            maximum value of the error bound. """
+            # We naively choose the max in {x, Px} even if it should be
+            # the max in the ***interval*** between x and Px.
+            # Yet, if x is close to Px, this is not a bad choice.
+            # This will happen especially for large n.
+            Jx = jacobian_x_wilson_cowan(x, W, coupling, D, a, b, c)
+            Jy = jacobian_y_wilson_cowan(x, W, coupling, a, b, c)
+            e_x = error_vector_fields_upper_bound(x, Jx, Jy, S, M, P)
 
+            Jx_tilde = jacobian_x_wilson_cowan(P@x, W, coupling, D, a, b, c)
+            Jy_tilde = jacobian_y_wilson_cowan(P@x, W, coupling, a, b, c)
+            e_Px = error_vector_fields_upper_bound(P@x, Jx_tilde, Jy_tilde,
+                                                   S, M, P)
+            error_upper_bound_array[i, count] = max(e_x, e_Px)
+
+        else:
+            raise ValueError("The variable approximation_method should be"
+                             " 'optimization', 'small_a' or 'max_x_Px'.")
 
 """                                                                              
 Comment                                                                          
--------                                                                          
-Below, we use error_...[0, :-1] because the column is error 0 (n = N). 
-We remove it to do a semilog plot.                                                            
+-------                                                                                                                                  
 See https://www.youtube.com/watch?v=ydxy3fEar9M for transforming an error for    
 a semilog plot.                                                                  
 """
-mean_error = np.mean(error_array[:, :-1], axis=0)
+mean_error = np.mean(error_array, axis=0)
 mean_log10_error = np.log10(mean_error)
 relative_std_semilogplot_error = \
-    np.std(error_array[:, :-1], axis=0)/(np.log(10)*mean_error)
+    np.std(error_array, axis=0)/(np.log(10)*mean_error)
 fill_between_error_1 = 10**(
         mean_log10_error - relative_std_semilogplot_error)
 fill_between_error_2 = 10**(
         mean_log10_error + relative_std_semilogplot_error)
 
-mean_upper_bound_error = np.mean(error_upper_bound_array[:, :-1], axis=0)
+mean_upper_bound_error = np.mean(error_upper_bound_array, axis=0)
 mean_log10_upper_bound_error = np.log10(mean_upper_bound_error)
 relative_std_semilogplot_upper_bound_error = \
-    np.std(error_upper_bound_array[:, :-1], axis=0) / \
+    np.std(error_upper_bound_array, axis=0) / \
     (np.log(10) * mean_upper_bound_error)
 fill_between_ub1 = 10**(mean_log10_upper_bound_error -
                         relative_std_semilogplot_upper_bound_error)
 fill_between_ub2 = 10**(mean_log10_upper_bound_error +
                         relative_std_semilogplot_upper_bound_error)
 
-# mean_upper_bound_error2 = np.mean(error_upper_bound_array2[:, :-1], axis=0)
-
-# mean_upper_bound_triangle_error = \
-#     np.mean(error_upper_bound_triangle_array, axis=0)
-# mean_upper_bound_induced_error = \
-#     np.mean(error_upper_bound_induced_array, axis=0)
-
 fig = plt.figure(figsize=(4, 4))
 ax = plt.subplot(111)
-ax.scatter(N_arange[:-1], mean_error, s=5, color=deep[3],
-           label="RMSE $\\mathcal{E}_f\,(x)$")
-ax.plot(N_arange[:-1], mean_upper_bound_error, color=dark_grey,
+ax.scatter(N_arange, mean_error, s=5, color=deep[3],
+           label="RMSE $\\mathcal{E}\,(x)$")
+ax.plot(N_arange, mean_upper_bound_error, color=dark_grey,
         label="Approximate upper bound")
 # ax.plot(N_arange[:-1], mean_upper_bound_error2, color=deep[9],
 #         label="Upper bound (part)")
 # ax.plot(N_arange[:-1], np.sqrt(N)*np.ones(len(N_arange[:-1]))/2,
 #  color=deep[9], label="Upper bound (part)")
 
-ax.fill_between(N_arange[:-1], fill_between_error_1, fill_between_error_2,
+ax.fill_between(N_arange, fill_between_error_1, fill_between_error_2,
                 color=deep[3], alpha=0.5)
-ax.fill_between(N_arange[:-1], fill_between_ub1, fill_between_ub2,
+ax.fill_between(N_arange, fill_between_ub1, fill_between_ub2,
                 color=dark_grey, alpha=0.5)
 # ax.plot(N_arange[:-1], S[:-2]/S[0], color=deep[9],
 #         label="$\\sigma_n/\\sigma_1$")
 # ax.plot(N_arange[:-1], S[:n-1] - S[1:n], color=deep[8],
 #         label="$\\sigma_n - \\sigma_{n-1}$")
 plt.xlabel('Dimension $n$')
-ticks = ax.get_xticks()
-ticks[ticks.tolist().index(0)] = 1
-plt.xticks(ticks[ticks > 0])
-plt.xlim([-0.01*N, 1.01*N])
+# ticks = ax.get_xticks()
+# ticks[ticks.tolist().index(0)] = 1
+# plt.xticks(ticks[ticks > 0])
+plt.xlim([-0.01*N, 1.01*np.max(N_arange)])
 plt.ylim([0.9*np.min(fill_between_error_1),
           1.1*np.max(fill_between_ub2)])
 ax.legend(loc=1, frameon=True, edgecolor="#e0e0e0")

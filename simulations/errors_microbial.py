@@ -13,168 +13,234 @@ import json
 import tkinter.simpledialog
 from tkinter import messagebox
 
+plot_singular_values_bool = False
+""" 
+                     Choice of approximation methods:
+            "neglect_linear_term", "max_x_Px", or "optimization"
+            
+- neglect_linear_term: it doesn't give good results
+- max_x_Px: good enough result, but not always above the error for an instance
+- optimization: very long simulations, does not guarantee a good x'            
+"""
+approximation_method = "optimization"
+
+
+""" 
+                           Choice of setup:
+                               1 or 2
+
+- setup = 1 uses the parameters of Sanhedrai et al. 2022. The trajectories
+  are not bounded between 0 and 1, but it is useful to get bifurcations.
+- setup = 2 is what we use in the paper for the upper bound, since the
+  trajectories are below one for the set of parameters used                
+"""
+#
+setup = 2
+
+
 """ Graph parameters """
 graph_str = "gut"
-A = get_microbiome_weight_matrix(graph_str)
-N = len(A[0])  # Dimension of the complete dynamics
+adj = get_microbiome_weight_matrix(graph_str)
+N = len(adj[0])  # Dimension of the complete dynamics
 
 """ Dynamical parameters """
 dynamics_str = "microbial"
 t = 0  # It is not involved in the error computation
-
-# 1. The ones used in SI and in Sanhedrai et al., Nat. Phys. (2022).
-# a, b, c, D = 5, 13, 10/3, 30*np.eye(N)
-
-# 2. The ones used in the paper to compute the upper bound on the error.
-a, b, c, D = 0.00005, 0.1, 0.9, 0.01*np.eye(N)
-
-# 3.
-# a, b, c, D = 0, 0.15, 72, 0*np.eye(N)
-
+# The parameters are define below
 
 """ SVD """
-U, S, Vh = np.linalg.svd(A)
-# plot_singular_values(S)
+U, S, Vh = np.linalg.svd(adj)
+if plot_singular_values_bool:
+    plot_singular_values(S)
 
 
 """ Simulations """
-N_arange = np.arange(1, N, 1)
-nb_samples = 1
-# for 1000 samples, it took 20h30min
-error_array = np.zeros((nb_samples, N))
-error_upper_bound_array = np.zeros((nb_samples, N))
-for n in tqdm(N_arange):
+if approximation_method == "optimization":
+    N_arange = np.array([1, 50, 200, 400, 600, 800, 830])
+    nb_samples = 10
+else:
+    N_arange = np.arange(1, N, 1)  # We do not compute the case n = N
+    nb_samples = 1000
+    # for 1000 samples, it took 35h for max_x_Px on a personal laptop (i7)
+
+error_array = np.zeros((nb_samples, len(N_arange)))
+error_upper_bound_array = np.zeros((nb_samples, len(N_arange)))
+for count, n in tqdm(enumerate(N_arange)):
+    print(f"{(count+1)}/{len(N_arange)}")
     Vhn = Vh[:n, :]
     D_sign = np.diag(-(np.sum(Vhn, axis=1) < 0).astype(float)) \
         + np.diag((np.sum(Vhn, axis=1) >= 0).astype(float))
     M = D_sign @ Vhn
-    W = A / S[0]  # We normalize the network by the largest singular value
+    if setup == 1:
+        W = adj
+    elif setup == 2:
+        W = adj / S[0]  # We normalize the network by the largest sing. value
     Mp = np.linalg.pinv(M)
     P = Mp@M
-    x_samples = np.random.uniform(0, 1, (N, nb_samples))
 
     # Test zone
     # -----------------------------------
     # xtest = x_samples[:, 0]
     # gamma = 3
-    # P = Mp @ M
-    # Dchi = np.diag((np.eye(N) - P)@xtest)
-    # DWchi = np.diag(W@(np.eye(N) - Mp @ M)@xtest)
-    # d = b*(xtest**2 - (P@xtest)**2) + c*(xtest**3 - (P@xtest)**3)\
+    # chi = (np.eye(N) - P)@xtest
+    # Dchi = np.diag(chi)
+    # DWchi = np.diag(W@chi)
+    # d = b*(xtest**2 - (P@xtest)**2) - c*(xtest**3 - (P@xtest)**3)\
     #     + gamma*(xtest*(W@xtest) - (P@xtest)*(W@P@xtest))
-    # print(f"\n\nmax a ={np.max(3*c*Dchi@xtest**2)}\n\n",
-    #       f"max b = {np.max((2*b*Dchi + gamma*DWchi
-    #  + gamma*Dchi@W)@xtest)}\n\n",
-    #       f"max bcoup = {np.max(gamma*Dchi@W@xtest)}\n\n",
-    #       f"max c = {np.max(d)}")
-    # print(f"\n\nmean a ={np.mean(3*c*Dchi@xtest**2)}\n\n",
-    #       f"mean b = {np.mean((2*b*Dchi + gamma*DWchi
-    #  + gamma*Dchi@W)@xtest)}\n\n",
-    #       f"mean bcoup = {np.mean(gamma*Dchi@W@xtest)}\n\n",
-    #       f"mean c = {np.mean(d)}")
+    # print(f"\n\nmean |a| ={np.mean(np.abs(-3*c*Dchi@(xtest**2)))}\n\n",
+    #       f"mean |b| = "
+    #       f"{np.mean(np.abs((2*b*Dchi+gamma*DWchi+gamma*Dchi@W)@xtest))}\n\n",
+    #       f"mean |bcoup| = {np.mean(np.abs(gamma*Dchi@W@xtest))}\n\n",
+    #       f"mean |c| = {np.mean(np.abs(d))}")
 
-    # print(f"\n\nmax a ={np.max(xtest**2)}\n\n",
-    #       f"max b = {np.max(Dchinv@(2*b*Dchi
-    # + gamma*Dchi@W + gamma*DWchi)@xtest/(3*c))}\n\n",
-    #       f"max c = {np.max(Dchinv@d/(3*c))}")
-    # print(f"\n\nmean a ={np.mean(xtest**2)}\n\n",
-    #       f"mean b = {np.mean(Dchinv@(2*b*Dchi
-    # + gamma*Dchi@W + gamma*DWchi)@xtest/(3*c))}\n\n",
-    #       f"mean c = {np.mean(Dchinv@d/(3*c))}")
-    # -----------------------------------
-    min_coupling = 0.1   # 1  # 0.1 # 0.5
-    max_coupling = 5     # 6  # 5   # 3
-    coupling_samples = np.random.uniform(min_coupling, max_coupling,
-                                         nb_samples)
+    if setup == 1:
+        W = adj
+        singvals_W = S
 
-    # a, b, c, D = 0.00005, 0.1, 0.9, 0.01*np.eye(N)
-    min_a, max_a = 0.00001, 0.0001
-    a_samples = np.random.uniform(min_a, max_a, nb_samples)
+        max_x = 20
+        x_samples = np.random.uniform(0, max_x, (N, nb_samples))
 
-    min_b, max_b = 0.05, 2
-    b_samples = np.random.uniform(min_b, max_b, nb_samples)
+        min_coupling = 0.5
+        max_coupling = 3
+        coupling_samples = np.random.uniform(min_coupling, max_coupling,
+                                             nb_samples)
 
-    min_c, max_c = 0.5, 1.5
-    c_samples = np.random.uniform(min_c, max_c, nb_samples)
+        min_a, max_a = 4, 6
+        a_samples = np.random.uniform(min_a, max_a, nb_samples)
 
-    mean_D, std_D = 0.05, 0.0005
+        min_b, max_b = 12, 13
+        b_samples = np.random.uniform(min_b, max_b, nb_samples)
+
+        min_c, max_c = 2, 4
+        c_samples = np.random.uniform(min_c, max_c, nb_samples)
+
+        mean_D, std_D = 0.01, 0.0001
+
+    elif setup == 2:
+        W = adj/S[0]
+        singvals_W = S/S[0]
+
+        max_x = 1
+        x_samples = np.random.uniform(0, max_x, (N, nb_samples))
+
+        min_coupling = 0.1
+        max_coupling = 5
+        coupling_samples = np.random.uniform(min_coupling, max_coupling,
+                                             nb_samples)
+
+        min_a, max_a = 0.00001, 0.0001
+        a_samples = np.random.uniform(min_a, max_a, nb_samples)
+
+        min_b, max_b = 0.05, 2
+        b_samples = np.random.uniform(min_b, max_b, nb_samples)
+
+        min_c, max_c = 0.5, 1.5
+        c_samples = np.random.uniform(min_c, max_c, nb_samples)
+
+        D = 0.01*np.eye(N)
 
     for i in range(0, nb_samples):
         x = x_samples[:, i]
         coupling = coupling_samples[i]
         a, b, c = a_samples[i], b_samples[i], c_samples[i]
-        D = np.diag(np.random.normal(mean_D, std_D, N))
+        if setup == 1:
+            D = np.diag(np.random.normal(mean_D, std_D, N))
 
         # RMSE
-        error_array[i, n - 1] = \
+        error_array[i, count] = \
             rmse(M@microbial(t, x, W, coupling, D, a, b, c),
                  reduced_microbial_vector_field(t, M@x, W, coupling,
                                                 M, Mp, D, a, b, c))
 
         # Upper bound RMSE
-        xp = x_prime_microbial(x, W, P, coupling, b, c)
-        """ Test zone """
-        # print(xp)
-        # chi = (np.eye(N) - P)@x
-        # print(
-        #   coupled_quadratic_equations_microbial(xp, x, W, P, coupling, b, c))
-        # p = P@x
-        # AA = 3*c*chi
-        # print(np.shape(W@chi), chi)
-        # print(np.diag(W@chi))
-        # BB = 2*b*np.diag(chi) + coupling*np.diag(chi)@W
-        # + coupling*np.diag(W@chi)
-        # CC = b*(x**2 - p**2) + c*(x**3 - p**3) + coupling*(x*(W@x) - p*(W@p))
-        # print(f"<A> = {np.mean(AA)}, <B> = {np.mean(BB)},
-        #  <C> = {np.mean(CC)}")
-        Jx = jacobian_x_microbial(xp, W, coupling, D, b, c)
-        Jy = jacobian_y_microbial(xp, coupling)
-        evec = error_vector_fields_upper_bound(x, Jx, Jy, S/S[0], M, P)
-        if np.isnan(evec):
-            error_upper_bound_array[i, n - 1] = \
-                error_upper_bound_array[i, n - 2]
-        else:
-            error_upper_bound_array[i, n - 1] = evec
+        if approximation_method == "neglect_linear_term":
+            """ Neglect the the linear term Bx' """
+            p = P@x
+            A = A_microbial(x, p, c)
+            B = B_microbial(x, p, W, b, coupling)
+            C = C_microbial(x, p, W, b, c, coupling)
+            xp = x_prime_microbial_neglect_linear_term(A, C)
+            # print(f"<|A|>= {np.mean(np.abs(A))}, "
+            #       f"<|B|>= {np.mean(np.abs(B))},"
+            #       f" <|C|>= {np.mean(np.abs(C))}")
+            Jx = jacobian_x_microbial(xp, W, coupling, D, b, c)
+            Jy = jacobian_y_microbial(xp, coupling)
+            evec = error_vector_fields_upper_bound(x, Jx, Jy, singvals_W, M, P)
+            if np.isnan(evec):
+                error_upper_bound_array[i, count] = \
+                    error_upper_bound_array[i, count - 1]
+            else:
+                error_upper_bound_array[i, count] = evec
 
-# fig = plt.figure(figsize=(4, 4))
-# plt.subplot(111)
-# plt.scatter(np.arange(1, len(mean_error_list) + 1, 1), mean_error_list,
-#             color=first_community_color, s=5)
-# ylab = plt.ylabel(f'Mean RMSE between\n the vector fields')
-# plt.xlabel('Dimension $n$')
-# plt.tight_layout()
-# plt.show()
+        elif approximation_method == "max_x_Px":
+            """ We choose x' as x or Px, choosing the one that gives the 
+            maximum value of the error bound. """
+            # We naively choose the max in {x, Px} even if it should be
+            # the max in the ***interval*** between x and Px.
+            # Yet, if x is close to Px, this is not a bad choice.
+            # This gives better results especially for large n.
+            # For the population dynamics on the gut microbiome, this gives a
+            # very crude results for small n.
+            Jx = jacobian_x_microbial(x, W, coupling, D, b, c)
+            Jy = jacobian_y_microbial(x, coupling)
+
+            Jx_tilde = jacobian_x_microbial(P@x, W, coupling, D, b, c)
+            Jy_tilde = jacobian_y_microbial(P@x, coupling)
+            e_x = error_vector_fields_upper_bound(x, Jx, Jy, singvals_W, M, P)
+            e_Px = error_vector_fields_upper_bound(P@x, Jx_tilde, Jy_tilde,
+                                                   singvals_W, M, P)
+
+            error_upper_bound_array[i, count] = max(e_x, e_Px)
+
+        elif approximation_method == "optimization":
+            p = P@x
+            A = A_microbial(x, p, c)
+            B = B_microbial(x, p, W, b, coupling)
+            C = C_microbial(x, p, W, b, c, coupling)
+            xp = x_prime_microbial_optimize(A, B, C, max_x=max_x)
+            Jx = jacobian_x_microbial(xp, W, coupling, D, b, c)
+            Jy = jacobian_y_microbial(xp, coupling)
+
+            evec = error_vector_fields_upper_bound(x, Jx, Jy, singvals_W, M, P)
+
+            error_upper_bound_array[i, count] = evec
+
+        else:
+            raise ValueError("The variable approximation_method should be"
+                             " 'optimization', 'neglect_linear_term'"
+                             " or 'max_x_Px'.")
+
 """                                                                              
 Comment                                                                          
--------                                                                          
-Below, we use error_...[0, :-1] because the column is error 0 (n = N). 
-We remove it to do a semilog plot.                                                            
+-------                                                                                                                                  
 See https://www.youtube.com/watch?v=ydxy3fEar9M for transforming an error for    
 a semilog plot.                                                                  
 """
-mean_error = np.mean(error_array[:, :-1], axis=0)
+mean_error = np.mean(error_array, axis=0)
 mean_log10_error = np.log10(mean_error)
 relative_std_semilogplot_error = \
-    np.std(error_array[:, :-1], axis=0) / (np.log(10) * mean_error)
+    np.std(error_array, axis=0) / (np.log(10) * mean_error)
 fill_between_error_1 = 10**(
         mean_log10_error - relative_std_semilogplot_error)
 fill_between_error_2 = 10**(
         mean_log10_error + relative_std_semilogplot_error)
 
-mean_upper_bound_error = np.mean(error_upper_bound_array[:, :-1], axis=0)
+mean_upper_bound_error = np.mean(error_upper_bound_array, axis=0)
 mean_log10_upper_bound_error = np.log10(mean_upper_bound_error)
 relative_std_semilogplot_upper_bound_error = \
-    np.std(error_upper_bound_array[:, :-1], axis=0) / \
+    np.std(error_upper_bound_array, axis=0) / \
     (np.log(10) * mean_upper_bound_error)
 fill_between_ub1 = 10**(mean_log10_upper_bound_error -
                         relative_std_semilogplot_upper_bound_error)
 fill_between_ub2 = 10**(mean_log10_upper_bound_error +
                         relative_std_semilogplot_upper_bound_error)
 
+# print(mean_error[:3], mean_upper_bound_error[:3])
+
 fig = plt.figure(figsize=(4, 4))
 ax = plt.subplot(111)
 ax.scatter(N_arange, mean_error, s=5, color=deep[3],
-           label="RMSE $\\mathcal{E}_f\,(x)$")
+           label="RMSE $\\mathcal{E}\,(x)$")
 ax.plot(N_arange, mean_upper_bound_error, color=dark_grey,
         label="Upper bound")
 ax.fill_between(N_arange, fill_between_error_1, fill_between_error_2,
@@ -216,7 +282,7 @@ if messagebox.askyesno("Python",
         "a_samples": f"np.random.uniform({min_a}, {max_a}, nb_samples)",
         "b_samples": f"np.random.uniform({min_b}, {max_b}, nb_samples)",
         "c_samples": f"np.random.uniform({min_c}, {max_c}, nb_samples)",
-        "D_samples": f"np.diag(np.random.normal({mean_D}, {std_D}, N))"}
+        "D": f"{D[0, 0]}I"}
 
     fig.savefig(path + f'{timestr}_{file}_vector_field_rmse_error_vs_n'
                        f'_{dynamics_str}_{graph_str}.pdf')

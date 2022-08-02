@@ -3,7 +3,7 @@
 
 import numpy as np
 from numpy.linalg import solve, norm
-from scipy.optimize import least_squares, root
+from scipy.optimize import least_squares
 
 
 def mse(a, b):
@@ -120,186 +120,6 @@ def x_prime_SIS(x, W, P):
     return solve(A, b)
 
 
-# -------------------------- Errors microbial ---------------------------------
-def jacobian_x_microbial(x, W, coupling, D, b, c):
-    return -D + np.diag(2*b*x + 3*c*x**2 + coupling*(W@x))
-
-
-def jacobian_y_microbial(x, coupling):
-    return coupling*np.diag(x)
-
-
-def x_prime_microbial_old(x, W, P, coupling, b, c):
-    """ This is a first crude approximation of x'. This is not used in
-     the paper. """
-    p = P@x
-    chi = x - p
-    Wchi = W@chi
-    A = 3*c*chi
-    B = 2*b*np.diag(chi) + coupling*np.diag(Wchi)
-    # ^ We have neglected the coupling of the quadratic equations
-    C = b*(p**2 - x**2) + c*(p**3 - x**3) + coupling*(p*(W@p) - x*(W@x))
-    # print(coupling*chi)
-    # print(f"A = {A}", f"\n\nC= {C}", f"\n\nB^2 - 4AC = {B**2 - 4*A*C}")
-    # print(f"\n\nxprime = {(-B + np.sqrt(B**2 - 4*A*C))/(2*A)}")
-
-    # Warning: The absolute value in the square root is imposed to guarantee
-    # a real solution.
-    return (-B + np.sqrt(np.abs(B**2 - 4*A*C)))/(2*A)
-
-
-def x_prime_microbial(x, W, P, coupling, b, c):
-    """ This is a crude approximation of x' """
-    p = P@x
-    chi = x - p
-    A = 3*c*chi
-    C = b*(x**2 - p**2) + c*(x**3 - p**3) + coupling*(x*(W@x) - p*(W@p))
-    # ^ Note that C has a negative sign difference with the C defined in the
-    # functions x_prime_microbial_old and objective_function_microbial
-    CA = C/A
-    # Warning
-    # We set the following to ensure that we are in the possible range of x_i',
-    # i.e., between 0 and 1. The parameters of the dynamics must be set to
-    # ensure that the trajectories are between 0 and 1, otherwise, the
-    # following lines can hardly be justified.
-    CA[CA < 0] = 0.5  # or 0
-    CA[CA > 1] = 0.5  # or 1
-    return np.sqrt(CA)
-
-
-# def objective_function_microbial(x, z, W, P, coupling, b, c):
-#     """ The coupled quadratic equations to find one zero in x'(variable x)
-#     and evaluate the upper bound on the alignment error.
-#     Note: x is x' and z is x, the position at which we evaluate the
-#     alignment error"""
-#     p = P@z
-#     chi = z - p
-#     Wchi = W@chi
-#     A = 3*c*np.diag(chi)
-#     B = 2*b*np.diag(chi) + coupling*np.diag(Wchi) + coupling*np.diag(chi)@W
-#     C = b*(p**2 - z**2) + c*(p**3 - z**3) + coupling*(p*(W@p) - z*(W@z))
-#     return A@(x**2) + B@x + C
-
-
-def objective_function_microbial(xp, x, W, P, coupling, b, c):
-    """ The coupled quadratic equations to find one zero in x'(variable xp) and
-    evaluate the upper bound on the alignment error. """
-    p = P@x
-    chi = x - p
-    A = 3*c*np.diag(chi)
-    B = 2*b*np.diag(chi) + coupling*np.diag(chi)@W + coupling*np.diag(W@chi)
-    C = b*(x**2 - p**2) + c*(x**3 - p**3) + coupling*(x*(W@x) - p*(W@p))
-    return A@(xp**2) + B@xp - C
-
-
-def constrained_objective_function_microbial(x, f, args_f, lower, upper,
-                                             min_incr=0.001):
-    """ We define this function because we want to find the roots in x'
-    where each elements in x' are between 0 and 1. This is a function from
-    jotasi on Stack Overflow:
-    https://stackoverflow.com/questions/43995862/python-multivariate-non-linear-solver-with-constraints """
-    x = np.asarray(x)
-    lower = np.asarray(lower)
-    upper = np.asarray(upper)
-    xBorder = np.where(x < lower, lower, x)
-    xBorder = np.where(x > upper, upper, xBorder)
-    fBorder = f(xBorder, *args_f)
-    distFromBorder = (np.sum(np.where(x < lower, lower - x, 0.))
-                      + np.sum(np.where(x > upper, x - upper, 0.)))
-    return fBorder + (fBorder + np.where(fBorder > 0,
-                                         min_incr, -min_incr))*distFromBorder
-
-
-def x_prime_microbial_optimize(x, W, P, coupling, b, c, nb_iter=10, tol=1e-6):
-    """ Obtain x' for the microbial dynamics with an optimization method,
-     but it might be very long to compute. z: is the position at which
-     we evaluate the alignment error. Below, we provide some definitions
-     of the parameters returned by scipy.optimize as a remainder.
-
-     We have that show_options(solver="root", method="lm", disp=True) gives:
-     Solve for least squares with Levenberg-Marquardt
-     Options
-     -------
-     col_deriv : bool
-         non-zero to specify that the Jacobian function computes derivatives
-         down the columns (faster, because there is no transpose operation).
-     ftol : float
-         Relative error desired in the sum of squares.
-     xtol : float
-         Relative error desired in the approximate solution.
-     gtol : float
-         Orthogonality desired between the function vector and the columns
-         of the Jacobian.
-     maxiter : int
-         The maximum number of calls to the function. If zero, then
-         100*(N+1) is the maximum where N is the number of elements in x0.
-     epsfcn : float
-         A suitable step length for the forward-difference approximation of
-         the Jacobian (for Dfun=None). If epsfcn is less than the machine
-         precision, it is assumed that the relative errors in the functions
-         are of the order of the machine precision.
-     factor : float
-         A parameter determining the initial step bound
-         (``factor * || diag * x||``). Should be in interval ``(0.1, 100)``.
-     diag : sequence
-         N positive entries that serve as a scale factors for the variables.
-
-     Also:
-     ``nfev``
-        The number of function calls
-    ``fvec``
-        The function evaluated at the output
-    ``fjac``
-        A permutation of the R matrix of a QR
-        factorization of the final approximate
-        Jacobian matrix, stored column wise.
-        Together with ipvt, the covariance of the
-        estimate can be approximated.
-    ``ipvt``
-        An integer array of length N which defines
-        a permutation matrix, p, such that
-        fjac*p = q*r, where r is upper triangular
-        with diagonal elements of nonincreasing
-        magnitude. Column j of p is column ipvt(j)
-        of the identity matrix.
-    ``qtf``
-        The vector (transpose(q) * fvec).
-     """
-    args_f = (x, W, P, coupling, b, c)
-    lower = np.zeros(len(x))
-    upper = np.ones(len(x))
-    args = (objective_function_microbial, args_f, lower, upper)
-    xp_return = 0.5*np.ones(len(x))
-    fvec_return = objective_function_microbial(xp_return, *args_f)
-    for i in range(nb_iter):
-        x0 = np.random.random(len(x))
-        optimization_result = root(constrained_objective_function_microbial,
-                                   x0, args=args, method='lm')
-        print("An optimization is complete.")
-        xp = optimization_result.x
-        fvec = objective_function_microbial(xp, *args_f)
-        if np.all(np.abs(fvec) < tol):
-            xp_return = xp
-            fvec_return = fvec
-            break
-        elif np.mean(fvec**2) < np.mean(fvec_return**2):
-            print("hello")
-            xp_return = xp
-            fvec_return = fvec
-            continue
-        print(optimization_result)
-    if np.mean(fvec_return**2) > tol:
-        print(f"The funtion objective function_microbial evaluated at x' "
-              f"(found with scipy.optimize.root) has at least one element"
-              f" greater than the tolerance tol = {tol}.")
-    return xp_return, fvec_return
-    # optimization_result = root(objective_function_microbial,
-    #                            x0, args=(z, W, P, coupling, b, c),
-    #                            method='lm')
-    # print(optimization_result)
-    # return optimization_result.x
-
-
 # ------------------------------ Errors RNN -----------------------------------
 def sigmoid(x):
     return 1/(1+np.exp(-x))
@@ -336,7 +156,7 @@ def jacobian_y_wilson_cowan(x, W, coupling, a, b, c):
            derivative_sigmoid(b*(coupling*W@x-c))
 
 
-def f_wilson_cowan(x_prime, x, W, P, coupling, a, b, c):
+def objective_function_wilson_cowan(x_prime, x, W, P, coupling, a, b, c):
     chi = (np.eye(len(x)) - P) @ x
     q = b*(coupling*W@x-c)
     q_tilde = b*(coupling*W@P@x-c)
@@ -348,11 +168,9 @@ def f_wilson_cowan(x_prime, x, W, P, coupling, a, b, c):
 
 
 def x_prime_wilson_cowan(position, W, P, coupling, a, b, c):
-    # The problem is that there are many solutions for xp and
-    # we might not find the xp that minimizes the upper bound
     N = len(position)
     x0 = np.random.uniform(0, 1, N)
-    return least_squares(f_wilson_cowan, x0=x0,
+    return least_squares(objective_function_wilson_cowan, x0=x0,
                          bounds=(np.zeros(N), np.ones(N)),
                          ftol=1e-5, xtol=1e-5, gtol=1e-5,
                          args=(position, W, P, coupling, a, b, c)).x
@@ -382,3 +200,244 @@ def derivative_sigmoid_prime_wilson_cowan(x, W, P, coupling, b, c):
     return d
 
 
+# -------------------------- Errors microbial ---------------------------------
+def jacobian_x_microbial(x, W, coupling, D, b, c):
+    return -D + np.diag(2*b*x - 3*c*x**2 + coupling*(W@x))
+
+
+def jacobian_y_microbial(x, coupling):
+    return coupling*np.diag(x)
+
+
+def A_microbial(x, p, c):
+    return -3*c*np.diag(x - p)
+
+
+def B_microbial(x, p, W, b, coupling):
+    chi = x - p
+    return 2*b*np.diag(chi) + coupling*np.diag(chi)@W + coupling*np.diag(W@chi)
+
+
+def C_microbial(x, p, W, b, c, coupling):
+    return b*(p**2 - x**2) - c*(p**3 - x**3) + coupling*(p*(W@p) - x*(W@x))
+
+
+def x_prime_microbial_neglect_linear_term(A, C):
+    """ We neglect the linear term Bx' in the objective function to
+     get an approximation of x'. """
+    CA = -C/np.diag(A)
+    # Warning
+    # We set the following to ensure that we are in the possible range of x_i',
+    # i.e., between 0 and 1. The parameters of the dynamics must be set to
+    # ensure that the trajectories are between 0 and 1, otherwise, the
+    # following lines can hardly be justified.
+    CA[CA < 0] = 0.01  # or 0.5
+    CA[CA > 1] = 0.99  # or 0.5
+    return np.sqrt(CA)
+
+
+def x_prime_microbial_neglect_coupling(x, W, P, coupling, b, c):
+    """ We approximate the coupling term coupling*np.diag(chi)@W
+    of the objective function by coupling*np.diag(W@chi)
+     to get an approximation of x'. """
+    p = P@x
+    chi = x - p
+    Wchi = W@chi
+    A = -3*c*chi
+    B_approx = 2*b*chi + coupling*Wchi
+    B = 2*b*np.diag(chi) + coupling*np.diag(chi)@W + coupling*np.diag(W@chi)
+    C = b*(p**2 - x**2) - c*(p**3 - x**3) + coupling*(p*(W@p) - x*(W@x))
+    BAC = B_approx**2 - 4*A*C
+    BAC[BAC < 0] = 0.01
+    BAC[BAC > 1] = 0.99
+    xpp = (-B_approx + np.sqrt(BAC))/(2*A)
+    xpm = (-B_approx - np.sqrt(BAC))/(2*A)
+
+    ofp = objective_function_microbial(xpp, A, B, C)
+    ofm = objective_function_microbial(xpm, A, B, C)
+
+    xp_return = xpp
+    if np.mean(ofp**2) > np.mean(ofm**2):
+        xp_return = xpm
+
+    return xp_return
+
+
+def objective_function_microbial(xp, A, B, C):
+    """ The coupled quadratic equations to find one zero in x'(variable xp)
+    and evaluate the upper bound on the alignment error. """
+    return A@(xp**2) + B@xp + C
+
+
+def x_prime_microbial_optimize(A, B, C, nb_inits=1, max_nfev=1000,
+                               tol=1e-4, max_x=1):
+    """ The least-squares work well for small random matrices,
+     but it is less accurate for the gut microbiome network """
+    N = len(A[0])
+    args_f = (A, B, C)
+    xp_return = max_x/2*np.ones(N)
+    fvec_return = objective_function_microbial(xp_return, *args_f)
+    for i in range(nb_inits):
+        x0 = np.random.uniform(0, 1, N)
+        xp = least_squares(objective_function_microbial, x0=x0,
+                           bounds=(np.zeros(N), max_x*np.ones(N)),
+                           ftol=1e-5, xtol=1e-8, gtol=1e-8, max_nfev=max_nfev,
+                           args=args_f).x
+        fvec = objective_function_microbial(xp, *args_f)
+        MSE_fvec = np.mean(fvec**2)
+        print(f"MSE[objective_function_microbial(x', *args)] = {MSE_fvec}")
+        if np.all(np.abs(fvec) < tol):
+            # print("All the elements of the evaluated objective"
+            #       " function is smaller than the tolerance.")
+            xp_return = xp
+            break
+        elif MSE_fvec < np.mean(fvec_return**2):
+            # np.any(np.abs(fvec_return) > tol):
+            # print("At least one element of the evaluated objective"
+            #       " function is greater than the minimum.")
+            xp_return = xp
+            fvec_return = fvec
+
+            continue
+
+    return xp_return
+
+
+# def constrained_objective_function_microbial(x, f, args_f, lower, upper,
+#                                              min_incr=0.001):
+#     """ We define this function because we want to find the roots in x'
+#     where each elements in x' are between 0 and 1. This is a function from
+#     jotasi on Stack Overflow:
+#     https://stackoverflow.com/questions/43995862/python-multivariate-non-linear-solver-with-constraints """
+#     x = np.asarray(x)
+#     lower = np.asarray(lower)
+#     upper = np.asarray(upper)
+#     xBorder = np.where(x < lower, lower, x)
+#     xBorder = np.where(x > upper, upper, xBorder)
+#     fBorder = f(xBorder, *args_f)
+#     distFromBorder = (np.sum(np.where(x < lower, lower - x, 0.))
+#                       + np.sum(np.where(x > upper, x - upper, 0.)))
+#     return fBorder + (fBorder + np.where(fBorder > 0,
+#                                          min_incr, -min_incr))*distFromBorder
+#
+#
+# def x_prime_microbial_optimize(x, W, P, coupling, b, c,
+#                                nb_iter=50, tol=1e-6):
+#     """ Obtain x' for the microbial dynamics with an optimization method,
+#      but it might be very long to compute. z: is the position at which
+#      we evaluate the alignment error. Below, we provide some definitions
+#      of the parameters returned by scipy.optimize as a remainder.
+#
+#      We have that show_options(solver="root", method="lm", disp=True) gives:
+#      Solve for least squares with Levenberg-Marquardt
+#      Options
+#      -------
+#      col_deriv : bool
+#          non-zero to specify that the Jacobian function computes derivatives
+#          down the columns (faster, because there is no transpose operation).
+#      ftol : float
+#          Relative error desired in the sum of squares.
+#      xtol : float
+#          Relative error desired in the approximate solution.
+#      gtol : float
+#          Orthogonality desired between the function vector and the columns
+#          of the Jacobian.
+#      maxiter : int
+#          The maximum number of calls to the function. If zero, then
+#          100*(N+1) is the maximum where N is the number of elements in x0.
+#      epsfcn : float
+#          A suitable step length for the forward-difference approximation of
+#          the Jacobian (for Dfun=None). If epsfcn is less than the machine
+#          precision, it is assumed that the relative errors in the functions
+#          are of the order of the machine precision.
+#      factor : float
+#          A parameter determining the initial step bound
+#          (``factor * || diag * x||``). Should be in interval ``(0.1, 100)``.
+#      diag : sequence
+#          N positive entries that serve as a scale factors for the variables.
+#
+#      Also:
+#      ``nfev``
+#         The number of function calls
+#     ``fvec``
+#         The function evaluated at the output
+#     ``fjac``
+#         A permutation of the R matrix of a QR
+#         factorization of the final approximate
+#         Jacobian matrix, stored column wise.
+#         Together with ipvt, the covariance of the
+#         estimate can be approximated.
+#     ``ipvt``
+#         An integer array of length N which defines
+#         a permutation matrix, p, such that
+#         fjac*p = q*r, where r is upper triangular
+#         with diagonal elements of nonincreasing
+#         magnitude. Column j of p is column ipvt(j)
+#         of the identity matrix.
+#     ``qtf``
+#         The vector (transpose(q) * fvec).
+#      """
+#     args_f = (x, W, P, coupling, b, c)
+#     lower = np.zeros(len(x))
+#     upper = np.ones(len(x))
+#     args = (objective_function_microbial, args_f, lower, upper)
+#     xp_return = 0.5*np.ones(len(x))
+#     fvec_return = objective_function_microbial(xp_return, *args_f)
+#     for i in range(nb_iter):
+#         x0 = np.random.random(len(x))
+#         optimization_result = root(constrained_objective_function_microbial,
+#                                    x0, args=args, method='lm')
+#         # print("An optimization is complete.")
+#         xp = optimization_result.x
+#         fvec = objective_function_microbial(xp, *args_f)
+#         if np.all(np.abs(fvec) < tol):
+#             print("You got it!")
+#             xp_return = xp
+#             fvec_return = fvec
+#             break
+#         elif np.mean(fvec**2) < np.mean(fvec_return**2):
+#             print("hello, try again...")
+#             xp_return = xp
+#             fvec_return = fvec
+#             continue
+#         print(optimization_result)
+#     if np.mean(fvec_return**2) > tol:
+#         print(f"The funtion objective function_microbial evaluated at x' "
+#               f"(found with scipy.optimize.root) has at least one element"
+#               f" greater than the tolerance tol = {tol}.")
+#     return xp_return
+#     # optimization_result = root(objective_function_microbial,
+#     #                            x0, args=(z, W, P, coupling, b, c),
+#     #                            method='lm')
+#     # print(optimization_result)
+#     # return optimization_result.x
+
+
+# def x_prime_microbial_neglect_quadratic(x, W, P, coupling, b, c):
+#     """ We neglect the quadratic term in the objective function to
+#      get an approximation of x'. """
+#     p = P@x
+#     chi = x - p
+#     Wchi = W@chi
+#     A = -3*c*chi
+#     B = 2*b*np.diag(chi) + coupling*np.diag(Wchi)
+#     # ^ We have neglected the coupling of the quadratic equations
+#     C =
+#     # print(coupling*chi)
+#     # print(f"A = {A}", f"\n\nC= {C}", f"\n\nB^2 - 4AC = {B**2 - 4*A*C}")
+#     # print(f"\n\nxprime = {(-B + np.sqrt(B**2 - 4*A*C))/(2*A)}")
+#
+#     # Warning: The absolute value in the square root is imposed to guarantee
+#     # a real solution.
+#     return (-B + np.sqrt(np.abs(B**2 - 4*A*C)))/(2*A)
+
+# def jacobian_objective_function_microbial(xp, x, W, P, coupling, b, c):
+#     """ The jacobian of the coupled quadratic equations to find one zero
+#      in x'(variable xp) and evaluate the upper bound on the alignment error.
+#      Note: it doesn't work well when used in the algorithm, there may be an
+#      error here. """
+#     p = P@x
+#     chi = x - p
+#     A = -3*c*np.diag(chi)
+#     B = 2*b*np.diag(chi) + coupling*np.diag(chi)@W + coupling*np.diag(W@chi)
+#     return 2*np.diag(A@x) + B

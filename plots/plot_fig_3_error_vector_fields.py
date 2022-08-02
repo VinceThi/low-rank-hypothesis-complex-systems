@@ -25,11 +25,10 @@ N_arange_sis = np.arange(1, len(A_sis[0])+1, 1)
 
 
 """ Microbial """
-path_error_microbial = "2022_05_14_10h30min25sec_1000_samples_B_neglected" \
+path_error_microbial = "2022_07_31_10h04min31sec_1000_samples_max_x_Px" \
                        "_RMSE_vector_field_microbial_gut.json"
-path_upper_bound_microbial = "2022_05_14_10h30min25sec_1000_samples_B" \
-                             "_neglected_upper_bound_RMSE_vector" \
-                             "_field_microbial_gut.json"
+path_upper_bound_microbial = "2022_07_31_10h04min31sec_1000_samples_max_x_Px_"\
+                             "upper_bound_RMSE_vector_field_microbial_gut.json"
 graph_str = "gut"
 A_microbial = get_microbiome_weight_matrix(graph_str)
 S_microbial = svdvals(A_microbial)
@@ -106,6 +105,8 @@ def plot_error(ax, dynamics_str, path_error, path_upper_bound, N_arange,
               path_upper_bound) as json_data:
         error_upper_bound_array = json.load(json_data)
 
+    """ In the folowing 'if' we add the error 0 at n = N to the error and
+    the upper bound array of rnn, wilson_cowan, and microbial. """
     if dynamics_str == "rnn":
         nb_samples, nb_sing = np.shape(error_array)
         error_array = \
@@ -123,6 +124,17 @@ def plot_error(ax, dynamics_str, path_error, path_upper_bound, N_arange,
         error_upper_bound_array = \
             np.hstack((error_upper_bound_array,
                        np.zeros((nb_samples, len(N_arange_wc) - nb_sing))))
+
+    if dynamics_str == "microbial":
+        nb_samples, nb_sing = np.shape(error_array)
+        error_array = \
+            np.hstack((error_array, np.zeros((nb_samples,
+                                              len(N_arange_microbial)
+                                              - nb_sing))))
+        error_upper_bound_array = \
+            np.hstack((error_upper_bound_array,
+                       np.zeros((nb_samples, len(N_arange_microbial)
+                                 - nb_sing))))
 
     mean_error = np.mean(error_array, axis=0)
     mean_log10_error = np.log10(mean_error)
@@ -155,10 +167,10 @@ def plot_error(ax, dynamics_str, path_error, path_upper_bound, N_arange,
 
     ax.scatter(N_arange, mean_error, s=5, color=deep[3],
                label="Average alignment error"
-                     " $\\langle \\mathcal{E}_f \\rangle_x$", zorder=0)
+                     " $\\langle \\mathcal{E} \\rangle_x$", zorder=0)
     ax.scatter(N_arange, mean_upper_bound_error, s=2, color=dark_grey,
                label="Average upper-bound"
-                     " on $\\langle \\mathcal{E}_f \\rangle_x$")
+                     " on $\\langle \\mathcal{E} \\rangle_x$")
     ax.fill_between(N_arange, fill_between_error_1, fill_between_error_2,
                     color=deep[3], alpha=0.5)
     ax.fill_between(N_arange, fill_between_ub1, fill_between_ub2,
@@ -214,21 +226,25 @@ def plot_error(ax, dynamics_str, path_error, path_upper_bound, N_arange,
         # ticks = [i for i in ticks
         #          if -0.1*len(N_arange) < i < 1.1*len(N_arange)]
         plt.xticks(ticks)
+        plt.text(-len(mean_error) / 5.8, 0.0000035, "0 -")
 
-    if dynamics_str == "microbial":
+    elif dynamics_str == "microbial":
         ticks = ax.get_xticks().tolist()
         ticks[ticks.index(0)] = 1
         ticks += [250, 500, 750]
         # ticks = [i for i in ticks
         #          if -0.1*len(N_arange) < i < 1.1*len(N_arange)]
         plt.xticks(ticks)
+        plt.text(-len(mean_error) / 5.6, 0.0000035, "0 -")
+
+    else:
+        plt.text(-len(mean_error) / 5.8, 0.0000035, "0 -")
 
     ax.set_ylim([0.75*ymin, ymax])
     ax.set_yscale('log', nonposy="clip")
     plt.tick_params(axis='y', which='both', left=True,
                     right=False, labelbottom=False)
     plt.minorticks_off()
-    plt.text(-len(mean_error)/6.2, 0.0000035, "0 -")
 
 
 """ -----------------------  Figure 3 ------------------------------------- """
@@ -287,7 +303,7 @@ ax32.plot((-d, +d), (-d, +d), zorder=10, linewidth=1.5, **kwargs)
 kwargs.update(transform=ax3.transAxes)
 ax3.plot((1 - d, 1 + d), (-d, d), zorder=10, linewidth=1.5, **kwargs)
 ax32.text(605, 100, "Chaotic RNN", fontsize=12)
-ax3.text(-120/3.3, 0.0000035, "0 -")
+ax3.text(-120/3, 0.0000035, "0 -")
 ax3.set_xlabel('Dimension $n$')
 ax3.xaxis.set_label_coords(1.1, -0.16)
 # ticks = ax3.get_xticks()
@@ -310,6 +326,7 @@ plot_singvals(ax4, S_microbial)
 ax4.text(letter_posx, letter_posy, "d", fontweight="bold",
          horizontalalignment="center", verticalalignment="top",
          transform=ax4.transAxes)
+
 
 # handles, labels = ax1.get_legend_handles_labels()
 # fig.legend(handles, labels, loc=(0.3, 0.95))

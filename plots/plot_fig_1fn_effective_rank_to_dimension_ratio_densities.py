@@ -17,9 +17,14 @@ def plotDensities(effectiveRanksDF):
     srankN = effectiveRanksDF['StableRank'] / effectiveRanksDF['Size']
     x, bins, p = axes[0, 0].hist(srankN, bins=30, range=(0, 1),
                                  density=True, color=color)
+    mean_srankN = np.mean(srankN)
+    axes[0][0].vlines(x=mean_srankN, ymin=0, ymax=0.68,
+                      linestyle="--", color=dark_grey, linewidth=1)
+    plt.text(mean_srankN+0.08, 0.7, f"{np.round(mean_srankN*100, 1)}%",
+             transform=axes[0, 0].transAxes, fontsize=10)
     for item in p:
         item.set_height(item.get_height()/sum(x))
-    plt.text(letter_posx, letter_posy, "h", fontweight="bold",
+    plt.text(letter_posx, letter_posy, "f", fontweight="bold",
              horizontalalignment="center",
              verticalalignment="top", transform=axes[0, 0].transAxes)
     axes[0][0].set_ylim([-0.02*0.85, 0.85])
@@ -27,9 +32,14 @@ def plotDensities(effectiveRanksDF):
     nrankN = effectiveRanksDF['NuclearRank'] / effectiveRanksDF['Size']
     x, bins, p = axes[0, 1].hist(nrankN, bins=30, range=(0, 1),
                                  density=True, color=color)
+    mean_nrankN = np.mean(nrankN)
+    axes[0][1].vlines(x=mean_nrankN, ymin=0, ymax=0.4,
+                      linestyle="--", color=dark_grey, linewidth=1)
+    plt.text(mean_nrankN + 0.08, 0.7, f"{np.round(mean_nrankN*100, 1)}%",
+             transform=axes[0, 1].transAxes, fontsize=10)
     for item in p:
         item.set_height(item.get_height() / sum(x))
-    plt.text(letter_posx, letter_posy, "i", fontweight="bold",      # erank",
+    plt.text(letter_posx, letter_posy, "g", fontweight="bold",      # erank",
              horizontalalignment="center",
              verticalalignment="top", transform=axes[0, 1].transAxes)
     axes[0][1].set_ylim([-0.02*0.5, 0.5])
@@ -37,9 +47,14 @@ def plotDensities(effectiveRanksDF):
     elbowN = effectiveRanksDF['Elbow'] / effectiveRanksDF['Size']
     x, bins, p = axes[0, 2].hist(elbowN, bins=30, range=(0, 1),
                                  density=True, color=color)
+    mean_elbowN = np.mean(elbowN)
+    axes[0][2].vlines(x=mean_elbowN, ymin=0, ymax=0.4,
+                      linestyle="--", color=dark_grey, linewidth=1)
+    plt.text(mean_elbowN + 0.08, 0.7, f"{np.round(mean_elbowN*100, 1)}%",
+             transform=axes[0, 2].transAxes, fontsize=10)
     for item in p:
         item.set_height(item.get_height() / sum(x))
-    plt.text(letter_posx, letter_posy, "k", fontweight="bold",  # Energy ratio"
+    plt.text(letter_posx, letter_posy, "h", fontweight="bold",  # Energy ratio"
              horizontalalignment="center",
              verticalalignment="top", transform=axes[0, 2].transAxes)
     axes[0][2].set_ylim([-0.02 * 0.5, 0.5])
@@ -47,9 +62,14 @@ def plotDensities(effectiveRanksDF):
     energyN = effectiveRanksDF['EnergyRatio']/effectiveRanksDF['Size']
     x, bins, p = axes[1, 0].hist(energyN, bins=30, range=(0, 1),
                                  density=True, color=color)
+    mean_energyN = np.mean(energyN)
+    axes[1][0].vlines(x=mean_energyN, ymin=0, ymax=0.4,
+                      linestyle="--", color=dark_grey, linewidth=1)
+    plt.text(mean_energyN + 0.08, 0.7, f"{np.round(mean_energyN*100, 1)}%",
+             transform=axes[1, 0].transAxes, fontsize=10)
     for item in p:
         item.set_height(item.get_height() / sum(x))
-    plt.text(letter_posx, letter_posy, "j", fontweight="bold",      # Elbow",
+    plt.text(letter_posx, letter_posy, "i", fontweight="bold",      # Elbow",
              horizontalalignment="center",
              verticalalignment="top", transform=axes[1, 0].transAxes)
     axes[1][0].set_ylim([-0.02*0.5, 0.5])
@@ -57,9 +77,14 @@ def plotDensities(effectiveRanksDF):
     thrankN = effectiveRanksDF['OptimalThreshold'] / effectiveRanksDF['Size']
     x, bins, p = axes[1, 1].hist(thrankN, bins=30, range=(0, 1),
                                  density=True, color=color)
+    mean_thrankN = np.mean(thrankN)
+    axes[1][1].vlines(x=mean_thrankN, ymin=0, ymax=0.4,
+                      linestyle="--", color=dark_grey, linewidth=1)
+    plt.text(mean_thrankN + 0.08, 0.7, f"{np.round(mean_thrankN*100, 1)}%",
+             transform=axes[1, 1].transAxes, fontsize=10)
     for item in p:
         item.set_height(item.get_height() / sum(x))
-    plt.text(letter_posx, letter_posy, "m", fontweight="bold",
+    plt.text(letter_posx, letter_posy, "j", fontweight="bold",
              horizontalalignment="center", verticalalignment="top",
              transform=axes[1, 1].transAxes)
     axes[1][1].set_ylim([-0.02*0.5, 0.5])
@@ -67,9 +92,14 @@ def plotDensities(effectiveRanksDF):
     shrankN = effectiveRanksDF['OptimalShrinkage'] / effectiveRanksDF['Size']
     x, bins, p = axes[1, 2].hist(shrankN, bins=30, range=(0, 1),
                                  density=True, color=color)
+    mean_shrankN = np.mean(shrankN)
+    axes[1][2].vlines(x=mean_shrankN, ymin=0, ymax=0.4,
+                      linestyle="--", color=dark_grey, linewidth=1)
+    plt.text(mean_shrankN + 0.08, 0.7, f"{np.round(mean_shrankN*100, 1)}%",
+             transform=axes[1, 2].transAxes, fontsize=10)
     for item in p:
         item.set_height(item.get_height() / sum(x))
-    plt.text(letter_posx, letter_posy, "n", fontweight="bold",
+    plt.text(letter_posx, letter_posy, "k", fontweight="bold",
              horizontalalignment="center", verticalalignment="top",
              transform=axes[1, 2].transAxes)
     axes[1][2].set_ylim([-0.02*0.5, 0.5])
@@ -77,6 +107,11 @@ def plotDensities(effectiveRanksDF):
     erankN = effectiveRanksDF['Erank'] / effectiveRanksDF['Size']
     x, bins, p = axes[2, 0].hist(erankN, bins=30, range=(0, 1),
                                  density=True, color=color)
+    mean_erankN = np.mean(erankN)
+    axes[2][0].vlines(x=mean_erankN, ymin=0, ymax=0.4,
+                      linestyle="--", color=dark_grey, linewidth=1)
+    plt.text(mean_erankN + 0.08, 0.7, f"{np.round(mean_erankN*100, 1)}%",
+             transform=axes[2, 0].transAxes, fontsize=10)
     for item in p:
         item.set_height(item.get_height() / sum(x))
     plt.text(letter_posx, letter_posy, "l", fontweight="bold",
@@ -87,9 +122,14 @@ def plotDensities(effectiveRanksDF):
     rankN = effectiveRanksDF['Rank'] / effectiveRanksDF['Size']
     x, bins, p = axes[2][1].hist(rankN, bins=30, range=(0, 1),
                                  density=True, color=color)
+    mean_rankN = np.mean(rankN)
+    axes[2][1].vlines(x=mean_rankN, ymin=0, ymax=0.4,
+                      linestyle="--", color=dark_grey, linewidth=1)
+    plt.text(mean_rankN - 0.46, 0.7, f"{np.round(mean_rankN*100, 1)}%",
+             transform=axes[2, 1].transAxes, fontsize=10)
     for item in p:
         item.set_height(item.get_height() / sum(x))
-    plt.text(letter_posx, letter_posy, "g", fontweight="bold",  # Rank",
+    plt.text(letter_posx, letter_posy, "m", fontweight="bold",  # Rank",
              horizontalalignment="center",
              verticalalignment="top", transform=axes[2, 1].transAxes)
     axes[2][1].set_ylim([-0.02 * 0.5, 0.5])
@@ -102,7 +142,7 @@ def plotDensities(effectiveRanksDF):
                                  density=True, color=color)
     for item in p:
         item.set_height(item.get_height() / sum(x))
-    plt.text(letter_posx, letter_posy, "f", fontweight="bold",
+    plt.text(letter_posx, letter_posy, "n", fontweight="bold",
              horizontalalignment="center",
              verticalalignment="top", transform=axes[2, 2].transAxes)
     axes[2][2].set_xscale('log')

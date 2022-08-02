@@ -9,12 +9,18 @@ from scipy.linalg import pinv
 
 
 def test_dsig_prime_approx_Jx_Jy_wilson_cowan():
-    N = 100
-    n = 10
+    """ We test the approximation of small 'a' values.
+    e.g., 'a' = 0.1 is a "pretty high" value of 'a'. To have a successful
+    test, one could choose a smaller 'a'. Of course, for a smaller 'a',
+    smaller tolerances can be chosen. """
+    A = get_connectome_weight_matrix("celegans_signed")
+    N = len(A[0])
+    # N = 100
+    # A = np.random.uniform(-1, 1, (N, N))
+    n = 5
     x = np.random.random(N)
     D = np.eye(N)
     coupling = 2
-    A = np.random.uniform(-1, 1, (N, N))
     U, S, Vh = np.linalg.svd(A)
     Vhn = Vh[:n, :]
     D_sign = np.diag(-(np.sum(Vhn, axis=1) < 0).astype(float)) \
@@ -23,10 +29,7 @@ def test_dsig_prime_approx_Jx_Jy_wilson_cowan():
     W = A
     Mp = pinv(M)
     P = Mp@M
-    a, b, c = 0.1, 1, 3
-    # 'a = 0.1' is a "pretty high" value of 'a'. To have a successful test,
-    # one should choose a smaller. Of course, for a smaller 'a', smaller
-    # tolerances can be chosen in np.allclose
+    a, b, c = 0.05, 1, 3
 
     dsig_prime = derivative_sigmoid_prime_wilson_cowan(x, W, P, coupling, b, c)
     Jx_approx = -D
@@ -46,19 +49,31 @@ def test_dsig_prime_approx_Jx_Jy_wilson_cowan():
     LHS_taylor = wilson_cowan(0, x, W, coupling, D, a, b, c)
     RHS_taylor = wilson_cowan(0, P@x, W, coupling, D, a, b, c)\
         + Jx_approx@chi + Jy_approx@W@chi
-
+    # print(np.max(LHS_taylor-RHS_taylor))
     assert np.allclose(LHS_taylor, RHS_taylor, rtol=1e-1, atol=1e-1)
+    # print(np.mean((LHS_taylor - RHS_taylor)**2))
+    assert np.mean((LHS_taylor - RHS_taylor)**2) < 1e-2
+    relative_error = np.linalg.norm(LHS_taylor - RHS_taylor) / \
+        np.linalg.norm(LHS_taylor)
+    assert relative_error < 0.15
 
 
 def test_Jx_Jy_approx_wilson_cowan():
-    N = 100
-    n = 50
-    # 'n' is very important in this test. If 'n' is high enough, x and Px
-    # should be close to the best x' to choose for the error bound
+    """
+    We test the approximation that x' is x or Px.
+    'n' is very important in this test. If 'n' is high enough, x and Px
+    should be close enough to the x' used to evaluate the error bound.
+    In the script errors_wilson_cowan, we observe that even for small 'n',
+    the approximation of the upper bound is reasonable.
+    """
+    A = get_connectome_weight_matrix("celegans_signed")
+    N = len(A[0])
+    # N = 100
+    # A = np.random.uniform(-1, 1, (N, N))
+    n = 150
     x = np.random.random(N)
     D = np.eye(N)
     coupling = 2
-    A = np.random.uniform(-1, 1, (N, N))
     U, S, Vh = np.linalg.svd(A)
     Vhn = Vh[:n, :]
     D_sign = np.diag(-(np.sum(Vhn, axis=1) < 0).astype(float)) \
@@ -87,17 +102,29 @@ def test_Jx_Jy_approx_wilson_cowan():
         RHS_taylor = wilson_cowan(0, P@x, W, coupling, D, a, b, c) \
                      + Jx_tilde@chi + Jy_tilde@W@chi
 
-    assert np.allclose(LHS_taylor, RHS_taylor, rtol=1e-1, atol=1e-1)
+    # assert np.allclose(LHS_taylor, RHS_taylor, rtol=1e-1, atol=1e-1)
+    # print(np.abs(LHS_taylor - RHS_taylor) < 1e-1)
+    # assert np.all(np.abs(LHS_taylor - RHS_taylor) < 0.3)
+    # print(np.mean((LHS_taylor - RHS_taylor)**2))
+    assert np.mean((LHS_taylor - RHS_taylor)**2) < 1e-2
+    relative_error = np.linalg.norm(LHS_taylor - RHS_taylor) / \
+        np.linalg.norm(LHS_taylor)
+    assert relative_error < 0.1
 
 
 def test_x_prime_Jx_Jy_wilson_cowan():
-    N = 100
+    """ We verify that the elements of x' are between 0 and 1 and
+        that the x' obtained with the least-square method is
+        accurate up to some tolerance. """
+    A = get_connectome_weight_matrix("celegans_signed")
+    N = len(A[0])
+    # N = 100
+    # A = np.random.uniform(-1, 1, (N, N))
     n = 10
     x = np.random.random(N)
     D = np.eye(N)
     coupling = 2
     a, b, c = 1, 1, 3
-    A = np.random.uniform(-1, 1, (N, N))
     U, S, Vh = np.linalg.svd(A)
     Vhn = Vh[:n, :]
     D_sign = np.diag(-(np.sum(Vhn, axis=1) < 0).astype(float)) \
