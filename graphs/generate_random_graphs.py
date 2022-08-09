@@ -41,7 +41,7 @@ def random_graph_generators(graph_str, N):
 
     elif graph_str == "barabasi_albert":
         generator = nx.barabasi_albert_graph
-        m = 2
+        m = 10
         args = (N, m)
 
     elif graph_str == "hard_configuration":

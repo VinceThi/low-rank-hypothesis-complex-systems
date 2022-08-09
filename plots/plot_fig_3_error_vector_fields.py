@@ -256,7 +256,7 @@ letter_posx, letter_posy = -0.27, 1.08
 
 # --------------------------- SIS ---------------------------------------------
 ax1 = plt.subplot(141)
-ax1.set_title("SIS", fontsize=fontsize_legend,
+ax1.set_title("Epidemiological", fontsize=fontsize_legend,
               pad=title_pad)
 plot_error(ax1, "qmf_sis", path_error_sis, path_upper_bound_sis, N_arange_sis)
 plot_singvals(ax1, S_sis)
@@ -268,7 +268,7 @@ ax1.text(letter_posx, letter_posy, "a", fontweight="bold",
 
 # ----------------------- Wilson-Cowan-----------------------------------------
 ax2 = plt.subplot(142)
-ax2.set_title("Wilson-Cowan", fontsize=fontsize_legend,
+ax2.set_title("Neuronal", fontsize=fontsize_legend,
               pad=title_pad)
 plot_error(ax2, "wilson_cowan", path_error_wc,
            path_upper_bound_wc, N_arange_wc)
@@ -318,7 +318,7 @@ ax32.set_xticks([650])
 
 # ------------------------ Microbial ------------------------------------------
 ax4 = plt.subplot(144)
-ax4.set_title("Population", fontsize=fontsize_legend,
+ax4.set_title("Microbial", fontsize=fontsize_legend,
               pad=title_pad)
 plot_error(ax4, "microbial", path_error_microbial,
            path_upper_bound_microbial, N_arange_microbial)

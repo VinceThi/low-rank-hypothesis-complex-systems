@@ -8,7 +8,7 @@ from scipy.stats import pareto, uniform
 
 def s1_model(N, beta, kappa_min, kappa_max, gamma):
     """
-    The density from which the kappas are drawn is a truncated pareto.
+    The density from which the expected degrees are drawn is a truncated pareto
     :param N:
     :param beta:  Parameter controling the clustering.
                  (1, infinity) -> lower to higher clustering

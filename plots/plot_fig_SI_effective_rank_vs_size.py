@@ -10,7 +10,6 @@ import numpy as np
 def plotEffectiveRanks_vs_N(effectiveRanksDF):
     color = "lightsteelblue"
     letter_posx, letter_posy = 0.5, 1
-    ylim = [-500, 6500]
     ylim2 = [-1000, 10500]
     fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(3*2.4, 3*2))
 
@@ -18,25 +17,25 @@ def plotEffectiveRanks_vs_N(effectiveRanksDF):
     axes[0][0].text(letter_posx, letter_posy, "a", fontweight="bold",
                     horizontalalignment="center",
                     verticalalignment="top", transform=axes[0, 0].transAxes)
-    axes[0][0].set_ylim(ylim)
+    axes[0][0].set_ylim([-20, 300])  # An outlier is removed for viz
 
     axes[0][1].scatter(effectiveRanksDF['Size'], effectiveRanksDF['NuclearRank'], s=10)
     axes[0][1].text(letter_posx, letter_posy, "b", fontweight="bold",      # erank",
                     horizontalalignment="center",
                     verticalalignment="top", transform=axes[0, 1].transAxes)
-    axes[0][1].set_ylim(ylim)
+    axes[0][1].set_ylim([-90, 1300])  # An outlier is removed for viz
 
     axes[0][2].scatter(effectiveRanksDF['Size'], effectiveRanksDF['Elbow'], s=10)
     axes[0][2].text(letter_posx, letter_posy, "c", fontweight="bold",  # Energy ratio"
                     horizontalalignment="center",
                     verticalalignment="top", transform=axes[0, 2].transAxes)
-    axes[0][2].set_ylim(ylim)
+    axes[0][2].set_ylim([-200, 3000])
 
     axes[1][0].scatter(effectiveRanksDF['Size'], effectiveRanksDF['EnergyRatio'], s=10)
     axes[1][0].text(letter_posx, letter_posy, "d", fontweight="bold",      # Elbow",
                     horizontalalignment="center",
                     verticalalignment="top", transform=axes[1, 0].transAxes)
-    axes[1][0].set_ylim(ylim)
+    axes[1][0].set_ylim([-500, 7500])
 
     axes[1][1].scatter(effectiveRanksDF['Size'], effectiveRanksDF['OptimalThreshold'], s=10)
     axes[1][1].text(letter_posx, letter_posy, "e", fontweight="bold",

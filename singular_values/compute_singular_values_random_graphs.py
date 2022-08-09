@@ -9,13 +9,13 @@ from plots.plot_singular_values import \
     plot_singular_values_histogram_random_networks, plot_singular_values
 
 
-plot_histogram = True
+plot_histogram = False
 plot_adjacency_matrix = False
 
 N = 1000
 nb_networks = 1000
 nb_bins = 1000
-graph_str = "s1"
+graph_str = "barabasi_albert"
 G, args = random_graph_generators(graph_str, N)
 
 if plot_adjacency_matrix:
