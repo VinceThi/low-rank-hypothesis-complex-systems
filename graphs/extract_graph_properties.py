@@ -50,6 +50,7 @@ def analyzeGraph(networkFilename):
     if any(gt.label_parallel_edges(theGraph, mark_only=True)) == 1:
         multiedges = 'multiedges'
 
+    # TODO WARNING, suited for simple unweighted graphs
     direction = 'undirected'
     density = 2 * nbEdges / (nbVertices * (nbVertices - 1))
     if theGraph.is_directed():

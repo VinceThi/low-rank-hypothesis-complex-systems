@@ -16,9 +16,9 @@ def compute_tensor_order_3(M, W):
     for which there are nonlinear terms of the form sum_j W_{ij} x_i x_j.
     If we set W = I, the tensor appears when there is a quadratic term x_i^2
 
-    :param M: Reduction matrix. Array of shape (n,N) where N is the dimension
-              of the complete system
-    :param W: Weight matrix of the network. Array with shape (N,N)
+    :param M: Reduction matrix. Array of floats with shape (n,N)
+              where N is the dimension of the complete system
+    :param W: Weight matrix of the network. Array of *floats* with shape (N,N)
 
     :return: Tensor T_{3,n}. Array with shape (n,n,n).
     """
@@ -69,9 +69,9 @@ def compute_tensor_order_4(M, W):
     sum_j W_{ij} z_i^2 bar{z}_j.
     If we set W = I, the tensor appears when there is a cubic term x_i^2
 
-    :param M: Reduction matrix. Array of shape (n,N) where N is the dimension
-              of the complete system
-    :param W: Weight matrix of the network. Array with shape (N,N)
+    :param M: Reduction matrix. Array of floats with shape (n,N)
+          where N is the dimension of the complete system
+    :param W: Weight matrix of the network. Array of *floats* with shape (N,N)
     :return: Tensor T_{4,N}. Array with shape (n,n,n,n).
 
     """

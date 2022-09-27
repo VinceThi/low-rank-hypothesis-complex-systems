@@ -72,7 +72,8 @@ a = 1
 b = 1
 c = 3
 
-coupling_constants = np.linspace(0.01, 1, 10)  # c. elegans signed
+# coupling_constants = np.linspace(0.01, 1, 20)  # c. elegans signed
+coupling_constants = np.linspace(0.2, 0.6, 50)  # c. elegans
 # coupling_constants = np.linspace(12, 15, 50)  # ciona weighted
 
 # Notes when W is not normalized by the largest singular value
@@ -83,7 +84,7 @@ coupling_constants = np.linspace(0.01, 1, 10)  # c. elegans signed
 
 
 """ SVD and dimension reduction """
-n = 40  # Dimension of the reduced dynamics
+n = 20  # Dimension of the reduced dynamics
 Un, Sn, Vhn = computeTruncatedSVD_more_positive(A, n)
 L, M = Un@Sn, Vhn
 print("\n", computeEffectiveRanks(svdvals(A), graph_str, N))
