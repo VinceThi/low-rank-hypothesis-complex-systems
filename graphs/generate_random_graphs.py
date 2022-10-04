@@ -29,9 +29,8 @@ def random_graph_generators(graph_str, N):
         args = (sizes, pq, None, None, True, True, True)
 
     elif graph_str == "DCSBM":
-        # generator = nx.degree_corrected_stochastic_block_model
-        # generator = np.nan
-        raise ValueError("DCSBM is not on networkx, but it is on graph tool.")
+        raise ValueError("DCSBM is not coded yet."
+                         " It is not on networkx, but it is on graph tool.")
 
     elif graph_str == "watts_strogatz":
         generator = nx.watts_strogatz_graph
@@ -74,8 +73,8 @@ def random_graph_generators(graph_str, N):
         generator = s1_model
         beta = 2.5
         # ^ Controls the clustering, (1, inf) -> lower to higher clustering
-        kappa_min = 1
-        kappa_max = 8
+        kappa_min = 3
+        kappa_max = 20
         gamma = 2.5
         args = (N, beta, kappa_min, kappa_max, gamma)
 

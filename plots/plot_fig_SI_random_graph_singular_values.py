@@ -31,7 +31,7 @@ with open(path_str + path_BA) as json_data:
 print(computeEffectiveRanks(singular_values_ba[:N], "BA", N))
 
 """ S1 model """
-path_S1 = "2022_08_02_12h02min38sec_1000_samples_concatenated" \
+path_S1 = "2022_10_04_14h49min45sec_1000_samples_corrected_concatenated" \
           "_singular_values_s1_model.json"
 with open(path_str + path_S1) as json_data:
     singular_values_s1 = np.array(json.load(json_data))
@@ -142,7 +142,7 @@ ax6.tick_params(axis='both', which='major')
 ax6.set_xlabel(xlabel)
 # ax6.set_ylabel(ylabel, labelpad=10)
 # ax1.set_yscale('log')
-ax6.set_title("S1", fontsize=fontsize_legend, pad=-12)
+ax6.set_title("S$^1$", fontsize=fontsize_legend, pad=-12)
 ax6.text(letter_posx, letter_posy, "f", fontweight="bold",
          horizontalalignment="center", verticalalignment="top",
          transform=ax6.transAxes)

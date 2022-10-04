@@ -5,6 +5,7 @@ import pandas as pd
 import matplotlib as plt
 from plots.config_rcparams import *
 import numpy as np
+from scipy.stats import pearsonr
 
 
 def plotEffectiveRanks_vs_density(effectiveRanksDF):
@@ -18,6 +19,8 @@ def plotEffectiveRanks_vs_density(effectiveRanksDF):
                     horizontalalignment="center",
                     verticalalignment="top", transform=axes[0, 0].transAxes)
     # axes[0][0].set_ylim([-20, 300])  # An outlier is removed for viz
+    print(pearsonr(effectiveRanksDF['Density'],
+                   effectiveRanksDF['StableRank']))
 
     axes[0][1].scatter(effectiveRanksDF['Density'], effectiveRanksDF['NuclearRank'], s=10)
     axes[0][1].text(letter_posx, letter_posy, "b", fontweight="bold",      # erank",

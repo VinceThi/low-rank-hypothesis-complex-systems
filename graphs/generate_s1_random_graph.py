@@ -6,15 +6,18 @@ import numpy as np
 from scipy.stats import pareto, uniform
 
 
-def s1_model(N, beta, kappa_min, kappa_max, gamma):
+def s1_model(N, beta, kappa_min, kappa_max, gamma, directed=False):
     """
     The density from which the expected degrees are drawn is a truncated pareto
-    :param N:
+    :param N: Number of vertices
     :param beta:  Parameter controling the clustering.
                  (1, infinity) -> lower to higher clustering
     :param kappa_min: Minimum expected degree
     :param kappa_max: Maximum expected degree
     :param gamma: shape parameter (gamma + 1) of the Pareto distribution
+                  gamma = 2.5 => shape parameter = 1.5
+    :param directed: (bool) if the graph is directed or not
+
     :return:
     An instance of the S1 random graph model
     """
@@ -26,23 +29,20 @@ def s1_model(N, beta, kappa_min, kappa_max, gamma):
             if val < kappa_max])
 
     # Angular positions drawn uniformly
-    thetas = uniform.rvs(size=N)
+    thetas = 2*np.pi*uniform.rvs(size=N)
 
     # Builds the "average" adjacency matrix (probabilities of connection)
     mu = beta*np.sin(np.pi/beta)/(2*np.pi*np.average(kappas))
     pij = np.absolute(thetas.reshape(-1, 1) - thetas)
     pij = np.pi - np.absolute(np.pi - pij)  # option 1
-    # pij = np.minimum(pij, 2 * np.pi - pij) # option 2
-    pij = 1/(1 + (len(kappas)*pij /
-                  (2*np.pi*mu*np.outer(kappas, kappas)))**beta)
+    # pij = np.minimum(pij, 2*np.pi - pij) # option 2
+    pij = 1/(1 + (len(kappas)*pij/(2*np.pi*mu*np.outer(kappas, kappas)))**beta)
     np.fill_diagonal(pij, 0)
 
     # Assigns which links exist.
     p = pij > uniform.rvs(size=pij.shape)
-    np.fill_diagonal(p, False)
+    np.fill_diagonal(p, False)         # Remove self-loops
+    if not directed:
+        p = np.tril(p) + np.tril(p).T  # Get an undirected graph
 
-    # Generate network from the lower diagonal.
-    edgelist = np.nonzero(np.tril(p))
-    edgelist = [t for t in zip(edgelist[0], edgelist[1])]
-
-    return nx.Graph(edgelist)
+    return nx.from_numpy_array(p)
