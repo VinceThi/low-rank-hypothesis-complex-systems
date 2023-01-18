@@ -1,0 +1,49 @@
+===================================================================================
+type of graph:  synthetic graph
+filename:       networks/cargoshipsBB_synth/original_graph/cargoshipsBB_synth
+created:        2023/01/17 2:18 UTC
+===================================================================================
+Input parameters
+number of vertices:     834
+geometry:               S1
+delta:                  1
+alpha:                  0.65
+PDF kappa:              power law with hard cut-off
+  - gamma:              2.03
+  - kappa min.:         0.302913
+  - kappa max.:         207.683
+PDF sigma:              deterministic scaling
+  - eta:                1.05
+  - prop. constant:     83
+Prob. of connection:    Fermi-Dirac
+  - beta:               1.85
+PDF weights:            gamma
+  - shape parameter:    0.588235
+  - scale parameter:    1.7
+===================================================================================
+Theoretical values
+mean kappa:         1.85252
+mean sigma:         170.382
+mu:                 0.157651
+nu:                 0.00184732
+===================================================================================
+Observables
+minimum non-zero degree:         1
+maximum degree:                  70
+average degree:                  1.85612
+number of zero-degree vertices:  389
+minimum non-zero strength:       0.000296448
+maximum strength:                12983.9
+average strength:                159.139
+2nd moment strength:             571384
+2eta-1 moment strength:          0
+variance strength:               546058
+minimum non-zero weight:         8.71875e-05
+maximum weight:                  5538.65
+average weight:                  85.7377
+minimum kappa:                   0.303312
+maximum kappa:                   98.2129
+average kappa:                   1.98034
+minimum sigma:                   23.7171
+maximum sigma:                   10253.1
+average sigma:                   183.879

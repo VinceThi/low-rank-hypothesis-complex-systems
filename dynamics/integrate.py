@@ -6,6 +6,7 @@ from scipy.integrate import ode
 import numpy as np
 import time as timer
 
+""" We recommand solve_ivp with BDF in general. """
 
 def integrate_rk4(t0, t1, dt, dynamics, adjacency_matrix,
                   init_cond, *args):
@@ -88,3 +89,4 @@ def integrate_dynamics(t0, t1, dt, dynamics, adjacency_matrix,
               "minutes", "(", np.round(timer.clock()-time_0, 5), " seconds)")
 
     return np.array(sol)
+

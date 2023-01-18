@@ -1,0 +1,49 @@
+===================================================================================
+type of graph:  synthetic graph
+filename:       networks/Human12a_synth/original_graph/Human12a_synth
+created:        2023/01/17 2:18 UTC
+===================================================================================
+Input parameters
+number of vertices:     501
+geometry:               S1
+delta:                  1
+alpha:                  0.45
+PDF kappa:              power law with hard cut-off
+  - gamma:              7.14
+  - kappa min.:         20.1749
+  - kappa max.:         55.5296
+PDF sigma:              deterministic scaling
+  - eta:                0.86
+  - prop. constant:     0.015
+Prob. of connection:    Fermi-Dirac
+  - beta:               2.8
+PDF weights:            gamma
+  - shape parameter:    0.769231
+  - scale parameter:    1.3
+===================================================================================
+Theoretical values
+mean kappa:         24.0155
+mean sigma:         0.230439
+mu:                 0.0167184
+nu:                 10.6193
+===================================================================================
+Observables
+minimum non-zero degree:         10
+maximum degree:                  53
+average degree:                  23.2934
+number of zero-degree vertices:  0
+minimum non-zero strength:       0.0386247
+maximum strength:                0.724208
+average strength:                0.237772
+2nd moment strength:             0.0697809
+2eta-1 moment strength:          0
+variance strength:               0.0132453
+minimum non-zero weight:         1.34866e-07
+maximum weight:                  0.496548
+average weight:                  0.0102077
+minimum kappa:                   20.1974
+maximum kappa:                   52.4316
+average kappa:                   23.8839
+minimum sigma:                   0.198905
+maximum sigma:                   0.451795
+average sigma:                   0.229386

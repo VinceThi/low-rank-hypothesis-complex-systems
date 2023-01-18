@@ -158,11 +158,11 @@ def reduced_microbial_vector_field(t, X, W, coupling, M, Mp, D, a, b, c):
     B: Logistic growth rate
     C: Carrying capacity
     K: Allee effect strength
-    Typical params: F = 5, B = 3, C = 3, K = 10
-                    a = 5, b = 13, c =10/3, D = 30*np.eye(N)
+    Example of params: F = 5, B = 3, C = 3, K = 10
+                       a = 5, b = 13, c = 1, D = 30*np.eye(N)
 
-                    F = 1/4, B = 1, C = 3, K = 10
-                    a = 1/4, b = 13/3, c = 1/3, D = 10*np.eye(N)
+                       F = 1/4, B = 1, C = 3, K = 10
+                       a = 1/4, b = 13/3, c = 1/3, D = 10*np.eye(N)
 
     :return: (n-dim array)
      Vector field of the reduced microbial dynamics

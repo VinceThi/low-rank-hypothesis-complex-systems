@@ -3,7 +3,9 @@
 
 from dynamics.integrate import *
 from dynamics.dynamics import qmf_sis
+from scipy.integrate import solve_ivp
 from dynamics.reduced_dynamics import reduced_qmf_sis_vector_field
+from dynamics.error_vector_fields import jacobian_x_SIS, jacobian_y_SIS
 from graphs.compute_tensors import compute_tensor_order_3
 from graphs.get_real_networks import get_epidemiological_weight_matrix
 from singular_values.compute_effective_ranks import computeEffectiveRanks
@@ -18,11 +20,26 @@ import tkinter.simpledialog
 from tkinter import messagebox
 
 plot_time_series = False
-plot_weight_matrix_bool = True
+plot_weight_matrix_bool = False
 
-""" Time parameters """
-t0, t1, dt = 0, 30, 0.1
-timelist = np.linspace(t0, t1, int(t1 / dt))
+""" Time and integration parameters """
+t0, t1 = 0, 30
+t_span = [t0, t1]
+t_span_red = [t0, t1]
+integration_method = 'BDF'
+rtol = 1e-8
+atol = 1e-12
+
+
+def jacobian_complete(t, x, W, coupling, D):
+    Jx = jacobian_x_SIS(x, W, coupling, D)
+    Jy = jacobian_y_SIS(x, coupling)
+    return Jx + Jy@W
+
+
+def jacobian_reduced(t, X, W, coupling, M, Mp, D):
+    return M@jacobian_complete(t, Mp@X, W, coupling, D)@Mp
+
 
 """ Graph parameters """
 graph_str = "high_school_proximity"
@@ -34,10 +51,10 @@ if plot_weight_matrix_bool:
 """ Dynamical parameters """
 dynamics_str = "qmf_sis"
 D = np.eye(N)
-coupling_constants = np.linspace(0.01, 4, 50)
+coupling_constants = np.linspace(0.01, 4, 1000)
 
 """ SVD and dimension reduction """
-n = 10  # Dimension of the reduced dynamics
+n = 104  # Dimension of the reduced dynamics
 Un, Sn, Vhn = computeTruncatedSVD_more_positive(A, n)
 L, M = Un@Sn, Vhn
 print(computeEffectiveRanks(svdvals(A), graph_str, N))
@@ -62,9 +79,16 @@ for coupling in tqdm(coupling_constants):
     redx0 = M@x0
 
     # Integrate complete dynamics
-    args_dynamics = (coupling, D)
-    x = np.array(integrate_dopri45(t0, t1, dt, qmf_sis,
-                                   W, x0, *args_dynamics))
+    # args_dynamics = (coupling, D)
+    # x = np.array(integrate_dopri45(t0, t1, dt, qmf_sis,
+    #                                W, x0, *args_dynamics))
+    args_dynamics = (W, coupling, D)
+    sol = solve_ivp(qmf_sis, t_span, x0, integration_method,
+                    args=args_dynamics, rtol=rtol, atol=atol,
+                    vectorized=True, jac=jacobian_complete)
+    x = sol.y.T
+    tc = sol.t
+
     x_glob = np.sum(m*x, axis=1)
 
     # /!\ Look carefully if the dynamics reach an equilibrium point
@@ -77,9 +101,17 @@ for coupling in tqdm(coupling_constants):
     # redx = np.array(integrate_dopri45(t0, t1, dt, reduced_qmf_sis,
     #                                   calW, redx0,
     #                                   *args_reduced_dynamics))
-    args_reduced_dynamics = (coupling, M, Mp, D)
-    redx = np.array(integrate_dopri45(t0, t1, dt, reduced_qmf_sis_vector_field,
-                                      W, redx0, *args_reduced_dynamics))
+    # args_reduced_dynamics = (coupling, M, Mp, D)
+    # redx = np.array(integrate_dopri45(t0, t1, dt,
+    # reduced_qmf_sis_vector_field,
+    #                                   W, redx0, *args_reduced_dynamics))
+    args_reduced_dynamics = (W, coupling, M, Mp, D)
+    sol = solve_ivp(reduced_qmf_sis_vector_field, t_span, redx0,
+                    integration_method, args=args_reduced_dynamics,
+                    rtol=rtol, atol=atol, vectorized=True,
+                    jac=jacobian_reduced)
+    redx = sol.y.T
+    tr = sol.t
     # redx0 = redx[-1, :]
 
     # Get global observables
@@ -97,8 +129,8 @@ for coupling in tqdm(coupling_constants):
         #     plt.plot(timelist, x[:, j], color=reduced_first_community_color,
         #              linewidth=0.3)
         for nu in range(n):
-            plt.plot(timelist, M[nu, :]@x.T, color=first_community_color)
-            plt.plot(timelist, redx[:, nu], color=second_community_color,
+            plt.plot(tc, M[nu, :]@x.T, color=first_community_color)
+            plt.plot(tr, redx[:, nu], color=second_community_color,
                      linestyle="--")
         ylab = plt.ylabel('$X_{\\mu}$', labelpad=20)
         ylab.set_rotation(0)
@@ -136,7 +168,7 @@ if messagebox.askyesno("Python",
 
     parameters_dictionary = {"graph_str": graph_str,
                              "D": D.tolist(), "n": n, "N": N,
-                             "t0": t0, "t1": t1, "dt": dt,
+                             "t0": t0, "t1": t1,
                              "coupling_constants": coupling_constants.tolist()}
 
     fig.savefig(path + f'{timestr}_{file}_bifurcation_diagram'

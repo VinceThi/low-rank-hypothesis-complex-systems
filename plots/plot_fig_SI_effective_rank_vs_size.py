@@ -1,4 +1,4 @@
-# -​*- coding: plot_fig_SI_effective_rank_vs_size.pyutf-8 -*​-
+# -​*- coding: utf-8 -*​-
 # @author: Vincent Thibeault
 
 import pandas as pd

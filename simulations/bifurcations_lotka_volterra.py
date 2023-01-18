@@ -24,6 +24,10 @@ from tkinter import messagebox
 # might diverge. The stability of the reduced dynamics is a matter of attention
 # for the Lotka-Volterra dynamics.
 
+# The integrator should be changed to solve_ivp here
+
+# This code is not used in the paper
+
 plot_time_series = False
 plot_weight_matrix_bool = False
 reduction_matrix_ortho_positive = False

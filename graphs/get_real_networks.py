@@ -165,8 +165,9 @@ def get_microbiome_weight_matrix(graph_str):
                f"graphs/graph_data/microbiomes/{graph_str}/"
 
     if graph_str == "gut":
-        # See p.27-28 of the supplementary information of
+        # See p.27-28 of the supplementary information (SI) of
         # Reviving a failed network through microscopic interventions
+        # and
         # R. Lim, J.J.T. Cabatbat, T.L.P. Martin, H. Kim, S. Kim, J. Sung,
         # C.-M. Ghim and P.-J. Kim. Large-scale metabolic interaction network
         # of the mouse and human gut microbiota. Scientific Data, 7, 204, 2020.

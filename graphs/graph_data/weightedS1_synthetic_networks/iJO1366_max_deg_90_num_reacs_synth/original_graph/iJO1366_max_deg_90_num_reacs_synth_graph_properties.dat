@@ -1,0 +1,49 @@
+===================================================================================
+type of graph:  synthetic graph
+filename:       networks/iJO1366_max_deg_90_num_reacs_synth/original_graph/iJO1366_max_deg_90_num_reacs_synth
+created:        2023/01/17 2:19 UTC
+===================================================================================
+Input parameters
+number of vertices:     1100
+geometry:               S1
+delta:                  1
+alpha:                  0.45
+PDF kappa:              power law with hard cut-off
+  - gamma:              2.52
+  - kappa min.:         2.25789
+  - kappa max.:         226.266
+PDF sigma:              deterministic scaling
+  - eta:                1.1
+  - prop. constant:     1
+Prob. of connection:    Fermi-Dirac
+  - beta:               2.2
+PDF weights:            gamma
+  - shape parameter:    0.769231
+  - scale parameter:    1.3
+===================================================================================
+Theoretical values
+mean kappa:         6.00419
+mean sigma:         7.59147
+mu:                 0.0577225
+nu:                 0.156553
+===================================================================================
+Observables
+minimum non-zero degree:         1
+maximum degree:                  122
+average degree:                  5.83818
+number of zero-degree vertices:  22
+minimum non-zero strength:       0.00132737
+maximum strength:                212.529
+average strength:                7.45066
+2nd moment strength:             257.119
+2eta-1 moment strength:          0
+variance strength:               201.607
+minimum non-zero weight:         4.55929e-06
+maximum weight:                  68.4479
+average weight:                  1.27619
+minimum kappa:                   2.26242
+maximum kappa:                   165.568
+average kappa:                   5.92689
+minimum sigma:                   2.45489
+maximum sigma:                   275.977
+average sigma:                   7.46146

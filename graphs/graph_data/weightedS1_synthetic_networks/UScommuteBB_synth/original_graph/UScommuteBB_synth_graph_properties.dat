@@ -1,0 +1,49 @@
+===================================================================================
+type of graph:  synthetic graph
+filename:       networks/UScommuteBB_synth/original_graph/UScommuteBB_synth
+created:        2023/01/17 2:19 UTC
+===================================================================================
+Input parameters
+number of vertices:     3109
+geometry:               S1
+delta:                  1
+alpha:                  0.59
+PDF kappa:              power law with hard cut-off
+  - gamma:              4.31
+  - kappa min.:         3.00091
+  - kappa max.:         34.0741
+PDF sigma:              deterministic scaling
+  - eta:                2.02
+  - prop. constant:     719
+Prob. of connection:    Fermi-Dirac
+  - beta:               2.2
+PDF weights:            gamma
+  - shape parameter:    0.714286
+  - scale parameter:    1.4
+===================================================================================
+Theoretical values
+mean kappa:         4.28567
+mean sigma:         16249
+mu:                 0.0808687
+nu:                 3.33915e-05
+===================================================================================
+Observables
+minimum non-zero degree:         1
+maximum degree:                  31
+average degree:                  4.28305
+number of zero-degree vertices:  60
+minimum non-zero strength:       0.00101253
+maximum strength:                1.47529e+06
+average strength:                17119.7
+2nd moment strength:             3.58339e+09
+2eta-1 moment strength:          0
+variance strength:               3.2903e+09
+minimum non-zero weight:         0.00101253
+maximum weight:                  1.32581e+06
+average weight:                  3997.09
+minimum kappa:                   3.00115
+maximum kappa:                   27.6942
+average kappa:                   4.30342
+minimum sigma:                   6619.88
+maximum sigma:                   589325
+average sigma:                   16254.5
