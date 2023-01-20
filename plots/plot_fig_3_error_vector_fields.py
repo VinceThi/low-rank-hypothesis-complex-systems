@@ -92,10 +92,6 @@ path_upper_bound_wc = "2022_03_25_14h45min47sec_1000_samples_upper_bound" \
                       "_RMSE_vector_field_wilson_cowan_celegans_signed.json"
 path_parameters_wc_n9 = "2023_01_10_15h50min51sec_n_9_2000pts_wilson_cowan" \
                         "_celegans_signed_parameters_dictionary.json"
-path_parameters_wc_n30 = "2023_01_10_16h16min37sec_n_30_1000pts_wilson_cowan" \
-                         "_celegans_signed_parameters_dictionary.json"
-path_parameters_wc_n80 = "2023_01_10_16h25min33sec_n_80_1000pts_wilson_cowan" \
-                         "_celegans_signed_parameters_dictionary.json"
 path_complete_forward_bifurcation_wc =\
     "2023_01_10_15h50min51sec_n_9_2000pts_x_forward_equilibrium_points" \
     "_list_complete_wilson_cowan_celegans_signed.json"
@@ -108,18 +104,18 @@ path_reduced_forward_bifurcation_n9_wc =\
 path_reduced_backward_bifurcation_n9_wc = \
     "2023_01_10_15h50min51sec_n_9_2000pts_redx_backward_equilibrium_points" \
     "_list_reduced_wilson_cowan_celegans_signed.json"
-path_reduced_forward_bifurcation_n30_wc =\
-    "2023_01_10_16h16min37sec_n_30_1000pts_redx_forward_equilibrium_points" \
+path_reduced_forward_bifurcation_n30_wc = \
+    "2023_01_18_14h22min06sec_n_30_2000ptsx2_redx_forward_equilibrium_points" \
     "_list_reduced_wilson_cowan_celegans_signed.json"
 path_reduced_backward_bifurcation_n30_wc =\
-    "2023_01_10_16h16min37sec_n_30_1000pts_redx_backward_equilibrium_points" \
+    "2023_01_18_14h22min06sec_n_30_2000ptsx2_redx_backward_equilibrium" \
+    "_points_list_reduced_wilson_cowan_celegans_signed.json"
+path_reduced_forward_bifurcation_n80_wc = \
+    "2023_01_18_14h23min54sec_n_80_2000ptsx2_redx_forward_equilibrium_points" \
     "_list_reduced_wilson_cowan_celegans_signed.json"
-path_reduced_forward_bifurcation_n80_wc =\
-    "2023_01_10_16h25min33sec_n_80_1000pts_redx_forward_equilibrium_points" \
-    "_list_reduced_wilson_cowan_celegans_signed.json"
-path_reduced_backward_bifurcation_n80_wc =\
-    "2023_01_10_16h25min33sec_n_80_1000pts_redx_backward_equilibrium_points" \
-    "_list_reduced_wilson_cowan_celegans_signed.json"
+path_reduced_backward_bifurcation_n80_wc = \
+    "2023_01_18_14h23min54sec_n_80_2000ptsx2_redx_backward_equilibrium" \
+    "_points_list_reduced_wilson_cowan_celegans_signed.json"
 graph_str = "celegans_signed"
 A_wc = get_connectome_weight_matrix(graph_str)
 S_wc = svdvals(A_wc)
@@ -262,13 +258,13 @@ def plot_error(ax, dynamics_str, path_error, path_upper_bound, N_arange,
     ax.scatter(N_arange, mean_error, s=5, color=deep[3],
                label="Average alignment error"
                      " $\\langle \\mathcal{E} \\rangle_x$", zorder=0)
-    ax.scatter(N_arange, mean_upper_bound_error, s=2, color=dark_grey,
+    ax.scatter(N_arange, mean_upper_bound_error, s=2, color="#313131",
                label="Average upper-bound"
                      " on $\\langle \\mathcal{E} \\rangle_x$")
     ax.fill_between(N_arange, fill_between_error_1, fill_between_error_2,
                     color=deep[3], alpha=0.5)
     ax.fill_between(N_arange, fill_between_ub1, fill_between_ub2,
-                    color=dark_grey, alpha=0.5)
+                    color=deep[7], alpha=0.5)
 
     # if ylabel_bool:
     #    ybox1 = TextArea("$\\langle \\mathcal{E}_f \\rangle_x$ ",
@@ -351,12 +347,22 @@ title_pad = -12
 letter_posx, letter_posy = -0.27, 1.08
 xlabel_ypos = 0.000002
 fontsize_legend = 12
+loc_legend = (0.02, 0.7)
 linewidth = 1.5
+ylabel_posx = -0.2
+ylabel_posy = 0.65
 s = 3.5
+cc = dark_grey
+cr1 = deep[4]
+cr2 = deep[6]
+cr3 = deep[9]
 
 
-def round_to_1(num):
-    return round(num, -int(floor(log10(abs(num)))))
+# def round_to_1(num):
+#     return round(num, -int(floor(log10(abs(num)))))
+
+def round_sig(num, sig=1):
+    return round(num, sig-int(floor(log10(abs(num))))-1)
 
 
 # --------------------------- SIS ---------------------------------------------
@@ -396,25 +402,26 @@ with open(path_str + f"{dynamics_str}_data/"
 coupling_constants = parameters_dictionary["coupling_constants"]
 
 ax5.scatter(coupling_constants, X1c,
-            color=deep[0], label="Exact", s=s)
-ax5.plot(coupling_constants, X1r1, color=deep[4],
+            color=cc, label="Exact", s=s)
+ax5.plot(coupling_constants, X1r1, color=cr1,
          label="$n = 1 \,\,(e = \mathrm{rmse} = $" +
-               f"${round_to_1(rmse(X1c, X1r1))})$",
+               f"${round_sig(rmse(X1c, X1r1))})$",
          linewidth=linewidth)
-ax5.plot(coupling_constants, X1r2, color=deep[2],
+ax5.plot(coupling_constants, X1r2, color=cr2,
          label="$n = 7 \\approx \mathrm{srank} \,\,(e = $" +
-               f"${round_to_1(rmse(X1c, X1r2))})$",
+               f"${round_sig(rmse(X1c, X1r2))})$",
          linewidth=linewidth)
-ax5.plot(coupling_constants, X1r3, color=deep[1],
+ax5.plot(coupling_constants, X1r3, color=cr3,
          label="$n = 104 = \mathrm{energy} \,\,(e = $" +
-               f"${round_to_1(rmse(X1c, X1r3))})$",
+               f"${round_sig(rmse(X1c, X1r3))})$",
          linewidth=linewidth)
 ylab = plt.ylabel('$\\mathcal{X}^*$')
+ax5.yaxis.set_label_coords(ylabel_posx, ylabel_posy)
 ylab.set_rotation(0)
 plt.xlabel("Infection rate")
-plt.ylim([-0.04, 1.04])
+plt.ylim([-0.02, 1.02])
 plt.tick_params(axis='both', which='major')
-plt.legend(loc=2, fontsize=8, handlelength=1)
+plt.legend(loc=loc_legend, fontsize=8, handlelength=1)
 plt.yticks([0, 0.5, 1])
 ax5.text(letter_posx, letter_posy, "e", fontweight="bold",
          horizontalalignment="center", verticalalignment="top",
@@ -425,15 +432,15 @@ ax5.text(letter_posx, letter_posy, "e", fontweight="bold",
 #                    bbox_transform=ax5.transAxes, loc=4)
 # axins.scatter(coupling_constants,
 #               X1c_equilibrium_points,
-#               color=deep[0], label="Exact", s=s)
+#               color=cc, label="Exact", s=s)
 # axins.plot(coupling_constants,
-#            X1r1_equilibrium_points, color=deep[4],
+#            X1r1_equilibrium_points, color=cr1,
 #            label="$n = 1$", linewidth=linewidth)
 # axins.plot(coupling_constants,
-#            X1r2_equilibrium_points, color=deep[2],
+#            X1r2_equilibrium_points, color=cr2,
 #            label="$n = 7 \\approx \mathrm{srank}$", linewidth=linewidth)
 # axins.plot(coupling_constants,
-#            X1r3_equilibrium_points, color=deep[1],
+#            X1r3_equilibrium_points, color=cr3,
 #            label="$n = 104 = \mathrm{energy}$", linewidth=linewidth)
 # axins.set_xlim([0.999, 1.011])
 # axins.set_ylim([0.027, 0.033])
@@ -466,12 +473,6 @@ dynamics_str = "wilson_cowan"
 with open(path_str + f"{dynamics_str}_data/" +
           path_parameters_wc_n9) as json_data:
     parameters_dictionary_wc_n9 = json.load(json_data)
-with open(path_str + f"{dynamics_str}_data/" +
-          path_parameters_wc_n30) as json_data:
-    parameters_dictionary_wc_n30 = json.load(json_data)
-with open(path_str + f"{dynamics_str}_data/" +
-          path_parameters_wc_n80) as json_data:
-    parameters_dictionary_wc_n80 = json.load(json_data)
 
 with open(path_str + f"{dynamics_str}_data/"
           + path_complete_forward_bifurcation_wc) as json_data:
@@ -499,97 +500,112 @@ with open(path_str + f"{dynamics_str}_data/"
           + path_reduced_backward_bifurcation_n80_wc) as json_data:
     Xrb_n80 = np.array(json.load(json_data))
 
+normalizing_constant = 0.25
+Xcf = Xcf/normalizing_constant
+Xcb = Xcb/normalizing_constant
+Xrf_n9 = Xrf_n9/normalizing_constant
+Xrb_n9 = Xrb_n9/normalizing_constant
+Xrf_n30 = Xrf_n30/normalizing_constant
+Xrb_n30 = Xrb_n30/normalizing_constant
+Xrf_n80 = Xrf_n80/normalizing_constant
+Xrb_n80 = Xrb_n80/normalizing_constant
+
 Xcfb = np.concatenate([Xcf, Xcb])
 Xrfb9 = np.concatenate([Xrf_n9, Xrb_n9])
 Xrfb30 = np.concatenate([Xrf_n30, Xrb_n30])
 Xrfb80 = np.concatenate([Xrf_n80, Xrb_n80])
 
 # The coupling constants are the same for every n
-coupling_constants_n9 =\
+coupling_constants =\
     np.array(parameters_dictionary_wc_n9["coupling_constants"])
-# coupling_constants_n30 =\
-#     np.array(parameters_dictionary_wc_n30["coupling_constants"])
-# coupling_constants_n80 = \
-#     np.array(parameters_dictionary_wc_n80["coupling_constants"])
-# print(len(coupling_constants_n9), len(coupling_constants_n30), len(coupling_constants_n80))
 ax6.text(letter_posx, letter_posy, "f", fontweight="bold",
          horizontalalignment="center", verticalalignment="top",
          transform=ax6.transAxes)
-plt.scatter(coupling_constants_n9, Xcf, color=deep[0], label="Exact", s=s)
-plt.scatter(coupling_constants_n9, Xcb, color=deep[0], s=s)
-plt.plot(coupling_constants_n9[:1860], Xrf_n9[Xrf_n9 < 0.13], color=deep[4],
+plt.scatter(coupling_constants, Xcf, color=cc, label="Exact", s=s)
+plt.scatter(coupling_constants, Xcb, color=cc, s=s)
+plt.plot(coupling_constants[:1860],
+         Xrf_n9[Xrf_n9 < 0.13/normalizing_constant], color=cr1,
          label="$n = 9 \\approx \mathrm{srank} \,\,(e = $" +
-               f"${round_to_1(rmse(Xcfb, Xrfb9))})$", linewidth=linewidth)
-plt.plot(coupling_constants_n9[1860:], Xrf_n9[Xrf_n9 >= 0.13], color=deep[4],
+               f"${round_sig(rmse(Xcfb, Xrfb9))})$", linewidth=linewidth)
+plt.plot(coupling_constants[1860:],
+         Xrf_n9[Xrf_n9 >= 0.13/normalizing_constant], color=cr1,
          linewidth=linewidth)
-plt.plot(coupling_constants_n9[:1849], Xrb_n9[Xrb_n9 < 0.13], color=deep[4],
+plt.plot(coupling_constants[:1849],
+         Xrb_n9[Xrb_n9 < 0.13/normalizing_constant], color=cr1,
          linewidth=linewidth)
-plt.plot(coupling_constants_n9[1849:], Xrb_n9[Xrb_n9 >= 0.13], color=deep[4],
+plt.plot(coupling_constants[1849:],
+         Xrb_n9[Xrb_n9 >= 0.13/normalizing_constant], color=cr1,
          linewidth=linewidth)
-plt.plot(coupling_constants_n30[:866], Xrf_n30[Xrf_n30 < 0.12], color=deep[2],
+plt.plot(coupling_constants[:1732],
+         Xrf_n30[Xrf_n30 < 0.12/normalizing_constant], color=cr2,
          label="$n = 30 \\approx \mathrm{nrank} \,\,(e = $" +
-               f"${round_to_1(rmse(Xcfb, Xrfb30))})$", linewidth=linewidth)
-plt.plot(coupling_constants_n30[866:], Xrf_n30[Xrf_n30 >= 0.12], color=deep[2],
+               f"${round_sig(rmse(Xcfb, Xrfb30))})$", linewidth=linewidth)
+plt.plot(coupling_constants[1732:],
+         Xrf_n30[Xrf_n30 >= 0.12/normalizing_constant], color=cr2,
          linewidth=linewidth)
-plt.plot(coupling_constants_n30[:822], Xrb_n30[Xrb_n30 < 0.12], color=deep[2],
+plt.plot(coupling_constants[:1644],
+         Xrb_n30[Xrb_n30 < 0.12/normalizing_constant], color=cr2,
          linewidth=linewidth)
-plt.plot(coupling_constants_n30[822:], Xrb_n30[Xrb_n30 >= 0.12], color=deep[2],
+plt.plot(coupling_constants[1644:],
+         Xrb_n30[Xrb_n30 >= 0.12/normalizing_constant], color=cr2,
          linewidth=linewidth)
-plt.plot(coupling_constants_n80[:834], Xrf_n80[Xrf_n80 < 0.11], color=deep[1],
-         label="$n = 80 = \mathrm{shrank}$ \,\,(e = $" +
-               f"${round_to_1(rmse(Xcfb, Xrfb80))})", linewidth=linewidth)
-plt.plot(coupling_constants_n80[834:], Xrf_n80[Xrf_n80 >= 0.11], color=deep[1],
+plt.plot(coupling_constants[:1668],
+         Xrf_n80[Xrf_n80 < 0.11/normalizing_constant], color=cr3,
+         label="$n = 80 = \mathrm{shrank} \,\,(e = $" +
+               f"${round_sig(rmse(Xcfb, Xrfb80))})$", linewidth=linewidth)
+plt.plot(coupling_constants[1668:],
+         Xrf_n80[Xrf_n80 >= 0.11/normalizing_constant], color=cr3,
          linewidth=linewidth)
-plt.plot(coupling_constants_n80[:795], Xrb_n80[Xrb_n80 < 0.11], color=deep[1],
+plt.plot(coupling_constants[:1589],
+         Xrb_n80[Xrb_n80 < 0.11/normalizing_constant], color=cr3,
          linewidth=linewidth)
-plt.plot(coupling_constants_n80[795:], Xrb_n80[Xrb_n80 >= 0.11], color=deep[1],
+plt.plot(coupling_constants[1589:],
+         Xrb_n80[Xrb_n80 >= 0.11/normalizing_constant], color=cr3,
          linewidth=linewidth)
 plt.xticks([0.02, 0.06, 0.10, 0.14])
 ylab = plt.ylabel('$\\mathcal{X}^*$')
+ax6.yaxis.set_label_coords(ylabel_posx, ylabel_posy)
 ylab.set_rotation(0)
 plt.xlabel('Synaptic weight')
-plt.ylim([-0.001, 0.26])
-plt.yticks([0, 0.1, 0.2])
-plt.legend(loc=2, fontsize=8, handlelength=1)
+# plt.ylim([-0.001, 0.26])
+# plt.yticks([0, 0.1, 0.2])
+plt.ylim([-0.02, 1.02])
+plt.yticks([0, 0.5, 1])
+plt.legend(loc=loc_legend, fontsize=8, handlelength=1)
 
 axins = inset_axes(ax6, width="35%", height="25%",
-                   bbox_to_anchor=(.2, .32, 1, 1),
+                   bbox_to_anchor=(.14, .34, 1, 1),
                    bbox_transform=ax6.transAxes, loc=3)
-axins.scatter(coupling_constants_n9, Xcf, color=deep[0], s=s)
-axins.scatter(coupling_constants_n9, Xcb, color=deep[0], s=s)
-axins.plot(coupling_constants_n80[:834], Xrf_n80[Xrf_n80 < 0.11],
-           color=deep[2], label="$n = 80 = \mathrm{shrank}$",
+axins.scatter(coupling_constants, Xcf, color=cc, label="Exact", s=s)
+axins.scatter(coupling_constants, Xcb, color=cc, s=s)
+axins.plot(coupling_constants[:1732],
+           Xrf_n30[Xrf_n30 < 0.12/normalizing_constant], color=cr2,
            linewidth=linewidth)
-plt.scatter(coupling_constants_n9, Xcf, color=deep[0], label="Exact", s=s)
-plt.scatter(coupling_constants_n9, Xcb, color=deep[0], s=s)
-# plt.plot(coupling_constants_n9[:1860], Xrf_n9[Xrf_n9 < 0.13], color=deep[4],
-#          label="$n = 9 \\approx \mathrm{srank}$", linewidth=linewidth)
-# plt.plot(coupling_constants_n9[1860:], Xrf_n9[Xrf_n9 >= 0.13], color=deep[4],
-#          linewidth=linewidth)
-# plt.plot(coupling_constants_n9[:1849], Xrb_n9[Xrb_n9 < 0.13], color=deep[4],
-#          linewidth=linewidth)
-# plt.plot(coupling_constants_n9[1849:], Xrb_n9[Xrb_n9 >= 0.13], color=deep[4],
-#          linewidth=linewidth)
-plt.plot(coupling_constants_n30[:866], Xrf_n30[Xrf_n30 < 0.12], color=deep[2],   
-         label="$n = 30 \\approx \mathrm{nrank}$", linewidth=linewidth)          
-plt.plot(coupling_constants_n30[866:], Xrf_n30[Xrf_n30 >= 0.12], color=deep[2],  
-         linewidth=linewidth)                                                    
-plt.plot(coupling_constants_n30[:822], Xrb_n30[Xrb_n30 < 0.12], color=deep[2],   
-         linewidth=linewidth)                                                    
-plt.plot(coupling_constants_n30[822:], Xrb_n30[Xrb_n30 >= 0.12], color=deep[2],  
-         linewidth=linewidth)                                                    
-plt.plot(coupling_constants_n80[:834], Xrf_n80[Xrf_n80 < 0.11], color=deep[1],
-         label="$n = 80 = \mathrm{shrank}$", linewidth=linewidth)
-plt.plot(coupling_constants_n80[834:], Xrf_n80[Xrf_n80 >= 0.11], color=deep[1],
-         linewidth=linewidth)
-plt.plot(coupling_constants_n80[:795], Xrb_n80[Xrb_n80 < 0.11], color=deep[1],
-         linewidth=linewidth)
-plt.plot(coupling_constants_n80[795:], Xrb_n80[Xrb_n80 >= 0.11], color=deep[1],
-         linewidth=linewidth)
+axins.plot(coupling_constants[1732:],
+           Xrf_n30[Xrf_n30 >= 0.12/normalizing_constant], color=cr2,
+           linewidth=linewidth)
+axins.plot(coupling_constants[:1644],
+           Xrb_n30[Xrb_n30 < 0.12/normalizing_constant], color=cr2,
+           linewidth=linewidth)
+axins.plot(coupling_constants[1644:],
+           Xrb_n30[Xrb_n30 >= 0.12/normalizing_constant], color=cr2,
+           linewidth=linewidth)
+axins.plot(coupling_constants[:1668],
+           Xrf_n80[Xrf_n80 < 0.11/normalizing_constant], color=cr3,
+           linewidth=linewidth)
+axins.plot(coupling_constants[1668:],
+           Xrf_n80[Xrf_n80 >= 0.11/normalizing_constant], color=cr3,
+           linewidth=linewidth)
+axins.plot(coupling_constants[:1589],
+           Xrb_n80[Xrb_n80 < 0.11/normalizing_constant], color=cr3,
+           linewidth=linewidth)
+axins.plot(coupling_constants[1589:],
+           Xrb_n80[Xrb_n80 >= 0.11/normalizing_constant], color=cr3,
+           linewidth=linewidth)
 axins.set_xlim([0.112, 0.124])
-axins.set_ylim([0.075, 0.158])
+axins.set_ylim([0.075/normalizing_constant, 0.158/normalizing_constant])
 axins.set_xticks([0.113, 0.123])
-axins.set_yticks([0.11, 0.15])
+# axins.set_yticks([0.11, 0.15])
 axins.spines['top'].set_visible(True)
 axins.spines['right'].set_visible(True)
 for axis in ['top', 'bottom', 'left', 'right']:
@@ -599,20 +615,24 @@ axins.tick_params(axis='both', which='major', labelsize=8,
 
 
 axins2 = inset_axes(ax6, width="18%", height="18%",
-                    bbox_to_anchor=(0.03, .07, 1, 1),
+                    bbox_to_anchor=(0.03, .06, 1, 1),
                     bbox_transform=ax6.transAxes, loc=4)
-axins2.plot(coupling_constants_n9[:1860], Xrf_n9[Xrf_n9 < 0.13], color=deep[4],
+axins2.plot(coupling_constants[:1860],
+            Xrf_n9[Xrf_n9 < 0.13/normalizing_constant], color=cr1,
             label="$n = 9 \\approx \mathrm{srank}$")
-axins2.plot(coupling_constants_n9[1860:], Xrf_n9[Xrf_n9 >= 0.13],
-            color=deep[4], linewidth=linewidth)
-axins2.plot(coupling_constants_n9[:1849], Xrb_n9[Xrb_n9 < 0.13],
-            color=deep[4], linewidth=linewidth)
-axins2.plot(coupling_constants_n9[1849:], Xrb_n9[Xrb_n9 >= 0.13],
-            color=deep[4], linewidth=linewidth)
+axins2.plot(coupling_constants[1860:],
+            Xrf_n9[Xrf_n9 >= 0.13/normalizing_constant],
+            color=cr1, linewidth=linewidth)
+axins2.plot(coupling_constants[:1849],
+            Xrb_n9[Xrb_n9 < 0.13/normalizing_constant],
+            color=cr1, linewidth=linewidth)
+axins2.plot(coupling_constants[1849:],
+            Xrb_n9[Xrb_n9 >= 0.13/normalizing_constant],
+            color=cr1, linewidth=linewidth)
 axins2.set_xlim([0.129, 0.132])
-axins2.set_ylim([0.108, 0.148])
+axins2.set_ylim([0.108/normalizing_constant, 0.148/normalizing_constant])
 axins2.set_xticks([0.13])
-axins2.set_yticks([0.11, 0.13])
+axins2.set_yticks([0.45, 0.55])
 axins2.spines['top'].set_visible(True)
 axins2.spines['right'].set_visible(True)
 for axis in ['top', 'bottom', 'left', 'right']:
@@ -674,35 +694,62 @@ with open(path_str + f"{dynamics_str}_data/"
 with open(path_str + f"{dynamics_str}_data/"
           + path_reduced_backward_bifurcation_n400_microbial) as json_data:
     Xrb_n400 = np.array(json.load(json_data))
+# same coupling constants linspace for  in every case
 coupling_constants =\
     np.array(parameters_dictionary_microbial_n76["coupling_constants_forward"])
-# same coupling constants linspace for  in every case
-plt.scatter(coupling_constants[:44], Xcf[Xcf < 2], color=deep[0],
-            label="Exact", s=s)
-plt.scatter(coupling_constants, Xcb, color=deep[0], s=s)
-plt.vlines(x=coupling_constants[44], ymin=0.1315, ymax=6.8, linestyle="--",
-           linewidth=1, color=deep[0])
-plt.plot(coupling_constants[:76], Xrf_n76[Xrf_n76 < 2], color=deep[4],
-         label="$n = 76 \\approx \mathrm{erank}$", linewidth=linewidth)
-plt.plot(coupling_constants, Xrb_n76, color=deep[4], linewidth=linewidth)
-plt.vlines(x=coupling_constants[76], ymin=0.139, ymax=5.097, linestyle="--",
-           linewidth=1, color=deep[4])
-plt.plot(coupling_constants[:67], Xrf_n203[Xrf_n203 < 2], color=deep[2],
-         label="$n = 203 = \mathrm{shrank}$", linewidth=linewidth)
-plt.plot(coupling_constants, Xrb_n203, color=deep[2], linewidth=linewidth)
-plt.vlines(x=coupling_constants[67], ymin=0.14, ymax=6.45, linestyle="--",
-           linewidth=1, color=deep[2])
-plt.plot(coupling_constants[:66], Xrf_n400[Xrf_n400 < 2], color=deep[1],
-         label="$n = 400$", linewidth=linewidth)
-plt.plot(coupling_constants, Xrb_n400, color=deep[1], linewidth=linewidth)
-plt.vlines(x=coupling_constants[66], ymin=0.1408, ymax=7.39, linestyle="--",
-           linewidth=1, color=deep[1])
+
+# We normalize and remove one branch to have only 2 branches for each n
+normalizing_constant = 10
+Xcf = Xcf[Xcf < 2/normalizing_constant]/normalizing_constant
+Xcb = Xcb/normalizing_constant
+Xrf_n76 = Xrf_n76[Xrf_n76 < 2/normalizing_constant]/normalizing_constant
+Xrb_n76 = Xrb_n76/normalizing_constant
+Xrf_n203 = Xrf_n203[Xrf_n203 < 2/normalizing_constant]/normalizing_constant
+Xrb_n203 = Xrb_n203/normalizing_constant
+Xrf_n400 = Xrf_n400[Xrf_n400 < 2/normalizing_constant]/normalizing_constant
+Xrb_n400 = Xrb_n400/normalizing_constant
+
+Xcfb = np.concatenate([Xcf, Xcb])
+Xrfb_n76 = np.concatenate([Xrf_n76, Xrb_n76])
+Xrfb_n203 = np.concatenate([Xrf_n203, Xrb_n203])
+Xrfb_n400 = np.concatenate([Xrf_n400, Xrb_n400])
+
+plt.scatter(coupling_constants[:44], Xcf, color=cc, label="Exact", s=s)
+plt.scatter(coupling_constants, Xcb, color=cc, s=s)
+plt.vlines(x=coupling_constants[44], ymin=0.1315/normalizing_constant,
+           ymax=6.8/normalizing_constant, linestyle="--",
+           linewidth=1, color=cc)
+plt.plot(coupling_constants[:76], Xrf_n76, color=cr1,
+         label="$n = 76 \\approx \mathrm{erank} \,\,(e = $" +
+               f"${round_sig(rmse(Xcfb, Xrfb_n76))}"
+               f")$", linewidth=linewidth)
+plt.plot(coupling_constants, Xrb_n76, color=cr1, linewidth=linewidth)
+plt.vlines(x=coupling_constants[76], ymin=0.139/normalizing_constant,
+           ymax=5.097/normalizing_constant, linestyle="--",
+           linewidth=1, color=cr1)
+plt.plot(coupling_constants[:67], Xrf_n203, color=cr2,
+         label="$n = 203 = \mathrm{shrank} \,\,(e = $" +
+               f"${round_sig(rmse(Xcfb, Xrfb_n203))}"
+               f")$", linewidth=linewidth)
+plt.plot(coupling_constants, Xrb_n203, color=cr2, linewidth=linewidth)
+plt.vlines(x=coupling_constants[67], ymin=0.14/normalizing_constant,
+           ymax=6.45/normalizing_constant, linestyle="--",
+           linewidth=1, color=cr2)
+plt.plot(coupling_constants[:66], Xrf_n400, color=cr3,
+         label="$n = 400 \,\,(e = $" +
+               f"${round_sig(rmse(Xcfb, Xrfb_n400))}"
+               f")$", linewidth=linewidth)
+plt.plot(coupling_constants, Xrb_n400, color=cr3, linewidth=linewidth)
+plt.vlines(x=coupling_constants[66], ymin=0.1408/normalizing_constant,
+           ymax=7.39/normalizing_constant, linestyle="--",
+           linewidth=1, color=cr3)
 plt.xticks([1.5, 2, 2.5, 3])
 ylab = plt.ylabel('$\\mathcal{X}^*$')
+ax7.yaxis.set_label_coords(ylabel_posx, ylabel_posy)
 ylab.set_rotation(0)
-plt.ylim([-0.3, 11.3])
-plt.yticks([0, 4, 8])
-plt.legend(loc=2, fontsize=8, handlelength=1)
+plt.ylim([-0.02, 1.02])
+plt.yticks([0, 0.5, 1])
+plt.legend(loc=loc_legend, fontsize=8, handlelength=1)
 plt.xlabel('Microbial interaction weight')
 
 # --------------------------- RNN ---------------------------------------------
@@ -778,19 +825,19 @@ X1r2, X2r2, X3r2 = redx2[0, :], redx2[1, :], redx2[2, :]
 X1r3, X2r3, X3r3 = redx3[0, :], redx3[1, :], redx3[2, :]
 ax8.scatter(X1c[int(time_cut_c*len(tc)):],
             X2c[int(time_cut_c*len(tc)):],
-            X3c[int(time_cut_c*len(tc)):], color=deep[0], s=s,  # linewidth=2,
+            X3c[int(time_cut_c*len(tc)):], color=cc, s=s,  # linewidth=2,
             label="Exact", zorder=0)
 ax8.plot(X1r1[int(time_cut*len(tr1)):],
          X2r1[int(time_cut*len(tr1)):],
-         X3r1[int(time_cut*len(tr1)):], color=deep[4],
+         X3r1[int(time_cut*len(tr1)):], color=cr1,
          linewidth=0.5, label="$n = 80 \\approx \\mathrm{erank}$", zorder=3)
 ax8.plot(X1r2[int(time_cut*len(tr2)):],
          X2r2[int(time_cut*len(tr2)):],
-         X3r2[int(time_cut*len(tr2)):], color=deep[2],
+         X3r2[int(time_cut*len(tr2)):], color=cr2,
          linewidth=1, label="$n = 90$", zorder=2)
 ax8.plot(X1r3[int(time_cut*len(tr3)):],
          X2r3[int(time_cut*len(tr3)):],
-         X3r3[int(time_cut*len(tr3)):], color=deep[1],
+         X3r3[int(time_cut*len(tr3)):], color=cr3,
          linewidth=1, label="$n = 100$", zorder=1)
 ax8.view_init(45, -135)
 ax8.set_xlabel("$X_1$")
@@ -801,7 +848,7 @@ ax8.set_xticks([-0.2, 0, 0.2])
 ax8.set_yticks([-0.2, 0, 0.2])
 ax8.set_zticks([-0.2, 0, 0.2])
 # ax8.tick_params(axis='both', which='major', labelsize=8)
-plt.legend(loc=(-0.2, 0.7), fontsize=8, handlelength=1)
+plt.legend(loc=(-0.2, 0.75), fontsize=8, handlelength=1)
 ax8.text2D(letter_posx, letter_posy, "h", fontweight="bold",
            horizontalalignment="center", verticalalignment="top",
            transform=ax8.transAxes)

@@ -96,7 +96,7 @@ def reduced_kuramoto_sakaguchi(t, Z, calW, calW_tensor4,
 # np.matmul(np.matmul(np.matmul(calW_tensor4, np.conj(Z)), Z), Z)
 
 
-def reduced_wilson_cowan(t, X, L, M, coupling, calD, a, b, c):
+def reduced_wilson_cowan(t, X, L, M, Mp, coupling, calD, a, b, c):
     """
     Reduced Wilson-Cowan dynamics defined directly from the vector field.
     :param t: (float) time
@@ -114,8 +114,8 @@ def reduced_wilson_cowan(t, X, L, M, coupling, calD, a, b, c):
     :return: (n-dim array)
      Vector field of the reduced Wilson-Cowan dynamics
     """
-    return -calD@X + M @ ((np.ones(len(M[0, :])) - a*np.linalg.pinv(M)@X) /
-                          (1 + np.exp(-b*(coupling*L@X - c))))
+    return -calD@X + M@((np.ones(shape=(len(M[0, :]), 1)) - a*Mp@X) /
+                        (1 + np.exp(-b*(coupling*L@X - c))))
 
 
 """ --------- Alternative definitions for the reduced dynamics ------------ """

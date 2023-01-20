@@ -88,7 +88,7 @@ x_forward_equilibrium_points_list = []
 redx_forward_equilibrium_points_list = []
 
 x0 = -10*np.random.random(N)
-redx0 = M @ x0
+redx0 = M@x0
 print("\n Iterating on coupling constants for equilibrium point diagram(f) \n")
 for coupling in tqdm(coupling_constants):
     
@@ -106,7 +106,7 @@ for coupling in tqdm(coupling_constants):
     x0 = x[-1, :]
 
     # Integrate reduced dynamics
-    args_reduced_dynamics = (L, M, coupling, calD, a, b, c)
+    args_reduced_dynamics = (L, M, Mp, coupling, calD, a, b, c)
     sol = solve_ivp(reduced_wilson_cowan, t_span, redx0,
                     integration_method, args=args_reduced_dynamics,
                     rtol=rtol, atol=atol, vectorized=True)
@@ -159,7 +159,7 @@ for coupling in tqdm(coupling_constants[::-1]):
     x0_b = x[-1, :]
 
     # Integrate reduced dynamics
-    args_reduced_dynamics = (L, M, coupling, calD, a, b, c)
+    args_reduced_dynamics = (L, M, Mp, coupling, calD, a, b, c)
     sol = solve_ivp(reduced_wilson_cowan, t_span, redx0_b,
                     integration_method, args=args_reduced_dynamics,
                     rtol=rtol, atol=atol, vectorized=True)

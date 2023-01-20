@@ -20,9 +20,10 @@ reduced_first_community_color = "#9ecae1"   # RGB: 158, 202, 225  light blue
 reduced_second_community_color = "#fdd0a2"  # RGB: 253, 208, 162  light orange
 reduced_third_community_color = "#a1d99b"   # RGB: 161, 217, 155  light green
 reduced_fourth_community_color = "#9e9ac8"  # RGB: 158, 154, 200  light purple
+#       blue 0     orange 1    green 2     red 3     purple 4
 deep = ["#4C72B0", "#DD8452", "#55A868", "#C44E52", "#8172B3",
         "#937860", "#DA8BC3", "#8C8C8C", "#CCB974", "#64B5CD"]
-
+#   grey orange 5   pink 6  light grey 7 grey yellow 8   light_blue 9
 
 """ Font and text """
 plt.rcParams.update(plt.rcParamsDefault)

@@ -26,6 +26,9 @@ plot_singvals_bool = False
 """ Time parameters """
 t0, t1 = 0, 300
 t_span = [t0, t1]
+integration_method = "BDF"
+rtol = 1e-8
+atol = 1e-12
 
 """ Graph parameters """
 graph_str = "mouse_control_rnn"
@@ -68,12 +71,12 @@ print(f"\ncoupling = {coupling} \n")
 
 """ Get trajectories """
 x0 = np.linspace(-1, 1, N)
-# x0 = 2*np.random.random(N) - 1
+
 
 # Integrate complete dynamics
 args_dynamics2 = (W, coupling, D)
-sol = solve_ivp(rnn, t_span, x0, 'BDF', args=args_dynamics2,
-                rtol=1e-8, atol=1e-12, vectorized=True)
+sol = solve_ivp(rnn, t_span, x0, integration_method, args=args_dynamics2,
+                rtol=rtol, atol=atol, vectorized=True)
 x = sol.y
 tc = sol.t
 X1c, X2c, X3c = M[0, :]@x, M[1, :]@x, M[2, :]@x
@@ -84,9 +87,9 @@ redx0 = M@x0
 # redx0 = M@x[:, -1]
 args_reduced_dynamics = (coupling, M, Mp, D)
 args_reduced_dynamics2 = (W, coupling, M, Mp, D)
-red_sol = solve_ivp(reduced_rnn_vector_field, t_span, redx0, 'BDF',
-                    args=args_reduced_dynamics2, rtol=1e-8, atol=1e-12,
-                    vectorized=True)
+red_sol = solve_ivp(reduced_rnn_vector_field, t_span, redx0,
+                    integration_method, args=args_reduced_dynamics2,
+                    rtol=rtol, atol=atol, vectorized=True)
 redx = red_sol.y
 tr = red_sol.t
 X1r, X2r, X3r = redx[0, :], redx[1, :], redx[2, :]
@@ -96,36 +99,24 @@ linewidth = 0.3
 redlinewidth = 2
 
 plt.subplot(231)
-plt.scatter(tc, X1c, color=first_community_color,
-            s=1, label=f"Complete")
-plt.scatter(tr, X1r, color=second_community_color,
-            s=1, label=f"Reduced")
+plt.scatter(tc, X1c, color=first_community_color, s=1, label=f"Complete")
+plt.scatter(tr, X1r, color=second_community_color, s=1, label=f"Reduced")
 plt.xlabel("Time $t$")
 plt.ylabel("$X_1$")
-# plt.xlim(180, 200)
-# plt.ylim(0.2, 0.32)
 plt.legend()
 
 plt.subplot(232)
-plt.scatter(tc, X2c, color=first_community_color,
-            s=1, label=f"Complete")
-plt.scatter(tr, X2r, color=second_community_color,
-            s=1, label=f"Reduced")
+plt.scatter(tc, X2c, color=first_community_color, s=1, label=f"Complete")
+plt.scatter(tr, X2r, color=second_community_color, s=1, label=f"Reduced")
 plt.xlabel("Time $t$")
 plt.ylabel("$X_2$")
-# plt.xlim(180, 200)
-# plt.ylim(0.52, 0.83)
 plt.legend()
 
 plt.subplot(233)
-plt.scatter(tc, X3c, color=first_community_color,
-            s=1, label=f"Complete")
-plt.scatter(tr, X3r, color=second_community_color,
-            s=1, label=f"Reduced")
+plt.scatter(tc, X3c, color=first_community_color, s=1, label=f"Complete")
+plt.scatter(tr, X3r, color=second_community_color, s=1, label=f"Reduced")
 plt.xlabel("Time $t$")
 plt.ylabel("$X_3$")
-# plt.xlim(180, 200)
-# plt.ylim(0.16, 0.45)
 plt.legend()
 
 time_cut = 0.5
@@ -185,24 +176,6 @@ ax6.plot(X1r[int(time_cut*len(tr)):],
 ax6.set_zlabel("$X_3$")
 ax6.set_ylabel("$X_2$")
 ax6.set_xlabel("$X_1$")
-# ax5.set_xlim(-0.35, -0.2)
-# ax5.set_ylim(-0.85, -0.5)
-# ax5.set_zlim(-1, -0.5)
-
-# ax6 = fig.add_subplot(236, projection='3d')
-# ax6.set_title("Reduced dynamics")
-#
-# print(int(time_cut*t_span[-1]))
-# ax6.plot(X1r[int(time_cut*len(tr)):],
-#          X2r[int(time_cut*len(tr)):],
-#          X3r[int(time_cut*len(tr)):], color=dark_grey,
-#          linewidth=redlinewidth, linestyle="--", alpha=0.7)
-# ax6.set_zlabel("$X_3$")
-# ax6.set_ylabel("$X_2$")
-# ax6.set_xlabel("$X_1$")
-# # ax6.set_xlim(-0.35, -0.2)
-# # ax6.set_ylim(-0.85, -0.5)
-# # ax6.set_zlim(-1, -0.5)
 plt.tight_layout()
 plt.show()
 
@@ -210,7 +183,7 @@ if messagebox.askyesno("Python",
                        "Would you like to save the parameters,"
                        " the data, and the plot?"):
     window = tkinter.Tk()
-    window.withdraw()  # hides the window
+    window.withdraw()
     file = tkinter.simpledialog.askstring("File: ", "Enter your file name")
     path = f'C:/Users/thivi/Documents/GitHub/' \
            f'low-rank-hypothesis-complex-systems/' \
