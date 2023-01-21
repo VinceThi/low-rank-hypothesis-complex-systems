@@ -3,7 +3,7 @@
 
 from graphs.get_real_networks import *
 from scipy.linalg import svdvals
-from dynamics.error_vector_fields import rmse, mse
+from dynamics.error_vector_fields import rmse, rmse_nearest_neighbors
 from singular_values.compute_svd import computeTruncatedSVD_more_positive
 from singular_values.optimal_shrinkage import optimal_shrinkage
 import json
@@ -37,6 +37,22 @@ path_reduced_bifurcation_n7_sis = \
     "_list_reduced_qmf_sis_high_school_proximity.json"
 path_reduced_bifurcation_n104_sis = \
     "2023_01_14_15h28min41sec_n_104_1000pts_redx_equilibrium_points" \
+    "_list_reduced_qmf_sis_high_school_proximity.json"
+
+path_parameters_trans_sis = \
+    "2023_01_20_15h43min51sec_at_trans_n_1_qmf_sis_high_school_proximity" \
+    "_parameters_dictionary.json"
+path_complete_bifurcation_trans_sis = \
+    "2023_01_20_15h43min51sec_at_trans_n_1_x_equilibrium_points" \
+    "_list_complete_qmf_sis_high_school_proximity.json"
+path_reduced_bifurcation_n1trans_sis = \
+    "2023_01_20_15h43min51sec_at_trans_n_1_redx_equilibrium_points" \
+    "_list_reduced_qmf_sis_high_school_proximity.json"
+path_reduced_bifurcation_n7trans_sis = \
+    "2023_01_20_15h44min33sec_at_trans_n_7_redx_equilibrium_points" \
+    "_list_reduced_qmf_sis_high_school_proximity.json"
+path_reduced_bifurcation_n104trans_sis = \
+    "2023_01_20_15h45min01sec_at_trans_n_104_redx_equilibrium_points" \
     "_list_reduced_qmf_sis_high_school_proximity.json"
 graph_str = "high_school_proximity"
 A_sis = get_epidemiological_weight_matrix(graph_str)
@@ -353,15 +369,15 @@ ylabel_posx = -0.2
 ylabel_posy = 0.65
 s = 3.5
 cc = dark_grey
-cr1 = deep[4]
-cr2 = deep[6]
-cr3 = deep[9]
+cr1 = deep[4]  # deep[4]
+cr2 = deep[2]  # deep[6]
+cr3 = deep[1]  # deep[9]
 
 
 # def round_to_1(num):
 #     return round(num, -int(floor(log10(abs(num)))))
 
-def round_sig(num, sig=1):
+def round_sig(num, sig=2):
     return round(num, sig-int(floor(log10(abs(num))))-1)
 
 
@@ -398,13 +414,12 @@ with open(path_str + f"{dynamics_str}_data/"
 with open(path_str + f"{dynamics_str}_data/"
           + path_reduced_bifurcation_n104_sis) as json_data:
     X1r3 = np.array(json.load(json_data))
-
 coupling_constants = parameters_dictionary["coupling_constants"]
 
 ax5.scatter(coupling_constants, X1c,
             color=cc, label="Exact", s=s)
 ax5.plot(coupling_constants, X1r1, color=cr1,
-         label="$n = 1 \,\,(e = \mathrm{rmse} = $" +
+         label="$n = 1 \,\,(e = $" +
                f"${round_sig(rmse(X1c, X1r1))})$",
          linewidth=linewidth)
 ax5.plot(coupling_constants, X1r2, color=cr2,
@@ -427,28 +442,43 @@ ax5.text(letter_posx, letter_posy, "e", fontweight="bold",
          horizontalalignment="center", verticalalignment="top",
          transform=ax5.transAxes)
 
-# axins = inset_axes(ax5, width="30%", height="30%",
-#                    bbox_to_anchor=(-0.05, .09, 1, 1),
-#                    bbox_transform=ax5.transAxes, loc=4)
-# axins.scatter(coupling_constants,
-#               X1c_equilibrium_points,
-#               color=cc, label="Exact", s=s)
-# axins.plot(coupling_constants,
-#            X1r1_equilibrium_points, color=cr1,
-#            label="$n = 1$", linewidth=linewidth)
-# axins.plot(coupling_constants,
-#            X1r2_equilibrium_points, color=cr2,
-#            label="$n = 7 \\approx \mathrm{srank}$", linewidth=linewidth)
-# axins.plot(coupling_constants,
-#            X1r3_equilibrium_points, color=cr3,
-#            label="$n = 104 = \mathrm{energy}$", linewidth=linewidth)
-# axins.set_xlim([0.999, 1.011])
+
+with open(path_str + f"{dynamics_str}_data/" +
+          path_parameters_trans_sis) as json_data:
+    parameters_dictionary = json.load(json_data)
+with open(path_str + f"{dynamics_str}_data/"
+          + path_complete_bifurcation_trans_sis) as json_data:
+    X1c_trans = np.array(json.load(json_data))
+with open(path_str + f"{dynamics_str}_data/"
+          + path_reduced_bifurcation_n1trans_sis) as json_data:
+    X1r1_trans = np.array(json.load(json_data))
+with open(path_str + f"{dynamics_str}_data/"
+          + path_reduced_bifurcation_n7trans_sis) as json_data:
+    X1r2_trans = np.array(json.load(json_data))
+with open(path_str + f"{dynamics_str}_data/"
+          + path_reduced_bifurcation_n104trans_sis) as json_data:
+    X1r3_trans = np.array(json.load(json_data))
+coupling_constants = parameters_dictionary["coupling_constants"]
+
+axins = inset_axes(ax5, width="30%", height="30%",
+                   bbox_to_anchor=(-0.05, .09, 1, 1),
+                   bbox_transform=ax5.transAxes, loc=4)
+axins.scatter(coupling_constants, X1c_trans, color=cc, s=s)
+axins.plot(coupling_constants, X1r1_trans, color=cr1, linewidth=linewidth)
+axins.plot(coupling_constants, X1r2_trans, color=cr2, linewidth=linewidth)
+axins.plot(coupling_constants, X1r3_trans, color=cr3, linewidth=linewidth)
+axins.set_xlim([0.9, 1.1])
 # axins.set_ylim([0.027, 0.033])
-# axins.set_xticks([1, 1.01])
+axins.set_xticks([0.9, 1, 1.1])
 # axins.set_yticks([0.03])
-# # axins2.spines['top'].set_visible(True)
-# # axins2.spines['right'].set_visible(True)
-# axins.tick_params(axis='both', which='major', labelsize=8)
+axins.spines['top'].set_visible(True)
+axins.spines['right'].set_visible(True)
+for axis in ['top', 'bottom', 'left', 'right']:
+    axins.spines[axis].set_linewidth(0.5)
+axins.tick_params(axis='both', which='major', labelsize=8,
+                  width=0.5, length=2)
+
+ax5.indicate_inset_zoom(axins)  # , edgecolor="black")
 
 
 # ----------------------- Wilson-Cowan-----------------------------------------
@@ -709,10 +739,10 @@ Xrb_n203 = Xrb_n203/normalizing_constant
 Xrf_n400 = Xrf_n400[Xrf_n400 < 2/normalizing_constant]/normalizing_constant
 Xrb_n400 = Xrb_n400/normalizing_constant
 
-Xcfb = np.concatenate([Xcf, Xcb])
-Xrfb_n76 = np.concatenate([Xrf_n76, Xrb_n76])
-Xrfb_n203 = np.concatenate([Xrf_n203, Xrb_n203])
-Xrfb_n400 = np.concatenate([Xrf_n400, Xrb_n400])
+Xcfb = np.concatenate([Xcf, Xcb[44:], Xcb])
+Xrfb_n76 = np.concatenate([Xrf_n76, Xrb_n76[76:], Xrb_n76])
+Xrfb_n203 = np.concatenate([Xrf_n203, Xrb_n203[67:], Xrb_n203])
+Xrfb_n400 = np.concatenate([Xrf_n400, Xrb_n400[66:], Xrb_n400])
 
 plt.scatter(coupling_constants[:44], Xcf, color=cc, label="Exact", s=s)
 plt.scatter(coupling_constants, Xcb, color=cc, s=s)
@@ -779,7 +809,7 @@ kwargs.update(transform=ax4.transAxes)
 ax4.plot((1 - d, 1 + d), (-d, d), zorder=10, linewidth=1.5, **kwargs)
 # ax42.text(575, 1000, "Recurrent neural network", fontsize=12)
 # ax42.text(595, 100, "Recurrent neural network", fontsize=10)
-ax42.text(605, 100, "Recurrent neural", fontsize=fontsize_legend)
+ax42.text(602, 100, "Recurrent neural", fontsize=fontsize_legend)
 # ax42.text(605, 100, "$\quad\quad$RNN", fontsize=12)
 ax4.text(-120/3.2, 0.0000035, "0 -")
 ax42.text(620, 0.00001, "Exact rank reduction\nat $n=\mathrm{rank}(W) = 102$",
@@ -798,7 +828,7 @@ ax42.set_xticks([650])
 # handles, labels = ax1.get_legend_handles_labels()
 # fig.legend(handles, labels, loc=(0.3, 0.95))
 
-""" Bifurcations """
+""" Trajectories """
 ax8 = fig.add_subplot(248, projection='3d')
 with open(path_str + f"rnn_data/" + path_x_limit_cycle_rnn) as json_data:
     x = np.array(json.load(json_data))
@@ -816,13 +846,23 @@ with open(path_str + f"rnn_data/" + path_tr2_limit_cycle_rnn) as json_data:
     tr2 = np.array(json.load(json_data))
 with open(path_str + f"rnn_data/" + path_tr3_limit_cycle_rnn) as json_data:
     tr3 = np.array(json.load(json_data))
-time_cut_c = 0.5
+time_cut_c = 0.73
+# ^ We must choose this correctly for the rmse in 3D, we want one cycle approx.
 time_cut = 0.5
 Un, Sn, M = computeTruncatedSVD_more_positive(A_rnn, 100)
 X1c, X2c, X3c = M[0, :]@x, M[1, :]@x, M[2, :]@x
 X1r1, X2r1, X3r1 = redx1[0, :], redx1[1, :], redx1[2, :]
 X1r2, X2r2, X3r2 = redx2[0, :], redx2[1, :], redx2[2, :]
 X1r3, X2r3, X3r3 = redx3[0, :], redx3[1, :], redx3[2, :]
+
+Rc = np.block([[X1c[int(time_cut_c*len(tc)):]],
+               [X2c[int(time_cut_c*len(tc)):]],
+               [X3c[int(time_cut_c*len(tc)):]]]).T
+Rr1 = np.block([[X1r1], [X2r1], [X3r1]]).T
+Rr2 = np.block([[X1r2], [X2r2], [X3r2]]).T
+Rr3 = np.block([[X1r3], [X2r3], [X3r3]]).T
+
+
 ax8.scatter(X1c[int(time_cut_c*len(tc)):],
             X2c[int(time_cut_c*len(tc)):],
             X3c[int(time_cut_c*len(tc)):], color=cc, s=s,  # linewidth=2,
@@ -830,15 +870,24 @@ ax8.scatter(X1c[int(time_cut_c*len(tc)):],
 ax8.plot(X1r1[int(time_cut*len(tr1)):],
          X2r1[int(time_cut*len(tr1)):],
          X3r1[int(time_cut*len(tr1)):], color=cr1,
-         linewidth=0.5, label="$n = 80 \\approx \\mathrm{erank}$", zorder=3)
+         linewidth=0.75,
+         label="$n = 80 \\approx \\mathrm{erank} \,\,(e = $"
+               + f"${round_sig(rmse_nearest_neighbors(Rc, Rr1))})$",
+         zorder=3)
 ax8.plot(X1r2[int(time_cut*len(tr2)):],
          X2r2[int(time_cut*len(tr2)):],
          X3r2[int(time_cut*len(tr2)):], color=cr2,
-         linewidth=1, label="$n = 90$", zorder=2)
+         linewidth=1,
+         label="$n = 90 \,\,(e = $"
+               + f"${round_sig(rmse_nearest_neighbors(Rc, Rr2))})$",
+         zorder=2)
 ax8.plot(X1r3[int(time_cut*len(tr3)):],
          X2r3[int(time_cut*len(tr3)):],
          X3r3[int(time_cut*len(tr3)):], color=cr3,
-         linewidth=1, label="$n = 100$", zorder=1)
+         linewidth=1,
+         label="$n = 100 \,\,(e = $"
+               + f"${round_sig(rmse_nearest_neighbors(Rc, Rr3))})$",
+         zorder=1)
 ax8.view_init(45, -135)
 ax8.set_xlabel("$X_1$")
 ax8.set_ylabel("$X_2$")

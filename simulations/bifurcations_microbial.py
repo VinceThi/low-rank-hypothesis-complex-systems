@@ -25,12 +25,11 @@ integrate_complete_dynamics = True
 integrate_reduced_dynamics = True
 forward_branch = True
 backward_branch = True
-uniform_observable = False
 
 # Desmos exploration: https://www.desmos.com/calculator/pdtj9p2mdi
 
 """ Time and integration parameters """
-t0, t1 = 0, 50
+t0, t1 = 0, 200
 t_span = [t0, t1]
 t_span_red = [t0, t1]
 integration_method = 'BDF'
@@ -62,35 +61,30 @@ Note: The ODE is very stiff and BDF is particularly well suited for
       one will find many arguments to use BDF, such as better integration time
       and failure rate. Also, rtol and atol need to be carefully chosen. Our 
       numerical simulations seem to corroborate their results.
-
 """
 
 
-def plot_time_series_observables(x, x_glob, tr, redx, tc, M):
+def plot_time_series_observables(x, x_glob, redx, redX_glob, tc, tr, M):
     plt.figure(figsize=(4, 4))
-    linewidth = 0.3
-    redlinewidth = 2
+    lw = 0.3
+    redlw = 2
     if integrate_complete_dynamics:
         for j in range(0, N):
-            plt.plot(tc, x[:, j],
-                     color=reduced_first_community_color,
-                     linewidth=linewidth)
-        for nu in range(n):
-            plt.scatter(tc, M[nu, :]@x.T,
-                        color=first_community_color, s=2)
-            plt.plot(tc, x_glob,
-                     linewidth=redlinewidth, color=deep[2])
+            plt.plot(tc, x[:, j], color=reduced_first_community_color,
+                     linewidth=lw)
+        for tau in range(n):
+            plt.scatter(tc, M[tau, :]@x.T, color=first_community_color, s=2)
+            plt.plot(tc, x_glob, linewidth=redlw, color=deep[2])
     if integrate_reduced_dynamics:
-        for nu in range(n):
-            plt.scatter(tr, redx[:, nu],
-                        color=second_community_color,
-                        s=2, linestyle="--")
-        plt.plot(tr, redX_glob,
-                 linewidth=redlinewidth, color=deep[3])
-    ylab = plt.ylabel('$X_{\\mu}$', labelpad=20)
-    ylab.set_rotation(0)
+        for tau in range(n):
+            plt.scatter(tr, redx[:, tau], color=second_community_color, s=2,
+                        linestyle="--")
+        plt.plot(tr, redX_glob, linewidth=redlw, color=deep[3])
+    ylabel = plt.ylabel('$X_{\\mu}$', labelpad=20)
+    ylabel.set_rotation(0)
     plt.xlabel("Time $t$")
     plt.tight_layout()
+    plt.show()
 
 
 """ Graph parameters """
@@ -106,222 +100,268 @@ if plot_weight_matrix_bool:
 dynamics_str = "microbial"
 # For real gut microbiome network
 a, b, c, D = 5, 13, 1, 30*np.eye(N)
-coupling_constants_forward = np.linspace(0.05, 3, 50)
-coupling_constants_backward = np.linspace(0.05, 3, 50)
+number_coupling = 50
+coupling_constants_forward = np.linspace(0, 3, number_coupling)
+coupling_constants_backward = np.linspace(0, 3, number_coupling)
+coupling_constants = []
 
 
 """ SVD and dimension reduction """
-n = 76  # 76, 203, 400  # Dimension of the reduced dynamics
+n = 203  # 76, 203, 400  # Dimension of the reduced dynamics
 Un, Sn, M = computeTruncatedSVD_more_positive(W, n)
 print("\n", computeEffectiveRanks(svdvals(W), graph_str, N))
 print(f"\nDimension of the reduced system n = {n} \n")
 Mp = pinv(M)
 # We combine all observable weighted by the singular values
 # to get a global observable
-s = np.diag(Sn)
-normalization_constant = np.sum(s@M)*20
-m = s@M/normalization_constant
-ell = s/normalization_constant
-
-norm_cte_uniform = 20
+# # singvals = np.diag(Sn)[:50]
+# s = np.diag(Sn)     # np.concatenate([singvals, np.zeros(n-len(singvals))])
+# normalization_constant = np.sum(s@M)*10
+# m = s@M/normalization_constant
+# ell = s/normalization_constant
+ell = np.sum(M, axis=1)/(10*N)
+m = ell@M
 
 timestr_M_D = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")
 
 
-""" Get bifurcations """
-
-if forward_branch:
-    x_forward_equilibrium_points_list = []
-    x_forward_uniform_eq_pts_list = []
-    redx_forward_equilibrium_points_list = []
-    x0 = np.random.random(N)
-    redx0 = M@x0
-    print("\n Iterating on coupling constants"
-          " for equilibrium point diagram(f) \n")
-    for coupling in tqdm(coupling_constants_forward):
-
-        if integrate_complete_dynamics:
-            args_dynamics = (W, coupling, D, a, b, c)
-            sol = solve_ivp(microbial, t_span, x0, integration_method,
-                            args=args_dynamics, rtol=rtol, atol=atol,
-                            vectorized=True, jac=jacobian_complete)
-            x = sol.y.T
-            tc = sol.t
-
-            """ Verify if the equilibrium point is reached """
-            eval_f = microbial(0, x[-1, :], W, coupling, D, a, b, c)
-            if not np.allclose(eval_f, np.zeros(N)):
-                raise ValueError("An equilibrium point is not reached for the "
-                                 "complete dynamics.")
-
-            """ Get global observables """
-            x_glob = np.sum(m*x, axis=1)
-            equilibrium_point = x_glob[-1]
-            x_forward_equilibrium_points_list.append(equilibrium_point)
-
-            """ Reset initial condition at the last equilibrium point """
-            x0 = x[-1, :]
-
-            if uniform_observable:
-                x_glob_uni = np.sum(x/N, axis=1)/norm_cte_uniform
-                x_forward_uniform_eq_pts_list.append(x_glob_uni[-1])
-
-        if integrate_reduced_dynamics:
-            args_reduced_dynamics = (W, coupling, M, Mp, D, a, b, c)
-            sol = solve_ivp(reduced_microbial_vector_field, t_span, redx0,
-                            integration_method, args=args_reduced_dynamics,
-                            rtol=rtol, atol=atol, vectorized=True,
-                            jac=jacobian_reduced)
-            redx = sol.y.T
-            tr = sol.t
-
-            """ Verify if the equilibrium point is reached """
-            eval_redf = reduced_microbial_vector_field(0, redx[-1, :], W,
-                                                       coupling, M, Mp,
-                                                       D, a, b, c)
-            if not np.allclose(eval_redf, np.zeros(n)):
-                raise ValueError("An equilibrium point is not reached for the "
-                                 "reduced dynamics.")
-
-            """ Get global observables """
-            redX_glob = np.zeros(len(redx[:, 0]))
-            for nu in range(n):
-                redX_nu = redx[:, nu]
-                redX_glob = redX_glob + ell[nu]*redX_nu
-            red_equilibrium_point = redX_glob[-1]
-            redx_forward_equilibrium_points_list.append(
-                red_equilibrium_point)
-
-            """ Reset initial condition at the last equilibrium point """
-            redx0 = redx[-1, :]
-
-        if plot_time_series:
-            plot_time_series_observables(x, x_glob, tr, redx, tc, M)
-            if uniform_observable:
-                plt.plot(tc, x_glob_uni, color="k")
-            plt.show()
-
-if backward_branch:
-    x_backward_equilibrium_points_list = []
-    x_backward_uniform_eq_pts_list = []
-    redx_backward_equilibrium_points_list = []
+""" Get equilibrium points """
+number_initial_conditions = 100
+xf = np.zeros((number_initial_conditions, number_coupling))
+redxf = np.zeros((number_initial_conditions, number_coupling))
+xb = np.zeros((number_initial_conditions, number_coupling))
+redxb = np.zeros((number_initial_conditions, number_coupling))
+for i in tqdm(range(number_initial_conditions)):
     if forward_branch:
-        x0_b = x[-1, :]
-        redx0_b = M@x[-1, :]
-    else:
-        x0_b = 0.1*np.random.random(N)
-        redx0_b = M@x0_b
-    print("\n Iterating on coupling constants"
-          " for equilibrium point diagram(b)\n")
-    for coupling in tqdm(coupling_constants_backward[::-1]):
+        x_forward_equilibrium_points_list = []
+        redx_forward_equilibrium_points_list = []
+        x0 = np.random.random(N)
+        redx0 = M@x0
+        print("\n Iterating on coupling constants"
+              " for equilibrium point diagram(f) \n")
+        x0_upper_limit = np.random.randint(1, 15)
+        for coupling in tqdm(coupling_constants_forward):
 
-        if integrate_complete_dynamics:
-            args_dynamics = (W, coupling, D, a, b, c)
-            sol = solve_ivp(microbial, t_span, x0_b, integration_method,
-                            args=args_dynamics, rtol=rtol, atol=atol,
-                            vectorized=True, jac=jacobian_complete)
-            x = sol.y.T
-            tc = sol.t
+            if integrate_complete_dynamics:
+                eq_pt_negative = True
+                eq_pt_unreach = True
+                while eq_pt_negative and eq_pt_unreach:
+                    args_dynamics = (W, coupling, D, a, b, c)
+                    sol = solve_ivp(microbial, t_span, x0, integration_method,
+                                    args=args_dynamics, rtol=rtol, atol=atol,
+                                    vectorized=True, jac=jacobian_complete)
+                    x = sol.y.T
+                    tc = sol.t
 
-            """ Verify if the equilibrium point is reached """
-            eval_f = microbial(0, x[-1, :], W, coupling, D, a, b, c)
-            if not np.allclose(eval_f, np.zeros(N)):
-                raise ValueError("An equilibrium point is not reached for the "
-                                 "complete dynamics.")
+                    """ Verify if the equilibrium point is reached """
+                    eval_f = microbial(0, x[-1, :], W, coupling, D, a, b, c)
+                    if not np.allclose(eval_f, np.zeros(N)):
+                        # raise ValueError
+                        # (f"An equilibrium point is not reached"
+                        #                  f" for the complete dynamics. \n\n"
+                        #                  f"The maximum absolute error is "
+                        #                  f" {np.max(np.abs(eval_f))}")
+                        x0 = np.random.random(N)
+                    else:
+                        eq_pt_unreach = False
+                        """ Get global observables """
+                        x_glob = np.sum(m*x, axis=1)
+                        equilibrium_point = x_glob[-1]
+                        if equilibrium_point > 0:
+                            eq_pt_negative = False
+                            x_forward_equilibrium_points_list.append(
+                                equilibrium_point)
+                            """ Reset initial condition at last eq. point """
+                            x0 = x[-1, :]
+                        else:
+                            x0 = np.random.random(N)
 
-            """ Get global observables """
-            x_glob = np.sum(m*x, axis=1)
-            equilibrium_point = x_glob[-1]
-            x_backward_equilibrium_points_list.append(equilibrium_point)
+            if integrate_reduced_dynamics:
+                eq_pt_negative = True
+                eq_pt_unreach = True
+                while eq_pt_negative and eq_pt_unreach:
+                    args_reduced_dynamics = (W, coupling, M, Mp, D, a, b, c)
+                    sol = solve_ivp(reduced_microbial_vector_field, t_span,
+                                    redx0, integration_method,
+                                    args=args_reduced_dynamics,
+                                    rtol=rtol, atol=atol, vectorized=True,
+                                    jac=jacobian_reduced)
+                    redx = sol.y.T
+                    tr = sol.t
 
-            """ Reset initial condition at the last equilibrium point """
+                    """ Verify if the equilibrium point is reached """
+                    eval_redf = reduced_microbial_vector_field(0, redx[-1, :],
+                                                               W, coupling, M,
+                                                               Mp, D, a, b, c)
+                    if not np.allclose(eval_redf, np.zeros(n)):
+                        # raise ValueError
+                        # (f"An equilibrium point is not reached"
+                        #                  f" for the reduced dynamics. \n\n"
+                        #                  f"The maximum absolute error is "
+                        #                  f" {np.max(np.abs(eval_redf))}")
+                        redx0 = M@np.random.random(N)
+                    else:
+                        eq_pt_unreach = False
+
+                        """ Get global observables """
+                        redX_glob = np.zeros(len(redx[:, 0]))
+                        for nu in range(n):
+                            redX_nu = redx[:, nu]
+                            redX_glob = redX_glob + ell[nu]*redX_nu
+
+                        red_equilibrium_point = redX_glob[-1]
+                        if red_equilibrium_point > 0:
+                            eq_pt_negative = False
+                            redx_forward_equilibrium_points_list.append(
+                                red_equilibrium_point)
+                            """ Reset initial condition at last eq. point """
+                            redx0 = redx[-1, :]
+                        else:
+                            redx0 = M@np.random.random(N)
+
+            if plot_time_series and integrate_complete_dynamics\
+                    and integrate_reduced_dynamics:
+                plot_time_series_observables(x, x_glob, redx, redX_glob,
+                                             tc, tr, M)
+        xf[i, :] = x_forward_equilibrium_points_list
+        redxf[i, :] = redx_forward_equilibrium_points_list
+
+    if backward_branch:
+        x_backward_equilibrium_points_list = []
+        redx_backward_equilibrium_points_list = []
+        if forward_branch and i == 0:
             x0_b = x[-1, :]
+            redx0_b = M@x[-1, :]
+        else:
+            x0_b = np.random.uniform(0, x0_upper_limit, N)
+            redx0_b = M@x0_b
+        print("\n Iterating on coupling constants"
+              " for equilibrium point diagram(b)\n")
+        for coupling in tqdm(coupling_constants_backward[::-1]):
 
-            if uniform_observable:
-                x_glob_uni = np.sum(x/N, axis=1)
-                x_backward_uniform_eq_pts_list.append(x_glob_uni[-1])
+            if integrate_complete_dynamics:
+                eq_pt_negative = True
+                eq_pt_unreach = True
+                while eq_pt_negative and eq_pt_unreach:
+                    args_dynamics = (W, coupling, D, a, b, c)
+                    sol = solve_ivp(microbial, t_span, x0_b,
+                                    integration_method,
+                                    args=args_dynamics, rtol=rtol, atol=atol,
+                                    vectorized=True, jac=jacobian_complete)
+                    x = sol.y.T
+                    tc = sol.t
 
-        if integrate_reduced_dynamics:
-            args_reduced_dynamics = (coupling, M, Mp, D, a, b, c)
-            args_reduced_dynamics = (W, coupling, M, Mp, D, a, b, c)
-            sol = solve_ivp(reduced_microbial_vector_field, t_span,
-                            redx0_b, integration_method,
-                            args=args_reduced_dynamics,
-                            rtol=rtol, atol=atol, vectorized=True,
-                            jac=jacobian_reduced)
-            redx = sol.y.T
-            tr = sol.t
+                    """ Verify if the equilibrium point is reached """
+                    eval_f = microbial(0, x[-1, :], W, coupling, D, a, b, c)
+                    if not np.allclose(eval_f, np.zeros(N)):
+                        # raise ValueError
+                        # (f"An equilibrium point is not reached"
+                        #                  f" for the complete dynamics. \n\n"
+                        #                  f"The maximum absolute error is "
+                        #                  f" {np.max(np.abs(eval_f))}")
+                        x0 = np.random.uniform(0, x0_upper_limit, N)
+                    else:
+                        eq_pt_unreach = False
 
-            """ Verify if the equilibrium point is reached """
-            eval_redf = reduced_microbial_vector_field(0, redx[-1, :], W,
-                                                       coupling, M, Mp,
-                                                       D, a, b, c)
-            if not np.allclose(eval_redf, np.zeros(n)):
-                raise ValueError("An equilibrium point is not reached for the "
-                                 "reduced dynamics.")
+                        """ Get global observables """
+                        x_glob = np.sum(m*x, axis=1)
+                        equilibrium_point = x_glob[-1]
+                        if equilibrium_point > 0:
+                            eq_pt_negative = False
+                            x_backward_equilibrium_points_list.append(
+                                equilibrium_point)
+                            """ Reset initial condition at last eq. point """
+                            x0_b = x[-1, :]
+                        else:
+                            x0_b = np.random.uniform(0, x0_upper_limit, N)
 
-            """ Get global observables """
-            redX_glob = np.zeros(len(redx[:, 0]))
-            redX_sub_glob = np.zeros(len(redx[:, 0]))
-            for nu in range(n):
-                redX_nu = redx[:, nu]
-                redX_glob = redX_glob + ell[nu]*redX_nu
-            red_equilibrium_point = redX_glob[-1]
-            redx_backward_equilibrium_points_list.append(
-                red_equilibrium_point)
+            if integrate_reduced_dynamics:
+                eq_pt_negative = True
+                eq_pt_unreach = True
+                while eq_pt_negative and eq_pt_unreach:
+                    args_reduced_dynamics = (coupling, M, Mp, D, a, b, c)
+                    args_reduced_dynamics = (W, coupling, M, Mp, D, a, b, c)
+                    sol = solve_ivp(reduced_microbial_vector_field, t_span,
+                                    redx0_b, integration_method,
+                                    args=args_reduced_dynamics,
+                                    rtol=rtol, atol=atol, vectorized=True,
+                                    jac=jacobian_reduced)
+                    redx = sol.y.T
+                    tr = sol.t
 
-            """ Reset initial condition at the last equilibrium points"""
-            redx0_b = redx[-1, :]
+                    """ Verify if the equilibrium point is reached """
+                    eval_redf = reduced_microbial_vector_field(0, redx[-1, :],
+                                                               W, coupling, M,
+                                                               Mp, D, a, b, c)
+                    if not np.allclose(eval_redf, np.zeros(n)):
+                        # raise ValueError
+                        # (f"An equilibrium point is not reached"
+                        #                  f" for the reduced dynamics. \n\n"
+                        #                  f"The maximum absolute error is "
+                        #                  f" {np.max(np.abs(eval_redf))}")
+                        redx0 = M@np.random.uniform(0, x0_upper_limit, N)
+                    else:
+                        eq_pt_unreach = False
+                        """ Get global observables """
+                        redX_glob = np.zeros(len(redx[:, 0]))
+                        redX_sub_glob = np.zeros(len(redx[:, 0]))
+                        for nu in range(n):
+                            redX_nu = redx[:, nu]
+                            redX_glob = redX_glob + ell[nu]*redX_nu
+                        red_equilibrium_point = redX_glob[-1]
+                        if red_equilibrium_point > 0:
+                            eq_pt_negative = False
+                            redx_backward_equilibrium_points_list.append(
+                                red_equilibrium_point)
+                            """ Reset initial condition at last eq. points"""
+                            redx0_b = redx[-1, :]
+                        else:
+                            redx0_b = M@np.random.uniform(0, x0_upper_limit, N)
 
-        if plot_time_series:
-            plot_time_series_observables(x, x_glob, tr, redx, tc, M)
-            if uniform_observable:
-                plt.plot(tc, x_glob_uni, color="k")
-            plt.show()
-
-    x_backward_equilibrium_points_list.reverse()
-    if uniform_observable:
-        x_backward_uniform_eq_pts_list.reverse()
-    redx_backward_equilibrium_points_list.reverse()
-
-if uniform_observable:
-    fig = plt.figure(figsize=(4, 4))
-    plt.scatter(coupling_constants_forward, x_forward_uniform_eq_pts_list,
-                color=deep[3], s=2)
-    plt.scatter(coupling_constants_backward, x_backward_uniform_eq_pts_list,
-                color=deep[3], s=2)
-    ylab = plt.ylabel('Global (uniform) equilibrium point $X^*$')
-    plt.xlabel('Global microbial\n interaction weight')
-    plt.tick_params(axis='both', which='major')
-    plt.tight_layout()
-    plt.show()
+            if plot_time_series and integrate_complete_dynamics \
+                    and integrate_reduced_dynamics:
+                plot_time_series_observables(x, x_glob, redx,
+                                             redX_glob, tc, tr, M)
+        x_backward_equilibrium_points_list.reverse()
+        redx_backward_equilibrium_points_list.reverse()
+        xb[i, :] = x_backward_equilibrium_points_list
+        redxb[i, :] = redx_backward_equilibrium_points_list
 
 fig = plt.figure(figsize=(4, 4))
 redlinewidth = 2
-norm_cte = 15
 plt.subplot(111)
 if integrate_complete_dynamics:
     if forward_branch:
-        plt.scatter(coupling_constants_forward,
-                    x_forward_equilibrium_points_list,
-                    color=deep[0], label="Complete", s=2)
+        for i in range(number_initial_conditions):
+            plt.scatter(coupling_constants_forward, xf[i, :],
+                        color=deep[0], s=3)
+        plt.plot(coupling_constants_forward, np.mean(xf, axis=0),
+                 color=deep[0], linewidth=1, label="Complete (f)")
     if backward_branch:
-        plt.scatter(coupling_constants_backward,
-                    x_backward_equilibrium_points_list,
-                    color=deep[2], s=2)
+        for i in range(number_initial_conditions):
+            plt.scatter(coupling_constants_backward, xb[i, :],
+                        color=deep[4], s=3)
+        plt.plot(coupling_constants_backward, np.mean(xb, axis=0),
+                 color=deep[4], linewidth=1, label="Complete (b)")
 if integrate_reduced_dynamics:
     if forward_branch:
-        plt.scatter(coupling_constants_forward,
-                    redx_forward_equilibrium_points_list,
-                    color=deep[1], label="Reduced", s=2)
+        for i in range(number_initial_conditions):
+            plt.scatter(coupling_constants_forward, redxf[i, :],
+                        color=deep[1], s=3)
+        plt.plot(coupling_constants_forward, np.mean(redxf, axis=0),
+                 color=deep[1], linewidth=1, label="Reduced (f)")
     if backward_branch:
-        plt.scatter(coupling_constants_backward,
-                    redx_backward_equilibrium_points_list,
-                    color=deep[3], s=2)
-ylab = plt.ylabel('Global activity equilibrium point $X^*$')
-plt.xlabel('Global microbial\n interaction weight')
+        for i in range(number_initial_conditions):
+            plt.scatter(coupling_constants_backward, redxb[i, :],
+                        color=deep[3], s=3)
+        plt.plot(coupling_constants_backward, np.mean(redxb, axis=0),
+                 color=deep[3], linewidth=1, label="Reduced (b)")
+ylab = plt.ylabel('Global activity equilibrium point $\mathcal{X}^*$')
+plt.xlabel('Microbial\n interaction weight')
 plt.tick_params(axis='both', which='major')
-plt.legend(loc=4, fontsize=fontsize_legend)
+plt.legend(loc=2, fontsize=8)
+plt.ylim([-0.02, 1.02])
+plt.yticks([0, 0.5, 1])
 plt.tight_layout()
 plt.show()
 if messagebox.askyesno("Python",
@@ -343,6 +383,9 @@ if messagebox.askyesno("Python",
                              "D": D.tolist(), "n": n, "N": N,
                              "t0": t0, "t1": t1, "t_span": t_span,
                              "t_span_red": t_span_red,
+                             "number initial conditions":
+                                 number_initial_conditions,
+                             "number coupling constants":number_coupling,
                              "coupling_constants_forward":
                                  coupling_constants_forward.tolist(),
                              "coupling_constants_backward":
@@ -354,27 +397,27 @@ if messagebox.askyesno("Python",
                       f'_x_forward_equilibrium_points_list'
                       f'_complete_{dynamics_str}_{graph_str}.json', 'w')\
                     as outfile:
-                json.dump(x_forward_equilibrium_points_list, outfile)
+                json.dump(xf.tolist(), outfile)
         if backward_branch:
             with open(path + f'{timestr}_{file}'
                              f'_x_backward_equilibrium_points_list'
                              f'_complete_{dynamics_str}_{graph_str}.json',
                       'w') \
                     as outfile:
-                json.dump(x_backward_equilibrium_points_list, outfile)
+                json.dump(xb.tolist(), outfile)
     if integrate_reduced_dynamics:
         if forward_branch:
             with open(path + f'{timestr}_{file}'
                       f'_redx_forward_equilibrium_points_list'
                       f'_reduced_{dynamics_str}_{graph_str}.json',
                       'w') as outfile:
-                json.dump(redx_forward_equilibrium_points_list, outfile)
+                json.dump(redxf.tolist(), outfile)
         if backward_branch:
             with open(path + f'{timestr}_{file}'
                       f'_redx_backward_equilibrium_points_list'
                       f'_reduced_{dynamics_str}_{graph_str}.json',
                       'w') as outfile:
-                json.dump(redx_backward_equilibrium_points_list, outfile)
+                json.dump(redxb.tolist(), outfile)
     with open(path + f'{timestr}_{file}'
               f'_{dynamics_str}_{graph_str}_parameters_dictionary.json',
               'w') as outfile:

@@ -4,6 +4,7 @@
 import numpy as np
 from numpy.linalg import solve, norm
 from scipy.optimize import least_squares
+from scipy.spatial import KDTree
 
 
 def mse(a, b):
@@ -12,6 +13,18 @@ def mse(a, b):
 
 def rmse(a, b):
     return np.sqrt(np.mean((a - b)**2))
+
+
+def rmse_nearest_neighbors(a, b):
+    """
+    :param a: N points in D dimensions reference array, shape (N, D)
+    :param b: X points in D dimensions array, shape (X, 3)
+    :return: root mean square error between two (X, D) arrays
+    """
+    nearest_neighbors = np.zeros(np.shape(a))
+    for i, pt in enumerate(a):
+        nearest_neighbors[i, :] = b[KDTree(b).query(pt)[1]]
+    return rmse(a, nearest_neighbors)
 
 
 def relative_error_vector_fields(M, vfield_true, vfield_approximate,

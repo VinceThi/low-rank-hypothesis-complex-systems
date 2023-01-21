@@ -23,7 +23,7 @@ plot_time_series = False
 plot_weight_matrix_bool = False
 
 """ Time and integration parameters """
-t0, t1 = 0, 30
+t0, t1 = 0, 3000    # to avoid even more critical slowing down: t1 = 3000
 t_span = [t0, t1]
 t_span_red = [t0, t1]
 integration_method = 'BDF'
@@ -51,7 +51,10 @@ if plot_weight_matrix_bool:
 """ Dynamical parameters """
 dynamics_str = "qmf_sis"
 D = np.eye(N)
-coupling_constants = np.linspace(0.01, 4, 1000)
+# coupling_constants = np.linspace(0.01, 4, 1000)
+
+coupling_constants = np.linspace(0.9, 1.1, 50)
+# ^ near bifurcation
 
 """ SVD and dimension reduction """
 n = 104  # Dimension of the reduced dynamics
@@ -72,7 +75,7 @@ calW, calW_tensor3 = M@W@Mp, compute_tensor_order_3(M, W)
 """ Integration """
 x_equilibrium_points_list = []
 redx_equilibrium_points_list = []
-print("\n Iterating on coupling constants for equilibrium points diagram...\n")
+print("\n Iterating on coupling constants to get the eq. points diagram...\n")
 for coupling in tqdm(coupling_constants):
 
     x0 = np.random.random(N)
