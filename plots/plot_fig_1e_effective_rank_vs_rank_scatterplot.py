@@ -105,15 +105,14 @@ effectiveRanksDF['y'] = effectiveRanksDF['stableRank'] / \
 # facecolors = [None, None, None, None, None,
 #               None, None, None, None, None]
 
-# --- Valid categories, in order of priority.
-validCategories = ['Connectome', 'Interactome', 'Ecological',
-                   'Communication', 'Economic', 'Learned',
-                   'Transportation', 'Technological',
-                   'Informational', 'Social']
-markers = ['*', 'h', '^', 'D', 'p', 'H', 'v', 'd', 'X', '.', 's',
+# --- Valid categories, in increasing order of number of networks in the data
+validCategories = ['Transportation', 'Communication', 'Economic', 'Learned',
+                   'Technological', 'Connectome',  'Ecological',
+                   'Informational', 'Interactome', 'Social']
+markers = ['v', 'D', 'p', 'H', 'd', '*', '^', 'X', 'h', '.', 's',
            'P', 'o']
-colors = ["#C44E52", "#DD8452", "#55A868", "#DA8BC3", "#8172B3",
-          "#CCB974", "#937860", "#64B5CD", "#8C8C8C",  "#4C72B0"]
+colors = ["#937860", "#DA8BC3", "#8172B3", "#CCB974", "#64B5CD",
+          "#C44E52", "#55A868", "#8C8C8C", "#DD8452", "#4C72B0"]
 facecolors = ["#C44E52", None, None, None, None,
               None, None, None, None, None]
 colorMap = dict(zip(validCategories, colors))
@@ -194,12 +193,12 @@ for i, cat in enumerate(reversed(validCategories)):
                             "fully_connected_layer_cnn_00900",
                             "fully_connected_layer_cnn_01000", ]
         N_learned = np.array([4589, 178, 669, 820, 980, 900, 1028, 892,
-                              1076, 1028, 628, 396, TODO])
+                              1076, 1028, 628, 396, 820])
         rank_learned = np.array([4589, 178, 669, 299, 10, 128, 256, 380,
-                                 308, 256, 116, 128, TODO])
+                                 308, 256, 116, 128, 308])
         srank_learned = np.array([16.4992, 1.23043, 20.1378, 1.21568,
                                   1.09635, 5.01488, 9.33475, 20.567, 30.1669,
-                                  28.1594, 11.3583, 1.22835, TODO])
+                                  28.1594, 11.3583, 1.22835, 19.7936])
         sns.scatterplot(x=rank_learned / N_learned,
                         y=srank_learned / N_learned, s=100,
                         facecolor='None',
@@ -236,6 +235,28 @@ for i, cat in enumerate(reversed(validCategories)):
         print(f"{cat}: {nb_network_cat}"
               f" networks")
 
+    elif cat == "Interactome":
+        # Interactomes from Netzschleuder
+        sns.scatterplot(x=rank[cat], y=effectiveRank[cat],
+                        facecolor='None',  # s=100,
+                        edgecolor=colorMap[cat],  # alpha=0.7,
+                        marker=markerMap[cat])  # , ax=g.ax_joint)
+
+        # Interactomes from other sources
+        other_interactome = ["gut"]
+        N_interactome = np.array([838])
+        rank_interactome = np.array([735])
+        srank_interactome = np.array([2.52231])
+
+        sns.scatterplot(x=rank_interactome / N_interactome,
+                        y=srank_interactome / N_interactome, # s=50,
+                        facecolor='None',
+                        edgecolor=colorMap[cat], marker=markerMap[cat])
+
+        nb_network_cat = len(effectiveRank[cat]) + len(other_interactome)
+        print(f"{cat}: {nb_network_cat}"
+              f" networks")
+
     else:
         sns.scatterplot(x=rank[cat], y=effectiveRank[cat],
                         facecolor='None',
@@ -248,17 +269,18 @@ for i, cat in enumerate(reversed(validCategories)):
     sns.scatterplot(x=[0], y=[1.5], facecolor='None',
                     edgecolor=colorMap[cat],
                     marker=markerMap[cat],  # .lower(),to have lower case label
-                    label=cat + f" ({np.around(nb_network_cat/674*100, 1)}%)",
+                    label=cat + f" ({np.around(nb_network_cat/675*100, 1)}%)",
                     zorder=len(validCategories)-i)
 
     total_number_networks += len(effectiveRank[cat])
 
-total_number_networks = total_number_networks + len(other_connectomes) \
+total_number_networks = total_number_networks\
+                        + len(other_connectomes) + len(other_interactome)\
                         + len(learned_networks) + len(economic_networks)
 print(f"Total number of networks = {total_number_networks}")
 
-if total_number_networks != 674:
-    raise ValueError("One much change the number of networks 674 which is "
+if total_number_networks != 675:
+    raise ValueError("One much change the number of networks 675 which is "
                      "hard coded in other places in the script.")
 
 # g.ax_joint.legend(loc='upper left', frameon=False, fontsize='x-small')
