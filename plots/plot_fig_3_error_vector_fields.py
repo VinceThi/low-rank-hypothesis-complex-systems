@@ -65,36 +65,33 @@ path_error_microbial = "2022_07_31_10h04min31sec_1000_samples_max_x_Px" \
                        "_RMSE_vector_field_microbial_gut.json"
 path_upper_bound_microbial = "2022_07_31_10h04min31sec_1000_samples_max_x_Px_"\
                              "upper_bound_RMSE_vector_field_microbial_gut.json"
-path_parameters_microbial_n76 = "2023_01_13_21h32min04sec_n_76_100ptsx2" \
-                                "_microbial_gut_parameters_dictionary.json"
-path_parameters_microbial_n203 = "2023_01_13_21h33min47sec_n_203_100ptsx2" \
-                                 "_microbial_gut_parameters_dictionary.json"
-path_parameters_microbial_n400 = "2023_01_14_10h44min04sec_n_400_100ptsx2_" \
-                                 "microbial_gut_parameters_dictionary.json"
+path_parameters_microbial = \
+    "2023_01_24_09h21min20sec_n_76_50coupling_100init_3h30_microbial" \
+    "_gut_parameters_dictionary.json"
 path_complete_forward_bifurcation_microbial =\
-    "2023_01_13_21h32min04sec_n_76_100ptsx2_x_forward_equilibrium" \
-    "_points_list_complete_microbial_gut.json"
+    "2023_01_24_15h54min17sec_only_complete_dyn_50coupling_100CI" \
+    "_x_forward_equilibrium_points_list_complete_microbial_gut.json"
 path_complete_backward_bifurcation_microbial =\
-    "2023_01_13_21h32min04sec_n_76_100ptsx2_x_backward_equilibrium" \
-    "_points_list_complete_microbial_gut.json"
-path_reduced_forward_bifurcation_n76_microbial =\
-    "2023_01_13_21h32min04sec_n_76_100ptsx2_redx_forward_equilibrium" \
-    "_points_list_reduced_microbial_gut.json"
+    "2023_01_24_15h54min17sec_only_complete_dyn_50coupling_100CI" \
+    "_x_backward_equilibrium_points_list_complete_microbial_gut.json"
+path_reduced_forward_bifurcation_n76_microbial = \
+    "2023_01_24_09h21min20sec_n_76_50coupling_100init_3h30_redx_forward" \
+    "_equilibrium_points_list_reduced_microbial_gut.json"
 path_reduced_backward_bifurcation_n76_microbial = \
-    "2023_01_13_21h32min04sec_n_76_100ptsx2_redx_backward_equilibrium" \
-    "_points_list_reduced_microbial_gut.json"
+    "2023_01_24_09h21min20sec_n_76_50coupling_100init_3h30_redx_backward" \
+    "_equilibrium_points_list_reduced_microbial_gut.json"
 path_reduced_forward_bifurcation_n203_microbial =\
-    "2023_01_13_21h33min47sec_n_203_100ptsx2_redx_forward_equilibrium" \
-    "_points_list_reduced_microbial_gut.json"
+    "2023_01_24_09h24min00sec_n_203_50coupling_100CI_6h30_redx_forward" \
+    "_equilibrium_points_list_reduced_microbial_gut.json"
 path_reduced_backward_bifurcation_n203_microbial =\
-    "2023_01_13_21h33min47sec_n_203_100ptsx2_redx_backward_equilibrium" \
-    "_points_list_reduced_microbial_gut.json"
-path_reduced_forward_bifurcation_n400_microbial =\
-    "2023_01_14_10h44min04sec_n_400_100ptsx2_redx_forward_equilibrium" \
-    "_points_list_reduced_microbial_gut.json"
-path_reduced_backward_bifurcation_n400_microbial = \
-    "2023_01_14_10h44min04sec_n_400_100ptsx2_redx_backward_equilibrium" \
-    "_points_list_reduced_microbial_gut.json"
+    "2023_01_24_09h24min00sec_n_203_50coupling_100CI_6h30_redx_backward" \
+    "_equilibrium_points_list_reduced_microbial_gut.json"
+path_reduced_forward_bifurcation_n735_microbial =\
+    "2023_01_24_09h30min53sec_n_735_50coupling_100CI_9h30_redx_forward" \
+    "_equilibrium_points_list_reduced_microbial_gut.json"
+path_reduced_backward_bifurcation_n735_microbial = \
+    "2023_01_24_09h30min53sec_n_735_50coupling_100CI_9h30_redx_backward" \
+    "_equilibrium_points_list_reduced_microbial_gut.json"
 graph_str = "gut"
 A_microbial = get_microbiome_weight_matrix(graph_str)
 S_microbial = svdvals(A_microbial)
@@ -373,11 +370,7 @@ cr1 = deep[4]  # deep[4]
 cr2 = deep[2]  # deep[6]
 cr3 = deep[1]  # deep[9]
 
-
-# def round_to_1(num):
-#     return round(num, -int(floor(log10(abs(num)))))
-
-def round_sig(num, sig=2):
+def round_sig(num, sig=1):
     return round(num, sig-int(floor(log10(abs(num))))-1)
 
 
@@ -478,7 +471,7 @@ for axis in ['top', 'bottom', 'left', 'right']:
 axins.tick_params(axis='both', which='major', labelsize=8,
                   width=0.5, length=2)
 
-ax5.indicate_inset_zoom(axins)  # , edgecolor="black")
+# ax5.indicate_inset_zoom(axins)  # , edgecolor="black")
 
 
 # ----------------------- Wilson-Cowan-----------------------------------------
@@ -688,93 +681,128 @@ ax7 = plt.subplot(247)
 ax7.text(letter_posx, letter_posy, "g", fontweight="bold",
          horizontalalignment="center", verticalalignment="top",
          transform=ax7.transAxes)
-dynamics_str = "microbial"
-with open(path_str + f"{dynamics_str}_data/" +
-          path_parameters_microbial_n76) as json_data:
-    parameters_dictionary_microbial_n76 = json.load(json_data)
-with open(path_str + f"{dynamics_str}_data/" +
-          path_parameters_microbial_n203) as json_data:
-    parameters_dictionary_microbial_n203 = json.load(json_data)
-with open(path_str + f"{dynamics_str}_data/" +
-          path_parameters_microbial_n400) as json_data:
-    parameters_dictionary_microbial_n400 = json.load(json_data)
+with open(path_str + f"microbial_data/" +
+          path_parameters_microbial) as json_data:
+    parameters_dictionary_microbial = json.load(json_data)
 
-with open(path_str + f"{dynamics_str}_data/"
+with open(path_str + f"microbial_data/"
           + path_complete_forward_bifurcation_microbial) as json_data:
     Xcf = np.array(json.load(json_data))
-with open(path_str + f"{dynamics_str}_data/"
+with open(path_str + f"microbial_data/"
           + path_complete_backward_bifurcation_microbial) as json_data:
     Xcb = np.array(json.load(json_data))
 
-with open(path_str + f"{dynamics_str}_data/"
+with open(path_str + f"microbial_data/"
           + path_reduced_forward_bifurcation_n76_microbial) as json_data:
     Xrf_n76 = np.array(json.load(json_data))
-with open(path_str + f"{dynamics_str}_data/"
+with open(path_str + f"microbial_data/"
           + path_reduced_backward_bifurcation_n76_microbial) as json_data:
     Xrb_n76 = np.array(json.load(json_data))
-with open(path_str + f"{dynamics_str}_data/"
+with open(path_str + f"microbial_data/"
           + path_reduced_forward_bifurcation_n203_microbial) as json_data:
     Xrf_n203 = np.array(json.load(json_data))
-with open(path_str + f"{dynamics_str}_data/"
+with open(path_str + f"microbial_data/"
           + path_reduced_backward_bifurcation_n203_microbial) as json_data:
     Xrb_n203 = np.array(json.load(json_data))
-with open(path_str + f"{dynamics_str}_data/"
-          + path_reduced_forward_bifurcation_n400_microbial) as json_data:
-    Xrf_n400 = np.array(json.load(json_data))
-with open(path_str + f"{dynamics_str}_data/"
-          + path_reduced_backward_bifurcation_n400_microbial) as json_data:
-    Xrb_n400 = np.array(json.load(json_data))
-# same coupling constants linspace for  in every case
-coupling_constants =\
-    np.array(parameters_dictionary_microbial_n76["coupling_constants_forward"])
+with open(path_str + f"microbial_data/"
+          + path_reduced_forward_bifurcation_n735_microbial) as json_data:
+    Xrf_n735 = np.array(json.load(json_data))
+with open(path_str + f"microbial_data/"
+          + path_reduced_backward_bifurcation_n735_microbial) as json_data:
+    Xrb_n735 = np.array(json.load(json_data))
 
-# We normalize and remove one branch to have only 2 branches for each n
-normalizing_constant = 10
-Xcf = Xcf[Xcf < 2/normalizing_constant]/normalizing_constant
-Xcb = Xcb/normalizing_constant
-Xrf_n76 = Xrf_n76[Xrf_n76 < 2/normalizing_constant]/normalizing_constant
-Xrb_n76 = Xrb_n76/normalizing_constant
-Xrf_n203 = Xrf_n203[Xrf_n203 < 2/normalizing_constant]/normalizing_constant
-Xrb_n203 = Xrb_n203/normalizing_constant
-Xrf_n400 = Xrf_n400[Xrf_n400 < 2/normalizing_constant]/normalizing_constant
-Xrb_n400 = Xrb_n400/normalizing_constant
+# Same number of CI and coupling constants in every case
+nb_ci = parameters_dictionary_microbial["number initial conditions"]
+coupling_constants = \
+    np.array(parameters_dictionary_microbial["coupling_constants_forward"])
 
-Xcfb = np.concatenate([Xcf, Xcb[44:], Xcb])
-Xrfb_n76 = np.concatenate([Xrf_n76, Xrb_n76[76:], Xrb_n76])
-Xrfb_n203 = np.concatenate([Xrf_n203, Xrb_n203[67:], Xrb_n203])
-Xrfb_n400 = np.concatenate([Xrf_n400, Xrb_n400[66:], Xrb_n400])
+""" Indices of the transitions """
+ic = 35
+ir1 = 43
+ir2 = 41
+ir3 = 35
 
-plt.scatter(coupling_constants[:44], Xcf, color=cc, label="Exact", s=s)
-plt.scatter(coupling_constants, Xcb, color=cc, s=s)
-plt.vlines(x=coupling_constants[44], ymin=0.1315/normalizing_constant,
-           ymax=6.8/normalizing_constant, linestyle="--",
-           linewidth=1, color=cc)
-plt.plot(coupling_constants[:76], Xrf_n76, color=cr1,
+# For the forward branch, we only conserve the lower branch
+# (before the transition), the equilibrium points that are on the upper branch
+# are obtained with the simulations for the backward branch.
+Xcf = Xcf[Xcf < 0.015].reshape((nb_ci, ic))
+Xrf_n76 = Xrf_n76[Xrf_n76 < 0.015].reshape((nb_ci, ir1))
+Xrf_n203 = Xrf_n203[Xrf_n203 < 0.015].reshape((nb_ci, ir2))
+Xrf_n735 = Xrf_n735[Xrf_n735 < 0.015].reshape((nb_ci, ir3))
+
+# We preserve only the equilibrium point that are not on the lower branch
+Xrb_n76[Xrb_n76 < 0.015] = np.nan
+Xrb_n203[Xrb_n203 < 0.015] = np.nan
+Xrb_n735[Xrb_n735 < 0.015] = np.nan
+
+meanXcf, stdXcf = np.mean(Xcf, axis=0), np.std(Xcf, axis=0)
+meanXcb, stdXcb = np.mean(Xcb, axis=0), np.std(Xcb, axis=0)
+meanXrf_n76, stdXrf_n76 = np.mean(Xrf_n76, axis=0), np.std(Xrf_n76, axis=0)
+meanXrb_n76, stdXrb_n76 = np.nanmean(Xrb_n76, axis=0),\
+                          np.nanstd(Xrb_n76, axis=0)
+meanXrf_n203, stdXrf_n203 = np.mean(Xrf_n203, axis=0), np.std(Xrf_n203, axis=0)
+meanXrb_n203, stdXrb_n203 = np.nanmean(Xrb_n203, axis=0), \
+                            np.nanstd(Xrb_n203, axis=0)
+meanXrf_n735, stdXrf_n735 = np.mean(Xrf_n735, axis=0), np.std(Xrf_n735, axis=0)
+meanXrb_n735, stdXrb_n735 = np.nanmean(Xrb_n735, axis=0),\
+                            np.nanstd(Xrb_n735, axis=0)
+
+Xcfb = np.concatenate([meanXcf, meanXcb[ic:], meanXcb])
+Xrfb_n76 = np.concatenate([meanXrf_n76, meanXrb_n76[ir1:], meanXrb_n76])
+Xrfb_n203 = np.concatenate([meanXrf_n203, meanXrb_n203[ir2:], meanXrb_n203])
+Xrfb_n735 = np.concatenate([meanXrf_n735, meanXrb_n735[ir3:], meanXrb_n735])
+
+plt.scatter(coupling_constants[:ic], meanXcf, color=cc,
+            label="Exact", s=s)
+plt.fill_between(coupling_constants[:ic], meanXcf[:ic]-stdXcf[:ic],
+                 meanXcf[:ic]+stdXcf[:ic], color=cc, alpha=0.2)
+plt.scatter(coupling_constants, meanXcb, color=cc, s=s)
+plt.fill_between(coupling_constants, meanXcb - stdXcb,
+                 meanXcb + stdXcb, color=cc, alpha=0.2)
+plt.vlines(x=coupling_constants[ic - 1], ymin=0.01096, ymax=0.7,
+           linestyle="--", linewidth=1, color=cc)
+
+plt.plot(coupling_constants[:ir1], meanXrf_n76, color=cr1,
          label="$n = 76 \\approx \mathrm{erank} \,\,(e = $" +
                f"${round_sig(rmse(Xcfb, Xrfb_n76))}"
                f")$", linewidth=linewidth)
-plt.plot(coupling_constants, Xrb_n76, color=cr1, linewidth=linewidth)
-plt.vlines(x=coupling_constants[76], ymin=0.139/normalizing_constant,
-           ymax=5.097/normalizing_constant, linestyle="--",
-           linewidth=1, color=cr1)
-plt.plot(coupling_constants[:67], Xrf_n203, color=cr2,
+plt.fill_between(coupling_constants[:ir1], meanXrf_n76 - stdXrf_n76,
+                 meanXrf_n76 + stdXrf_n76, color=cr1, alpha=0.1)
+plt.plot(coupling_constants, meanXrb_n76,
+         color=cr1, linewidth=linewidth)
+plt.fill_between(coupling_constants, meanXrb_n76 - stdXrb_n76,
+                 meanXrb_n76 + stdXrb_n76, color=cr1, alpha=0.1)
+plt.vlines(x=coupling_constants[ir1 - 1], ymin=0.012, ymax=0.383,
+           linestyle="--", linewidth=1, color=cr1)
+
+plt.plot(coupling_constants[:ir2], meanXrf_n203, color=cr2,
          label="$n = 203 = \mathrm{shrank} \,\,(e = $" +
                f"${round_sig(rmse(Xcfb, Xrfb_n203))}"
                f")$", linewidth=linewidth)
-plt.plot(coupling_constants, Xrb_n203, color=cr2, linewidth=linewidth)
-plt.vlines(x=coupling_constants[67], ymin=0.14/normalizing_constant,
-           ymax=6.45/normalizing_constant, linestyle="--",
-           linewidth=1, color=cr2)
-plt.plot(coupling_constants[:66], Xrf_n400, color=cr3,
-         label="$n = 400 \,\,(e = $" +
-               f"${round_sig(rmse(Xcfb, Xrfb_n400))}"
+plt.fill_between(coupling_constants[:ir2], meanXrf_n203 - stdXrf_n203,
+                 meanXrf_n203 + stdXrf_n203, color=cr2, alpha=0.1)
+plt.plot(coupling_constants, meanXrb_n203,
+         color=cr2, linewidth=linewidth)
+plt.fill_between(coupling_constants, meanXrb_n203 - stdXrb_n203,
+                 meanXrb_n203 + stdXrb_n203, color=cr2, alpha=0.1)
+plt.vlines(x=coupling_constants[ir2 - 1], ymin=0.014, ymax=0.54287,
+           linestyle="--", linewidth=1, color=cr2)
+
+plt.plot(coupling_constants[:ir3], meanXrf_n735, color=cr3,
+         label="$n = 735 = \mathrm{rank} \,\,(e = $" +
+               f"${round_sig(rmse(Xcfb, Xrfb_n735))}" 
                f")$", linewidth=linewidth)
-plt.plot(coupling_constants, Xrb_n400, color=cr3, linewidth=linewidth)
-plt.vlines(x=coupling_constants[66], ymin=0.1408/normalizing_constant,
-           ymax=7.39/normalizing_constant, linestyle="--",
-           linewidth=1, color=cr3)
-plt.xticks([1.5, 2, 2.5, 3])
-ylab = plt.ylabel('$\\mathcal{X}^*$')
+plt.fill_between(coupling_constants[:ir3], meanXrf_n735 - stdXrf_n735,
+                 meanXrf_n735 + stdXrf_n735, color=cr3, alpha=0.1)
+plt.plot(coupling_constants, meanXrb_n735,
+         color=cr3, linewidth=linewidth)
+plt.fill_between(coupling_constants, meanXrb_n735 - stdXrb_n735,
+                 meanXrb_n735 + stdXrb_n735, color=cr3, alpha=0.1)
+plt.vlines(x=coupling_constants[ir3-1], ymin=0.01408, ymax=0.624,
+           linestyle="--", linewidth=1, color=cr3)
+plt.xlim([-0.05, 3.05])
+plt.xticks([0, 1, 2, 3])
+ylab = plt.ylabel('$\\langle\\mathcal{X}^*\\rangle_{x_0}$')
 ax7.yaxis.set_label_coords(ylabel_posx, ylabel_posy)
 ylab.set_rotation(0)
 plt.ylim([-0.02, 1.02])
@@ -897,7 +925,7 @@ ax8.set_xticks([-0.2, 0, 0.2])
 ax8.set_yticks([-0.2, 0, 0.2])
 ax8.set_zticks([-0.2, 0, 0.2])
 # ax8.tick_params(axis='both', which='major', labelsize=8)
-plt.legend(loc=(-0.2, 0.75), fontsize=8, handlelength=1)
+plt.legend(loc=(-0.2, 0.7), fontsize=8, handlelength=1)
 ax8.text2D(letter_posx, letter_posy, "h", fontweight="bold",
            horizontalalignment="center", verticalalignment="top",
            transform=ax8.transAxes)

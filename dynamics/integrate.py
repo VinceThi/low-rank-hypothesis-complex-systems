@@ -8,6 +8,7 @@ import time as timer
 
 """ We recommand solve_ivp with BDF in general. """
 
+
 def integrate_rk4(t0, t1, dt, dynamics, adjacency_matrix,
                   init_cond, *args):
     args = (adjacency_matrix, *args)

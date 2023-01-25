@@ -85,80 +85,49 @@ class SNMF(PyMFBase):
         H1 = (XW_pos + np.dot(self.H.T, WW_neg)).T
 
         XW_neg = separate_negative(XW)
-        H2 = (XW_neg + np.dot(self.H.T, WW_pos)).T + 10 ** -9
+        H2 = (XW_neg + np.dot(self.H.T, WW_pos)).T + 10**(-9)
 
         self.H *= np.sqrt(H1 / H2)
 
 
-def snmf(M, niter=500, W_init=None, H_init=None):
+def snmf(data, num_bases, niter=500, W_init=None, H_init=None):
     """
     SNMF: Semi-nonnegative matrix factorization
-    :param M: n x N matrix (n > N)
+    :param data: matrix to be factorized
     :param niter: number of iteration in the algorithm, 100 iterations is a
                   safe number of iterations, see Ding 2010
-    :param H_init:
-    :param W_init:
-    :return:
+    :param H_init: initialization of the positive matrix
+    :param W_init: initialization of the coefficient matrix
+    :return: coefficient matrix W, positive matrix H, normalized frobenius err.
     """
-    n, N = np.shape(M)
-    snmf_mdl = SNMF(M, H_init=H_init, W_init=W_init, num_bases=n)
-    snmf_mdl.factorize(niter=niter)
-    # ---------------------------- Normalized frobenius error
-    return snmf_mdl.W, snmf_mdl.H, snmf_mdl.ferr[-1]/(n*N)**2
+    n, N = np.shape(data)
+    facto = SNMF(data, H_init=H_init, W_init=W_init, num_bases=num_bases)
+    facto.factorize(niter=niter)
+    return facto.W, facto.H, facto.ferr[-1]/(n*N)
 
 
-def snmf_multiple_inits(M, number_initializations):
-    """
-    Notation: W -> F   and   H -> G
-    :param M:
-    :param number_initializations:
-    :return:
-    """
-    n, N = np.shape(M)
+def snmf_multiple_inits(data, num_bases, number_initializations=1000):
 
-    """ ---------------------------- SVD ---------------------------------- """
-    u, s, vh = np.linalg.svd(M)
+    u, s, vh = np.linalg.svd(data)
 
     # Initial matrix H with SVD
-    G_init = np.absolute(vh[0:n, :])
+    H_init = np.absolute(vh[0:num_bases, :])
 
-    # Semi nonnegative matrix factorization
-    # with SVD initialization
-    F_svd, G_svd, frobenius_error_svd = snmf(M, H_init=G_init)
-    # if not matrix_is_singular(F_svd):
-    F, G = F_svd, G_svd
+    # SNMF with SVD initialization
+    W_svd, H_svd, frobenius_error_svd =\
+        snmf(data, H_init=H_init, num_bases=num_bases)
+    W, H = W_svd, H_svd
     snmf_frobenius_error = frobenius_error_svd
-    print("snmf_frobenius_error_svd = ", snmf_frobenius_error)
-    # if matrix_is_singular(F):
-    #     for j in range(number_initializations):
-    #         # Semi nonnegative matrix factorization
-    #         # with random initialization
-    #         F_random, G_random, frobenius_error_random = snmf(M, H_init=None)
-    #         print(det(F_random))
-    #         if not matrix_is_singular(F_random):
-    #             F, G, = F_random, G_random
-    #             snmf_frobenius_error = frobenius_error_random
-    #
-    # else:
 
-    """ -------------------------- Random --------------------------------- """
     for j in range(number_initializations):
-        # Semi nonnegative matrix factorization
-        # with random initialization
-        F_random, G_random, frobenius_error_random = snmf(M, H_init=None)
-        # print(det(F_random))
+        # SNMF with random initialization
+        W_random, H_random, frobenius_error_random = \
+            snmf(data, num_bases=num_bases, H_init=None)
         if snmf_frobenius_error > frobenius_error_random:
-            F, G, = F_random, G_random
+            W, H, = W_random, H_random
             snmf_frobenius_error = frobenius_error_random
-            print("snmf_frobenius_error_random = ", snmf_frobenius_error)
 
-    # print("snmf_frobenius_error_svd = ", snmf_frobenius_error)
-
-    if matrix_is_singular(F):
-        raise ValueError("W is singular in the semi-nonnegative matrix"
-                         " factorization (snmf).")
-    # ---------- Normalized frobenius error
-    return F, G, snmf_frobenius_error
+    return W, H, snmf_frobenius_error
 
 
 def _test():
@@ -167,22 +136,30 @@ def _test():
 
 
 if __name__ == "__main__":
-    # _test()
+
     data = np.array([[-0.0375, -0.0375,  0.0725,  0.3418,  0.3304,  0.3304],
                      [0.3304,  0.3304,  0.3418,  0.0725, -0.0375, -0.0375],
                      [0.3,  -0.3304,  0.3418,  -0.0725, 0.0375, -0.01]])
-    n, N = np.shape(data)
+    d1, d2 = np.shape(data)
 
     # SVD
     u, s, vh = np.linalg.svd(data)
-    # Initial matrix H with SVD
-    h_init = abs(vh[0:n, :])
 
-    snmf_mdl = SNMF(data, H_init=h_init, num_bases=3)
+    # Initial matrix H with absolute values of right singular vectors SVD
+    num_base = 6    # k in Ding et al. 2010
+    h_init = abs(vh[0:num_base, :]).reshape((num_base, d2))
+
+    snmf_mdl = SNMF(data, H_init=h_init, num_bases=num_base)
     snmf_mdl.factorize(niter=1000)
 
     print(f"H = {snmf_mdl.H} \n")
     print(f"W = {snmf_mdl.W} \n")
     print(f"WH = {snmf_mdl.W@snmf_mdl.H} \n")
-    print(f"W^-1 data = {np.linalg.inv(snmf_mdl.W)@data}\n")
-    print(f"det(W) = {np.linalg.det(snmf_mdl.W)} ")
+
+    W1, H1, snmf_frob_error = snmf_multiple_inits(data, num_base,
+                                                  number_initializations=100)
+
+    print(f"H = {H1} \n")
+    print(f"W = {W1} \n")
+    print(f"WH = {W1@H1} \n")
+    print(f"error = {snmf_frob_error} \n")

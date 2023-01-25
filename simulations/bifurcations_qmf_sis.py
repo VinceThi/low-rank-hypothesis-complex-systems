@@ -23,7 +23,7 @@ plot_time_series = False
 plot_weight_matrix_bool = False
 
 """ Time and integration parameters """
-t0, t1 = 0, 3000    # to avoid even more critical slowing down: t1 = 3000
+t0, t1 = 0, 30    # to avoid even more critical slowing down: t1 = 3000
 t_span = [t0, t1]
 t_span_red = [t0, t1]
 integration_method = 'BDF'

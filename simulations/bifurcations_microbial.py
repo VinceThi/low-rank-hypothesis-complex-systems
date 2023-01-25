@@ -2,6 +2,7 @@
 # @author: Vincent Thibeault
 
 from dynamics.integrate import *
+# from matrix_factorization.snmf import snmf_multiple_inits
 from scipy.integrate import solve_ivp
 from dynamics.error_vector_fields import jacobian_x_microbial,\
     jacobian_y_microbial
@@ -21,7 +22,7 @@ from tkinter import messagebox
 
 plot_time_series = False
 plot_weight_matrix_bool = False
-integrate_complete_dynamics = True
+integrate_complete_dynamics = False
 integrate_reduced_dynamics = True
 forward_branch = True
 backward_branch = True
@@ -33,8 +34,9 @@ t0, t1 = 0, 200
 t_span = [t0, t1]
 t_span_red = [t0, t1]
 integration_method = 'BDF'
-rtol = 1e-8
-atol = 1e-12
+rtol = 1e-6   # 1e-8
+atol = 1e-10  # 1e-12
+tol_eq_pt = 1e-7
 
 
 def jacobian_complete(t, x, W, coupling, D, a, b, c):
@@ -48,7 +50,7 @@ def jacobian_reduced(t, X, W, coupling, M, Mp, D, a, b, c):
 
 
 """ 
-Note: The ODE is very stiff and BDF is particularly well suited for 
+Note: The ODE is stiff and BDF is particularly well suited for 
       stiff problems. We also provide the jacobian matrices as recommanded
       in the documentation of 'solve_ivp': 
       https://docs.scipy.org/doc/scipy/reference/generated/
@@ -101,32 +103,47 @@ dynamics_str = "microbial"
 # For real gut microbiome network
 a, b, c, D = 5, 13, 1, 30*np.eye(N)
 number_coupling = 50
-coupling_constants_forward = np.linspace(0, 3, number_coupling)
-coupling_constants_backward = np.linspace(0, 3, number_coupling)
+coupling_constants_forward = np.linspace(0.1, 3, number_coupling)
+coupling_constants_backward = np.linspace(0.1, 3, number_coupling)
 coupling_constants = []
+
+number_initial_conditions = 300
+max_randint_CI = 15
 
 
 """ SVD and dimension reduction """
-n = 203  # 76, 203, 400  # Dimension of the reduced dynamics
+n_min = 76
+n = 76  # 76, 203, 400, 735  # Dimension of the reduced dynamics >= n_min
 Un, Sn, M = computeTruncatedSVD_more_positive(W, n)
 print("\n", computeEffectiveRanks(svdvals(W), graph_str, N))
 print(f"\nDimension of the reduced system n = {n} \n")
 Mp = pinv(M)
-# We combine all observable weighted by the singular values
-# to get a global observable
-# # singvals = np.diag(Sn)[:50]
-# s = np.diag(Sn)     # np.concatenate([singvals, np.zeros(n-len(singvals))])
-# normalization_constant = np.sum(s@M)*10
-# m = s@M/normalization_constant
-# ell = s/normalization_constant
-ell = np.sum(M, axis=1)/(10*N)
+
+if n < n_min:
+    raise ValueError("n < n_min. "
+                     "For Fig. 3 of the paper, we want global observables "
+                     "that does not vary with $n$, so we set a minimal value"
+                     "to compare equilibrium points branches at different "
+                     "values of n greater or equal to n_min.")
+
+# We try to be as close as possible to the uniform observable with n_min
+# right singular vectors
+normalization_constant = 10
+ell_bar = np.sum(M[:n_min, :], axis=1)/(normalization_constant*N)
+ell = np.concatenate([ell_bar, np.zeros(n - n_min)])
 m = ell@M
+
+# from matrix_factorization.snmf import snmf_multiple_inits
+# F, G, snmf_frob_error = snmf_multiple_inits(M[:n_min, :], num_bases=1,
+#                                             number_initializations=1000)
+# ell_bar = pinv(F)
+# ell = np.concatenate([ell_bar[0], np.zeros(n - n_min)])
+# m = ell@M
 
 timestr_M_D = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")
 
 
 """ Get equilibrium points """
-number_initial_conditions = 100
 xf = np.zeros((number_initial_conditions, number_coupling))
 redxf = np.zeros((number_initial_conditions, number_coupling))
 xb = np.zeros((number_initial_conditions, number_coupling))
@@ -135,17 +152,16 @@ for i in tqdm(range(number_initial_conditions)):
     if forward_branch:
         x_forward_equilibrium_points_list = []
         redx_forward_equilibrium_points_list = []
-        x0 = np.random.random(N)
+        x0 = np.random.uniform(0, 3, N)  # np.random.random(N)
         redx0 = M@x0
         print("\n Iterating on coupling constants"
               " for equilibrium point diagram(f) \n")
-        x0_upper_limit = np.random.randint(1, 15)
         for coupling in tqdm(coupling_constants_forward):
 
             if integrate_complete_dynamics:
                 eq_pt_negative = True
                 eq_pt_unreach = True
-                while eq_pt_negative and eq_pt_unreach:
+                while eq_pt_negative or eq_pt_unreach:
                     args_dynamics = (W, coupling, D, a, b, c)
                     sol = solve_ivp(microbial, t_span, x0, integration_method,
                                     args=args_dynamics, rtol=rtol, atol=atol,
@@ -155,12 +171,13 @@ for i in tqdm(range(number_initial_conditions)):
 
                     """ Verify if the equilibrium point is reached """
                     eval_f = microbial(0, x[-1, :], W, coupling, D, a, b, c)
-                    if not np.allclose(eval_f, np.zeros(N)):
-                        # raise ValueError
-                        # (f"An equilibrium point is not reached"
-                        #                  f" for the complete dynamics. \n\n"
-                        #                  f"The maximum absolute error is "
-                        #                  f" {np.max(np.abs(eval_f))}")
+                    if not np.all(eval_f < tol_eq_pt):
+                        print(f"An equilibrium point is not reached "
+                              f"for the complete dynamics (forward branch)."
+                              f" \n The maximum absolute error is"
+                              f" {np.max(np.abs(eval_f))}. \n "
+                              f"Another initial condition is sampled at the "
+                              f"coupling value {coupling}.")
                         x0 = np.random.random(N)
                     else:
                         eq_pt_unreach = False
@@ -179,7 +196,7 @@ for i in tqdm(range(number_initial_conditions)):
             if integrate_reduced_dynamics:
                 eq_pt_negative = True
                 eq_pt_unreach = True
-                while eq_pt_negative and eq_pt_unreach:
+                while eq_pt_negative or eq_pt_unreach:
                     args_reduced_dynamics = (W, coupling, M, Mp, D, a, b, c)
                     sol = solve_ivp(reduced_microbial_vector_field, t_span,
                                     redx0, integration_method,
@@ -193,12 +210,13 @@ for i in tqdm(range(number_initial_conditions)):
                     eval_redf = reduced_microbial_vector_field(0, redx[-1, :],
                                                                W, coupling, M,
                                                                Mp, D, a, b, c)
-                    if not np.allclose(eval_redf, np.zeros(n)):
-                        # raise ValueError
-                        # (f"An equilibrium point is not reached"
-                        #                  f" for the reduced dynamics. \n\n"
-                        #                  f"The maximum absolute error is "
-                        #                  f" {np.max(np.abs(eval_redf))}")
+                    if not np.all(eval_redf < tol_eq_pt):
+                        print(f"An equilibrium point is not reached "
+                              f"for the reduced dynamics (forw. branch). \n\n "
+                              f"The maximum absolute error is"
+                              f" {np.max(np.abs(eval_redf))}. \n\n "
+                              f"Another initial condition is sampled at the "
+                              f"coupling value {coupling}.")
                         redx0 = M@np.random.random(N)
                     else:
                         eq_pt_unreach = False
@@ -223,18 +241,17 @@ for i in tqdm(range(number_initial_conditions)):
                     and integrate_reduced_dynamics:
                 plot_time_series_observables(x, x_glob, redx, redX_glob,
                                              tc, tr, M)
-        xf[i, :] = x_forward_equilibrium_points_list
-        redxf[i, :] = redx_forward_equilibrium_points_list
+        if integrate_complete_dynamics:
+            xf[i, :] = x_forward_equilibrium_points_list
+        if integrate_reduced_dynamics:
+            redxf[i, :] = redx_forward_equilibrium_points_list
 
     if backward_branch:
         x_backward_equilibrium_points_list = []
         redx_backward_equilibrium_points_list = []
-        if forward_branch and i == 0:
-            x0_b = x[-1, :]
-            redx0_b = M@x[-1, :]
-        else:
-            x0_b = np.random.uniform(0, x0_upper_limit, N)
-            redx0_b = M@x0_b
+        x0_upper_limit = np.random.randint(1, max_randint_CI)
+        x0_b = np.random.uniform(0, x0_upper_limit, N)
+        redx0_b = M@x0_b
         print("\n Iterating on coupling constants"
               " for equilibrium point diagram(b)\n")
         for coupling in tqdm(coupling_constants_backward[::-1]):
@@ -242,7 +259,7 @@ for i in tqdm(range(number_initial_conditions)):
             if integrate_complete_dynamics:
                 eq_pt_negative = True
                 eq_pt_unreach = True
-                while eq_pt_negative and eq_pt_unreach:
+                while eq_pt_negative or eq_pt_unreach:
                     args_dynamics = (W, coupling, D, a, b, c)
                     sol = solve_ivp(microbial, t_span, x0_b,
                                     integration_method,
@@ -253,12 +270,14 @@ for i in tqdm(range(number_initial_conditions)):
 
                     """ Verify if the equilibrium point is reached """
                     eval_f = microbial(0, x[-1, :], W, coupling, D, a, b, c)
-                    if not np.allclose(eval_f, np.zeros(N)):
-                        # raise ValueError
-                        # (f"An equilibrium point is not reached"
-                        #                  f" for the complete dynamics. \n\n"
-                        #                  f"The maximum absolute error is "
-                        #                  f" {np.max(np.abs(eval_f))}")
+                    if not np.all(eval_f < tol_eq_pt):
+                        print(f"An equilibrium point is not reached "
+                              f"for the complete dynamics (backward branch)."
+                              f" \n The maximum absolute error is"
+                              f" {np.max(np.abs(eval_f))}. \n "
+                              f"Another initial condition is sampled at the "
+                              f"coupling value {coupling}.")
+                        x0_upper_limit = np.random.randint(1, max_randint_CI)
                         x0 = np.random.uniform(0, x0_upper_limit, N)
                     else:
                         eq_pt_unreach = False
@@ -273,12 +292,18 @@ for i in tqdm(range(number_initial_conditions)):
                             """ Reset initial condition at last eq. point """
                             x0_b = x[-1, :]
                         else:
+                            print(f"The equilibrium point is negative "
+                                  f"for the complete dynamics(backward branch)"
+                                  f".\n Another initial condition is sampled"
+                                  f" at the coupling value {coupling}.")
+                            x0_upper_limit = \
+                                np.random.randint(1, max_randint_CI)
                             x0_b = np.random.uniform(0, x0_upper_limit, N)
 
             if integrate_reduced_dynamics:
                 eq_pt_negative = True
                 eq_pt_unreach = True
-                while eq_pt_negative and eq_pt_unreach:
+                while eq_pt_negative or eq_pt_unreach:
                     args_reduced_dynamics = (coupling, M, Mp, D, a, b, c)
                     args_reduced_dynamics = (W, coupling, M, Mp, D, a, b, c)
                     sol = solve_ivp(reduced_microbial_vector_field, t_span,
@@ -293,13 +318,18 @@ for i in tqdm(range(number_initial_conditions)):
                     eval_redf = reduced_microbial_vector_field(0, redx[-1, :],
                                                                W, coupling, M,
                                                                Mp, D, a, b, c)
-                    if not np.allclose(eval_redf, np.zeros(n)):
-                        # raise ValueError
-                        # (f"An equilibrium point is not reached"
-                        #                  f" for the reduced dynamics. \n\n"
-                        #                  f"The maximum absolute error is "
-                        #                  f" {np.max(np.abs(eval_redf))}")
-                        redx0 = M@np.random.uniform(0, x0_upper_limit, N)
+                    if not np.all(eval_redf < tol_eq_pt):
+                        print(f"An equilibrium point is not reached "
+                              f"for the reduced dynamics (back. branch). \n\n "
+                              f"The maximum absolute error is"
+                              f" {np.max(np.abs(eval_redf))}. \n\n "
+                              f"Another initial condition is sampled at the "
+                              f"coupling value {coupling}.")
+                        upper = np.random.randint(1, max_randint_CI)
+                        x0_upper_limit = \
+                            np.random.randint(1, max_randint_CI)
+                        redx0_b = M@np.random.uniform(0, x0_upper_limit, N)
+
                     else:
                         eq_pt_unreach = False
                         """ Get global observables """
@@ -316,17 +346,25 @@ for i in tqdm(range(number_initial_conditions)):
                             """ Reset initial condition at last eq. points"""
                             redx0_b = redx[-1, :]
                         else:
+                            print(f"The equilibrium point is negative "
+                                  f"for the reduced dynamics (back. branch)."
+                                  f"\n\n Another initial condition is sampled "
+                                  f"at the coupling value {coupling}.")
+                            x0_upper_limit = \
+                                np.random.randint(1, max_randint_CI)
                             redx0_b = M@np.random.uniform(0, x0_upper_limit, N)
 
             if plot_time_series and integrate_complete_dynamics \
                     and integrate_reduced_dynamics:
                 plot_time_series_observables(x, x_glob, redx,
                                              redX_glob, tc, tr, M)
-        x_backward_equilibrium_points_list.reverse()
-        redx_backward_equilibrium_points_list.reverse()
-        xb[i, :] = x_backward_equilibrium_points_list
-        redxb[i, :] = redx_backward_equilibrium_points_list
-
+        if integrate_complete_dynamics:
+            x_backward_equilibrium_points_list.reverse()
+            xb[i, :] = x_backward_equilibrium_points_list
+        if integrate_reduced_dynamics:
+            redx_backward_equilibrium_points_list.reverse()
+            redxb[i, :] = redx_backward_equilibrium_points_list
+              
 fig = plt.figure(figsize=(4, 4))
 redlinewidth = 2
 plt.subplot(111)
@@ -383,13 +421,21 @@ if messagebox.askyesno("Python",
                              "D": D.tolist(), "n": n, "N": N,
                              "t0": t0, "t1": t1, "t_span": t_span,
                              "t_span_red": t_span_red,
+                             "rtol": rtol, "atol": atol,
+                             "tol_eq_pt": tol_eq_pt,
                              "number initial conditions":
                                  number_initial_conditions,
-                             "number coupling constants":number_coupling,
+                             "number coupling constants": number_coupling,
                              "coupling_constants_forward":
                                  coupling_constants_forward.tolist(),
                              "coupling_constants_backward":
-                                 coupling_constants_backward.tolist()}
+                                 coupling_constants_backward.tolist(),
+                             "initial conditions distribution "
+                             "(forward branch)": "np.random.uniform(0, 1, N)",
+                             "initial conditions distribution"
+                             " (backward branch)":
+                             f"np.random.uniform(0, "
+                             f"randint(1, {max_randint_CI}), N)"}
 
     if integrate_complete_dynamics:
         if forward_branch:
