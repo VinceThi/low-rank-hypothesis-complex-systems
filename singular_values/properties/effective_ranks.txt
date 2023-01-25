@@ -1,5 +1,4 @@
 # Name                                                Size    Rank    OptimalThreshold    OptimalShrinkage        Erank    Elbow    EnergyRatio    StableRank    NuclearRank
-
 7th_graders                                             29      29                   2                   3     18.7859         4             10       1.73418        4.64561
 AT_2008                                               2271     842                  82                 108    687.454        376            410      51.6231       169.992
 CY_2015                                                335     108                   6                   8     90.1023       108             54      14.649         33.2829
