@@ -152,7 +152,7 @@ for i in tqdm(range(number_initial_conditions)):
     if forward_branch:
         x_forward_equilibrium_points_list = []
         redx_forward_equilibrium_points_list = []
-        x0 = np.random.uniform(0, 3, N)  # np.random.random(N)
+        x0 = np.random.random(N)
         redx0 = M@x0
         print("\n Iterating on coupling constants"
               " for equilibrium point diagram(f) \n")

@@ -78,7 +78,7 @@ path_reduced_forward_bifurcation_n76_microbial = \
     "2023_01_24_09h21min20sec_n_76_50coupling_100init_3h30_redx_forward" \
     "_equilibrium_points_list_reduced_microbial_gut.json"
 path_reduced_backward_bifurcation_n76_microbial = \
-    "2023_01_24_09h21min20sec_n_76_50coupling_100init_3h30_redx_backward" \
+    "2023_01_25_09h18min08sec_n_76_50coupling_300CI_redx_backward" \
     "_equilibrium_points_list_reduced_microbial_gut.json"
 path_reduced_forward_bifurcation_n203_microbial =\
     "2023_01_24_09h24min00sec_n_203_50coupling_100CI_6h30_redx_forward" \
