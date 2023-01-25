@@ -9,8 +9,8 @@ from singular_values.compute_effective_ranks import *
 
 networkName = "fully_connected_layer_cnn_01000"
 #  "mouse_control_rnn", "zebrafish_rnn", "mouse_rnn",
-#  "cnn_nws_main_XXXXX_020" where XXXXX is
-#  fully_connected_layer_cnn_00100,..., fully_connected_layer_cnn_01000
+# "fully_connected_layer_cnn_00100", "fully_connected_layer_cnn_00200",...,
+#  "fully_connected_layer_cnn_01000"
 singularValuesFilename = 'properties/' + networkName \
                          + '_singular_values.txt'
 
