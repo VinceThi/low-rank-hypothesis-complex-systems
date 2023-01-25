@@ -9,7 +9,7 @@ import scipy.linalg as la
 
 
 def computeSingularValues():
-    """Computes the singular values of every graphs
+    """Computes the singular values of every graphs from netzschleuder
      and saves them into a file."""
 
     graphPropFilename = 'properties/graph_properties.txt'
