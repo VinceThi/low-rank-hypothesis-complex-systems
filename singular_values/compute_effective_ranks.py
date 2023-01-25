@@ -104,7 +104,7 @@ def computeOptimalThreshold(singularValues):
 
 def computeOptimalShrinkage(singularValues, norm="frobenius", tolerance=1e-13):
     """ Optimal shrinkage for a given norm ('frobenius', 'nuclear', 'operator')
-     for a square matrix with gaussian noise (see Gavish, Doje noho, 2017 and
+     for a square matrix with gaussian noise (see Gavish, Donoho, 2017 and
      William Leeb, 2022 for the operator norm). """
     shrinked_singvals = optimal_shrinkage(singularValues, 1, norm)
     return len(shrinked_singvals[shrinked_singvals > tolerance])

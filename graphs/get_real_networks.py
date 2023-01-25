@@ -260,16 +260,25 @@ def get_learned_weight_matrix(graph_str):
         W = np.load(path_str + f"{graph_str}/"
                     + "mouse-control1-model.npz")["J"]
 
-    elif graph_str in ["00001", "00100", "00200", "00300", "00400",
-                       "00500", "00600", "00700", "00800", "00900"]:
+    elif graph_str in ["fully_connected_layer_cnn_00100",
+                       "fully_connected_layer_cnn_00200",
+                       "fully_connected_layer_cnn_00300",
+                       "fully_connected_layer_cnn_00400",
+                       "fully_connected_layer_cnn_00500",
+                       "fully_connected_layer_cnn_00600",
+                       "fully_connected_layer_cnn_00700",
+                       "fully_connected_layer_cnn_00800",
+                       "fully_connected_layer_cnn_00900",
+                       "fully_connected_layer_cnn_01000"]:
         # Data from https://github.com/gabrieleilertsen/nws
 
         # theta is the notation of the paper : "Classifying the classifier:
         #  Dissecting the weight space of neural networks" of
         # G. Eilertsen et al.
-        theta = np.fromfile(path_str+f"cnn/cnn_nws_main_{graph_str}_020.bin",
+        theta = np.fromfile(path_str +
+                            f"cnn/cnn_nws_main_{graph_str[-5:]}_020.bin",
                             'double')
-        meta = pd.read_csv(path_str+f"cnn/meta_{graph_str}.csv")
+        meta = pd.read_csv(path_str+f"cnn/meta_{graph_str[-5:]}.csv")
         # About the data
         # with pd.option_context('display.max_rows', None,
         #                        'display.max_columns', None):

@@ -7,10 +7,10 @@ from graphs.get_real_networks import get_learned_weight_matrix,\
     get_microbiome_weight_matrix
 from singular_values.compute_effective_ranks import *
 
-# networkName = "00600"
-networkName = "gut"
+networkName = "fully_connected_layer_cnn_01000"
 #  "mouse_control_rnn", "zebrafish_rnn", "mouse_rnn",
-#  "cnn_nws_main_XXXXX_020" where XXXXX is 00001, 00100, 00200, ..., 00900
+#  "cnn_nws_main_XXXXX_020" where XXXXX is
+#  fully_connected_layer_cnn_00100,..., fully_connected_layer_cnn_01000
 singularValuesFilename = 'properties/' + networkName \
                          + '_singular_values.txt'
 
@@ -21,8 +21,7 @@ singularValuesFilename = 'properties/' + networkName \
 #     N = 15314
 #     singularValues = np.loadtxt(singularValuesFilename)
 
-W = get_microbiome_weight_matrix(networkName)
-# get_learned_weight_matrix(networkName)
+W = get_learned_weight_matrix(networkName)
 N = len(W[0])
 singularValues = la.svdvals(W)
 

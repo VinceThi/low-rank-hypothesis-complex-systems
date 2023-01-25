@@ -183,15 +183,23 @@ for i, cat in enumerate(reversed(validCategories)):
                         edgecolor=colorMap[cat],  # alpha=0.7,
                         marker=markerMap[cat])  # , ax=g.ax_joint)
         learned_networks = ["zebrafish_rnn", "mouse_rnn", "mouse_control_rnn",
-                            "00001", "00100", "00200", "00300", "00400",
-                            "00500", "00600", "00700", "00800", "00900"]
-        N_learned = np.array([4589, 178, 669, 756, 820, 980, 900, 1028, 892,
-                              1076, 1028, 628, 396])
-        rank_learned = np.array([4589, 178, 669, 244, 299, 10, 128, 256, 380,
-                                 308, 256, 116, 128])
-        srank_learned = np.array([16.4992, 1.23043, 20.1378, 50.8693, 1.21568,
+                            "fully_connected_layer_cnn_00100",
+                            "fully_connected_layer_cnn_00200",
+                            "fully_connected_layer_cnn_00300",
+                            "fully_connected_layer_cnn_00400",
+                            "fully_connected_layer_cnn_00500",
+                            "fully_connected_layer_cnn_00600",
+                            "fully_connected_layer_cnn_00700",
+                            "fully_connected_layer_cnn_00800",
+                            "fully_connected_layer_cnn_00900",
+                            "fully_connected_layer_cnn_01000", ]
+        N_learned = np.array([4589, 178, 669, 820, 980, 900, 1028, 892,
+                              1076, 1028, 628, 396, TODO])
+        rank_learned = np.array([4589, 178, 669, 299, 10, 128, 256, 380,
+                                 308, 256, 116, 128, TODO])
+        srank_learned = np.array([16.4992, 1.23043, 20.1378, 1.21568,
                                   1.09635, 5.01488, 9.33475, 20.567, 30.1669,
-                                  28.1594, 11.3583, 1.22835])
+                                  28.1594, 11.3583, 1.22835, TODO])
         sns.scatterplot(x=rank_learned / N_learned,
                         y=srank_learned / N_learned, s=100,
                         facecolor='None',

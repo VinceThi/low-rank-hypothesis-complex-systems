@@ -99,6 +99,7 @@ def optimal_threshold(singvals, beta, sigma=None, target_rank=True):
         # Approximate ``w(beta)``
         coef_approx = optimal_SVHT_coef_sigma_unknown(beta)
         log.info(f'Approximated `w(beta)` value: {coef_approx}')
+
         # Compute the optimal ``w(beta)``
         coef = optimal_SVHT_coef_sigma_known(beta) / \
             np.sqrt(median_marcenko_pastur(beta))
@@ -121,11 +122,14 @@ def optimal_threshold(singvals, beta, sigma=None, target_rank=True):
     if target_rank:
         # Compute and return rank
         greater_than_cutoff = np.where(singvals > cutoff)
+        print(cutoff, np.max(singvals), greater_than_cutoff)
         if greater_than_cutoff[0].size > 0:
             k = np.max(greater_than_cutoff) + 1
         else:
-            warnings.warn("From optimal_shrinkage.py in function"
-                          " optimal_threshold. The predicted threshold is 0.")
+            warnings.warn("From optimal_shrinkage.py in function"            
+                          " optimal_threshold. The cutoff is greater than "
+                          " the largest singular value. The target optimal "
+                          " threshold rank is set to 0")
             k = 0
         log.info(f'Target rank: {k}')
         return k
