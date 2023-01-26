@@ -171,7 +171,9 @@ def get_microbiome_weight_matrix(graph_str):
         # R. Lim, J.J.T. Cabatbat, T.L.P. Martin, H. Kim, S. Kim, J. Sung,
         # C.-M. Ghim and P.-J. Kim. Large-scale metabolic interaction network
         # of the mouse and human gut microbiota. Scientific Data, 7, 204, 2020.
-        dictionary = scipy.io.loadmat(path_str+'MicrobiomeNetworks.mat')
+        dictionary = scipy.io.loadmat(path_str+'MicrobiomeNetworks.mat',
+                                      variable_names=['complementarity',
+                                                      'competition'])
         P = dictionary['complementarity']
         Q = dictionary['competition']
 

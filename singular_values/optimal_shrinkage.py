@@ -122,7 +122,6 @@ def optimal_threshold(singvals, beta, sigma=None, target_rank=True):
     if target_rank:
         # Compute and return rank
         greater_than_cutoff = np.where(singvals > cutoff)
-        print(cutoff, np.max(singvals), greater_than_cutoff)
         if greater_than_cutoff[0].size > 0:
             k = np.max(greater_than_cutoff) + 1
         else:
