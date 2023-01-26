@@ -9,12 +9,12 @@ from plots.config_rcparams import *
 import numpy as np
 
 
-def plotDensities(effectiveRanksDF):
+def plotDensities(weightedDF, unweightedDF):
     color = "lightsteelblue"
     letter_posx, letter_posy = 0.5, 1
     fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(3*2, 3*2))
 
-    srankN = effectiveRanksDF['StableRank'] / effectiveRanksDF['Size']
+    srankN = unweightedDF['StableRank'] / unweightedDF['Size']
     x, bins, p = axes[0, 0].hist(srankN, bins=30, range=(0, 1),
                                  density=True, color=color)
     mean_srankN = np.mean(srankN)
@@ -29,7 +29,7 @@ def plotDensities(effectiveRanksDF):
              verticalalignment="top", transform=axes[0, 0].transAxes)
     axes[0][0].set_ylim([-0.02*0.85, 0.85])
 
-    nrankN = effectiveRanksDF['NuclearRank'] / effectiveRanksDF['Size']
+    nrankN = unweightedDF['NuclearRank'] / unweightedDF['Size']
     x, bins, p = axes[0, 1].hist(nrankN, bins=30, range=(0, 1),
                                  density=True, color=color)
     mean_nrankN = np.mean(nrankN)
@@ -44,7 +44,7 @@ def plotDensities(effectiveRanksDF):
              verticalalignment="top", transform=axes[0, 1].transAxes)
     axes[0][1].set_ylim([-0.02*0.5, 0.5])
 
-    elbowN = effectiveRanksDF['Elbow'] / effectiveRanksDF['Size']
+    elbowN = unweightedDF['Elbow'] / unweightedDF['Size']
     x, bins, p = axes[0, 2].hist(elbowN, bins=30, range=(0, 1),
                                  density=True, color=color)
     mean_elbowN = np.mean(elbowN)
@@ -59,7 +59,7 @@ def plotDensities(effectiveRanksDF):
              verticalalignment="top", transform=axes[0, 2].transAxes)
     axes[0][2].set_ylim([-0.02 * 0.5, 0.5])
 
-    energyN = effectiveRanksDF['EnergyRatio']/effectiveRanksDF['Size']
+    energyN = unweightedDF['EnergyRatio']/unweightedDF['Size']
     x, bins, p = axes[1, 0].hist(energyN, bins=30, range=(0, 1),
                                  density=True, color=color)
     mean_energyN = np.mean(energyN)
@@ -74,7 +74,7 @@ def plotDensities(effectiveRanksDF):
              verticalalignment="top", transform=axes[1, 0].transAxes)
     axes[1][0].set_ylim([-0.02*0.5, 0.5])
 
-    thrankN = effectiveRanksDF['OptimalThreshold'] / effectiveRanksDF['Size']
+    thrankN = unweightedDF['OptimalThreshold'] / unweightedDF['Size']
     x, bins, p = axes[1, 1].hist(thrankN, bins=30, range=(0, 1),
                                  density=True, color=color)
     mean_thrankN = np.mean(thrankN)
@@ -89,7 +89,7 @@ def plotDensities(effectiveRanksDF):
              transform=axes[1, 1].transAxes)
     axes[1][1].set_ylim([-0.02*0.5, 0.5])
 
-    shrankN = effectiveRanksDF['OptimalShrinkage'] / effectiveRanksDF['Size']
+    shrankN = unweightedDF['OptimalShrinkage'] / unweightedDF['Size']
     x, bins, p = axes[1, 2].hist(shrankN, bins=30, range=(0, 1),
                                  density=True, color=color)
     mean_shrankN = np.mean(shrankN)
@@ -104,7 +104,7 @@ def plotDensities(effectiveRanksDF):
              transform=axes[1, 2].transAxes)
     axes[1][2].set_ylim([-0.02*0.5, 0.5])
 
-    erankN = effectiveRanksDF['Erank'] / effectiveRanksDF['Size']
+    erankN = unweightedDF['Erank'] / unweightedDF['Size']
     x, bins, p = axes[2, 0].hist(erankN, bins=30, range=(0, 1),
                                  density=True, color=color)
     mean_erankN = np.mean(erankN)
@@ -119,7 +119,7 @@ def plotDensities(effectiveRanksDF):
              transform=axes[2, 0].transAxes)
     axes[2][0].set_ylim([-0.02 * 0.5, 0.5])
 
-    rankN = effectiveRanksDF['Rank'] / effectiveRanksDF['Size']
+    rankN = unweightedDF['Rank'] / unweightedDF['Size']
     x, bins, p = axes[2][1].hist(rankN, bins=30, range=(0, 1),
                                  density=True, color=color)
     mean_rankN = np.mean(rankN)
@@ -134,7 +134,7 @@ def plotDensities(effectiveRanksDF):
              verticalalignment="top", transform=axes[2, 1].transAxes)
     axes[2][1].set_ylim([-0.02 * 0.5, 0.5])
 
-    nbVertices = effectiveRanksDF['Size']
+    nbVertices = unweightedDF['Size']
     nbVertices = nbVertices.values
     x, bins, p = axes[2][2].hist(nbVertices, bins=np.logspace(np.log10(0.1),
                                                               np.log10(21000),
@@ -184,22 +184,38 @@ def plotDensities(effectiveRanksDF):
 
 def main():
 
-    effectiveRanksFilename = "C:/Users/thivi/Documents/GitHub/" \
-                             "low-rank-hypothesis-complex-systems/" \
-                             "singular_values/properties/effective_ranks.txt"
-    # 'singular_values/properties/effective_ranks.txt'
-    header = \
-        open(effectiveRanksFilename, 'r').readline().replace('#', ' ').split()
-    effectiveRanksDF = pd.read_table(effectiveRanksFilename, names=header,
-                                     comment="#", delimiter=r"\s+")
-    effectiveRanksDF.set_index('Name', inplace=True)
+    # effectiveRanksFilename = "C:/Users/thivi/Documents/GitHub/" \
+    #                          "low-rank-hypothesis-complex-systems/" \
+    #                          "singular_values/properties/effective_ranks.txt"
+    # # 'singular_values/properties/effective_ranks.txt'
+    # header = \
+    #     open(effectiveRanksFilename, 'r').readline().replace('#', ' ').split()
+    # effectiveRanksDF = pd.read_table(effectiveRanksFilename, names=header,
+    #                                  comment="#", delimiter=r"\s+")
+    # effectiveRanksDF.set_index('Name', inplace=True)
+
+    graphPropFilename = '../graphs/graph_data/graph_properties_augmented.txt'
+    header = open(graphPropFilename, 'r').readline().replace('#', ' ').split()
+    graphPropDF = pd.read_table(graphPropFilename, names=header, comment="#", delimiter=r"\s+")
+    graphPropDF.set_index('name', inplace=True)
+
+    effRanksFilename = '../singular_values/properties/effective_ranks.txt'
+    header = open(effRanksFilename, 'r').readline().replace('#', ' ').split()
+    effRanksDF = pd.read_table(effRanksFilename, names=header, comment="#", delimiter=r"\s+")
+    effRanksDF.rename(columns={'Name': 'name'}, inplace=True)
+    effRanksDF.set_index('name', inplace=True)
+
+    fullDF = pd.merge(graphPropDF, effRanksDF, left_index=True, right_index=True)
+
+    weightedDF = fullDF[fullDF['(un)weighted'] == 'weighted']
+    unweightedDF = fullDF[fullDF['(un)weighted'] == 'unweighted']
 
     # figureFilenamePDF = 'figures/pdf/' \
     #                     'effective_rank_to_dimension_ratio_densities.pdf'
     # figureFilenamePNG = 'figures/png/' \
     #                     'effective_rank_to_dimension_ratio_densities.png'
 
-    plotDensities(effectiveRanksDF)
+    plotDensities(weightedDF, unweightedDF)
     plt.show()
     # fig.savefig(figureFilenamePDF, bbox_inches='tight')
     # fig.savefig(figureFilenamePNG, bbox_inches='tight')
