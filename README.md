@@ -24,7 +24,7 @@ The `dynamics/` folder contains the code for the integration of various nonlinea
 
 The `graphs/` folder contains the code to extract real networks, generate random graphs (e.g, $S^1$ model), among others.
 
-- `get_real_networks.py` allows to extract the networks that are not Netzschleuder with functions such as `get_{type of network}(graph_name)`.
+- `get_real_networks.py` allows to extract the networks that are not Netzschleuder with functions such as `get_<type of network>(graph_name)`.
 - `generate_random_graphs.py` allows to generate graphs from various random graphs with fixed parameters or random parameters.
 - `generate_S1_random_graphs.py` contains the function `s1_model`, a generator of graphs from the random geometric model $S^1$.
 - `compute_tensors.py` contains different functions to compute the tensors arising in the dimension reduction of the paper.
