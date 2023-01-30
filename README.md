@@ -20,6 +20,17 @@ The `dynamics/` folder contains the code for the integration of various nonlinea
 - `error_vector_fields.py` contains every functions needed to compute the error upper bound in the paper (e.g., the Jacobian, $x'$, ...).
 - `integrate.py` contains integrators for dynamics on graphs: rk4, dopri45, a function that uses `scipy.integrate.ode`. Ultimately, we use `scipy.integrate.solve_ivp` with BDF in `simulation/`.
 
+#### Graphs
+
+The `graphs/` folder contains the code to extract real networks, generate random graphs (e.g, $S^1$ model), among others.
+
+- `get_real_networks.py` allows to extract the networks that are not Netzschleuder with functions such as `get_{type of network}(graph_name)`.
+- `generate_random_graphs.py` allows to generate graphs from various random graphs with fixed parameters or random parameters.
+- `generate_S1_random_graphs.py` contains the function `s1_model`, a generator of graphs from the random geometric model $S^1$.
+- `compute_tensors.py` contains different functions to compute the tensors arising in the dimension reduction of the paper.
+- `split_weight_nws`, by Gabriel Eilerstein, contains the function `unpack` that allows to separate layer weights for convolutional and fully connected layers in convolutional neural networks from [nws](https://github.com/gabrieleilertsen/nws).
+- `extract_graph_properties.py` and `extract_graph_properties_non_netzschleuder.ipynb` extracts various properties and add them to the file `properties/graph_properties.txt` and `graph_data/graph_properties_augmented.txt` respectively.  For weighted graphs, this is at this stage that the keyword used to include the weights into the adjacency matrix must be chosen if the `edge property` corresponding to weights is not called `weight` in the dataset. The graph will be considered as binary if this last step is omitted.
+
 #### Simulations for the dynamics
 
 The `simulation/` folder contains the code to compute the alignment errors, the trajectories and the equilibrium points for the different dynamics of the paper.
@@ -34,13 +45,12 @@ The `simulation/` folder contains the code to compute the alignment errors, the 
 - `trajectories_rnn.py` allows to generate the data to get Fig.~3h.
 
 
-#### Computing singular values, ranks and effective ranks
+#### Singular values, ranks and effective ranks
 
 Once one or more new network datasets have been added to the `graph_data/netzschleuder/` subdirectory, their singular values, rank and effective ranks can computed by executing the following scripts in this specific order.
 
-1. `extract_graph_properties.py` extracts various properties and add them to the file `properties/graph_properties.txt`.  For weighted graphs, this is at this stage that the keyword used to include the weights into the adjacency matrix must be chosen if the `edge property` corresponding to weights is not called `weight` in the dataset. The graph will be considered as binary if this last step is omitted.
-2. `compute_singular_values.py` computes the singular values for every new network datasets.  The singular values are saved into the file `properties/singular_values/<dataset name>_singular_values.txt`.
-3. `compute_effective_ranks.py` computes the rank as well as various _effective_ ranks and add them into the file `properties/effective_ranks.txt`.
+- `compute_singular_values.py` computes the singular values for every new network datasets.  The singular values are saved into the file `properties/singular_values/<dataset name>_singular_values.txt`.
+- `compute_effective_ranks.py` computes the rank as well as various _effective_ ranks and add them into the file `properties/effective_ranks.txt`.
 
 
 #### Plotting the results
