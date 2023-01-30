@@ -47,10 +47,11 @@ The `simulation/` folder contains the code to compute the alignment errors, the 
 
 #### Singular values, ranks and effective ranks
 
-Once one or more new network datasets have been added to the `graph_data/netzschleuder/` subdirectory, their singular values, rank and effective ranks can computed by executing the following scripts in this specific order.
+Once one or more new network datasets have been added to the `graph_data/netzschleuder/` and `graph_data/` subdirectories, their singular values, rank and effective ranks can computed by executing the following scripts from the `singular_values/` folder in this specific order.
 
-- `compute_singular_values.py` computes the singular values for every new network datasets.  The singular values are saved into the file `properties/singular_values/<dataset name>_singular_values.txt`.
-- `compute_effective_ranks.py` computes the rank as well as various _effective_ ranks and add them into the file `properties/effective_ranks.txt`.
+1. `compute_singular_values.py` computes the singular values for every new network datasets from Netzschleuder in `graph_data/netzschleuder/`. The singular values are saved into the file `properties/singular_values/<dataset name>_singular_values.txt`.
+2. `compute_singular_values_non_netzschleuder.py` computes the singular values for specific network datasets not from Netzschleuder in `graph_data/`. The singular values are saved into the file `properties/<dataset name>_singular_values.txt`.
+3. `compute_effective_ranks.py` computes the rank as well as various _effective_ ranks and add them into the file `properties/effective_ranks.txt`.
 
 
 #### Plotting the results
@@ -63,7 +64,7 @@ Once one or more new network datasets have been added to the `graph_data/netzsch
 
 Unit tests are in the folder `tests/` and are seperated in three: `tests/test_dynamics/`, `tests/test_graphs/`, and `tests/test_singular_values/`.
 
-- The tests in `tests/test_dynamics/` ensure that the complete dynamics and the reduced dynamics coincide in tensor form at $n=N$ (scripts test_{dynamics' name}) and that the $x'$ and Jacobian matrices (found analytically or numerically) to compute the upper bound on the alignment error are correct (scripts test_error_{dynamics' name}).
+- The tests in `tests/test_dynamics/` ensure that the complete dynamics and the reduced dynamics coincide in tensor form at $n=N$ (scripts test_<dynamics' name>}) and that the $x'$ and Jacobian matrices (found analytically or numerically) to compute the upper bound on the alignment error are correct (scripts test_error_<dynamics' name>).
 
 - The tests in `tests/test_graphs/test_compute_tensors.py` ensure that the tensors arising in the dimension reduction are well computed numerically. Simple speed tests for different methods (einsum, matmul, loop) to compute the tensors are also available.
 
