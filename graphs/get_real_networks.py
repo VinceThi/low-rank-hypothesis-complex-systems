@@ -114,12 +114,12 @@ def get_connectome_weight_matrix(graph_name):
     elif graph_name == "zebrafish_meso":
         # Kunst et al.
         # "A Cellular-Resolution Atlas of the Larval Zebrafish Brain",
-        # (2019) avec le traitement de Antoine Légaré
-        # On a pas exactement les mêmes régions que l'article non plus,
-        #  où la matrice est faite avec 36 régions. Ici, on en a 71 qui sont
-        #  mutually exclusive et collectively exhaustive (je reprends les
-        # termes du dude dans le courriel) donc ça couvre tout le volume au
-        #  complet sans overlap
+        # (2019) with the treatment of Antoine Légaré
+        # We do not have exactly the same regions than the ones in the paper
+        # where the matrix is 36 by 36. Here, we have 71 regions that are
+        # mutually exclusive and collectively exhaustive (these are the terms
+        # of the corresponding author of the above paper), in the sense that
+        # it covers the whole volume without overlap
 
         df = pd.read_csv(path_str +
                          'Connectivity_matrix_zebra_fish_mesoscopic.csv')

@@ -50,7 +50,7 @@ dynamics_str = "rnn"
 D = 1*np.eye(N)
 coupling = 2
 # Interesting parameters for graph_str = "mouse_control_rnn"
-# n = 101 : D = I, coupling = 2
+# n = 100 : D = I, coupling = 2
 # n = 90 : D = I, coupling = 2
 
 # Interesting parameters for graph_str = "mouse_rnn"
@@ -132,9 +132,9 @@ ax4.plot(X1r[int(time_cut*len(tr)):],
          linewidth=redlinewidth, linestyle="--", label="Reduced dynamics")
 ax4.set_ylabel("$X_2$")
 ax4.set_xlabel("$X_1$")
-# for j in range(0, N):
-#     plt.plot(tc, x[j, :], color=reduced_first_community_color,
-#              linewidth=linewidth)
+for j in range(0, N):
+    plt.plot(tc, x[j, :], color=reduced_first_community_color,
+             linewidth=linewidth)
 # for nu in range(n):
 #     plt.plot(tc, M[nu, :]@x, color=first_community_color,
 #              linewidth=redlinewidth)

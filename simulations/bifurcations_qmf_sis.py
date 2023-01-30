@@ -51,9 +51,9 @@ if plot_weight_matrix_bool:
 """ Dynamical parameters """
 dynamics_str = "qmf_sis"
 D = np.eye(N)
-# coupling_constants = np.linspace(0.01, 4, 1000)
+coupling_constants = np.linspace(0.01, 4, 1000)
 
-coupling_constants = np.linspace(0.9, 1.1, 50)
+# coupling_constants = np.linspace(0.9, 1.1, 50)
 # ^ near bifurcation
 
 """ SVD and dimension reduction """
