@@ -64,7 +64,7 @@ Once one or more new network datasets have been added to the `graph_data/netzsch
 
 Unit tests are in the folder `tests/` and are seperated in three: `tests/test_dynamics/`, `tests/test_graphs/`, and `tests/test_singular_values/`.
 
-- The tests in `tests/test_dynamics/` ensure that the complete dynamics and the reduced dynamics coincide in tensor form at $n=N$ (scripts test_<dynamics' name>}) and that the $x'$ and Jacobian matrices (found analytically or numerically) to compute the upper bound on the alignment error are correct (scripts test_error_<dynamics' name>).
+- The tests in `tests/test_dynamics/` ensure that the complete dynamics and the reduced dynamics coincide in tensor form at $n=N$ (scripts test_<dynamics' name>}) and that the $x'$ and Jacobian matrices (found analytically or numerically) to compute the upper bound on the alignment error are correct (scripts test_error_vector_fields_<dynamics' name>).
 
 - The tests in `tests/test_graphs/test_compute_tensors.py` ensure that the tensors arising in the dimension reduction are well computed numerically. Simple speed tests for different methods (einsum, matmul, loop) to compute the tensors are also available.
 
