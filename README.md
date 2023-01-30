@@ -55,9 +55,14 @@ Once one or more new network datasets have been added to the `graph_data/netzsch
 
 
 #### Plotting the results
+
+The `plot/` folder contains the configuration parameters and functions to plot the figures of the paper, singular values, weight matrices, etc.
+
+- `config_params.py` contains the configuration parameters for the plots.
 - `plot_fig_1b_drosophila_network.py`, `plot_fig_1d_drosophila_singular_values.py`, `plot_fig_1e_effective_rank_vs_rank_scatterplot.py` and `plot_fig_1fn_effective_rank_to_dimension_ratio_densities.py` generate subfigures for Fig. 1, which is then assembled on Inkscape.
 - `plot_fig_3_error_vector_fields.py` generates Fig. 3 with the alignment errors and the bifurcations/trajectories.
 - `plot_singular_values.py` contains the functions to generate scree plots or histograms for the singular values of one or many networks. The function `plot_singular_values` gives the scree plots with the effective ranks, the cumulative explained variance and the y axis in log if desired.
+- `plot/figures/png/singular_values` contains plots of the singular values of various real networks in png, while `plot/figures/pdf/singular_values` contains the pdfs.
 
 
 #### Unit tests
