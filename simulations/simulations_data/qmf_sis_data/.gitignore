@@ -1,5 +1,6 @@
 # Ignore everything in this directory
 *
+
 # Except this file
 !.gitignore
 !2023_01_14_15h10min58sec_n_1_1000pts_qmf_sis_high_school_proximity_parameters_dictionary.json
