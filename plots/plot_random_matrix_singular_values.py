@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-\\
 # @author: Vincent Thibeault
 import numpy as np
 import tenpy as tp
@@ -11,7 +11,7 @@ plot_histogram = False
 N = 500
 
 if plot_histogram:
-    generator = tp.linalg.random_matrix.COE  # GOE, GUE
+    generator = tp.linalg.random_matrix.COE  # GOE, GUE, CUE
     args = [(N, N)]
 
     plot_singular_values_histogram_random_matrices(generator, args,
