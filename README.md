@@ -30,6 +30,7 @@ The `graphs/` folder contains the code to extract real networks, generate random
 - `compute_tensors.py` contains different functions to compute the tensors arising in the dimension reduction of the paper.
 - `split_weight_nws`, by Gabriel Eilerstein, contains the function `unpack` that allows to separate layer weights for convolutional and fully connected layers in convolutional neural networks from [nws](https://github.com/gabrieleilertsen/nws).
 - `extract_graph_properties.py` and `extract_graph_properties_non_netzschleuder.ipynb` extracts various properties and add them to the file `properties/graph_properties.txt` and `graph_data/graph_properties_augmented.txt` respectively.  For weighted graphs, this is at this stage that the keyword used to include the weights into the adjacency matrix must be chosen if the `edge property` corresponding to weights is not called `weight` in the dataset. The graph will be considered as binary if this last step is omitted.
+- `graphs/graph_data/` contains some connectomes, the gut microbiome network, and graph properties .txt files for the real networks.
 
 #### Simulations for the dynamics
 
@@ -43,6 +44,7 @@ The `simulation/` folder contains the code to compute the alignment errors, the 
 - `bifurcations_wilson_cowan.py` allows to generate the data to get Fig.~3f.
 - `bifurcations_microbial.py` allows to generate the data to get Fig.~3g.
 - `trajectories_rnn.py` allows to generate the data to get Fig.~3h.
+- `simulation/simulation_data/` contains all the data to generate Fig. 3 of the paper.
 
 
 #### Singular values, ranks and effective ranks
