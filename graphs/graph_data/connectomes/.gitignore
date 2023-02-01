@@ -2,3 +2,7 @@
 *
 # Except this file
 !.gitignore
+!celegans_weighted_directed_signed.xls
+!C_Elegans.npy
+!ABA_weight_mouse.txt
+!Connectivity_matrix_zebra_fish_mesoscopic.csv
