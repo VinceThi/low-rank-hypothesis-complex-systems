@@ -1,5 +1,6 @@
 # Ignore everything in this directory
 *
+
 # Except this file
 !.gitignore
 !2023_01_08_12h48min42sec_nice_limit_cycle_x_time_series_complete_rnn_mouse_control_rnn.json

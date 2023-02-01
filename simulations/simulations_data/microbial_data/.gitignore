@@ -1,5 +1,6 @@
 # Ignore everything in this directory
 *
+
 # Except this file
 !.gitignore
 !2023_01_25_09h18min08sec_n_76_50coupling_300CI_microbial_gut_parameters_dictionary.json
