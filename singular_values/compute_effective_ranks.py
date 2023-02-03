@@ -1,6 +1,6 @@
 # -​*- coding: utf-8 -*​-
-# @author: Antoine Allard <antoineallard.info>
-#          Vincent Thibeault
+# @author: Antoine Allard <antoineallard.info> and Vincent Thibeault
+
 import glob
 import numpy as np
 import os
@@ -9,6 +9,13 @@ import tabulate
 from singular_values.optimal_shrinkage import optimal_shrinkage,\
     optimal_threshold
 from tqdm import tqdm
+import networkx as nx
+from scipy.linalg import svdvals
+import time
+import json
+import tkinter.simpledialog
+from tkinter import messagebox
+import collections.abc
 
 
 def to_fwf(df, fname, cols=None):
@@ -135,9 +142,71 @@ def computeEffectiveRanks(singularValues, matrixName, size):
     return tabulate.tabulate(properties, headers=header)
 
 
+def computeEffectiveRanksRandomGraphs(generator, args, nb_graphs=1000):
+
+    graph_str = generator.__name__
+    singularValues = np.array([])
+    effectiveRanks = np.zeros((8, nb_graphs))
+    for i in tqdm(range(0, nb_graphs)):
+        if graph_str in ["tenpy_random_matrix", "perturbed_gaussian"]:
+            W = generator(*args)
+        else:
+            W = nx.to_numpy_array(generator(*args))
+        singularValues_instance = svdvals(W)
+        effectiveRanks_instance = \
+            np.array([computeRank(singularValues_instance),
+                      computeOptimalThreshold(singularValues_instance),
+                      computeOptimalShrinkage(singularValues_instance),
+                      computeERank(singularValues_instance),
+                      findEffectiveRankElbow(singularValues_instance),
+                      computeEffectiveRankEnergyRatio(singularValues_instance,
+                                                      threshold=0.9),
+                      computeStableRank(singularValues_instance),
+                      computeNuclearRank(singularValues_instance)])
+
+        singularValues = np.concatenate((singularValues,
+                                         singularValues_instance))
+        effectiveRanks[:, i] = effectiveRanks_instance
+    if messagebox.askyesno("Python", "Would you like to save the"
+                                     " parameters and the data?"):
+        window = tkinter.Tk()
+        window.withdraw()  # hides the window
+        file = tkinter.simpledialog.askstring("File: ",
+                                              "Enter your file name")
+        args_list = list(args)
+        for i, arg in enumerate(args_list):
+            if not isinstance(arg, (collections.abc.Sequence, float, int)):
+                args_list[i] = args_list[i].tolist()
+        path = "C:/Users/thivi/Documents/GitHub/" \
+               "low-rank-hypothesis-complex-systems/" \
+               "singular_values/properties/singular_values_random_graphs/"
+        order = "rank, thrank, shrank, erank, elbow, energy, srank, nrank"
+        timestr = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")
+        parameters_dictionary = {"graph_str": graph_str,
+                                 "args_generator": tuple(args_list),
+                                 "nb_graphs": nb_graphs,
+                                 "order rank and effective"
+                                 " ranks in effectiveRanks"
+                                 " (shape (8, nb_graphs))": order
+                                 }
+
+        with open(path + f'{timestr}_{file}_concatenated_singular_values'
+                         f'_{graph_str}.json', 'w') \
+                as outfile:
+            json.dump(singularValues.tolist(), outfile)
+        with open(path + f'{timestr}_{file}_concatenated_effective_ranks'
+                         f'_{graph_str}.json', 'w') \
+                as outfile:
+            json.dump(effectiveRanks.tolist(), outfile)
+        with open(path + f'{timestr}_{file}_singular_values_histogram'
+                         f'_{graph_str}_parameters_dictionary.json',
+                  'w') as outfile:
+            json.dump(parameters_dictionary, outfile)
+
+
 def computeEffectiveRanksManyNetworks(recompute=True):
     """ Computes the rank and various effective ranks
-    and add them to a dataframe for many networks.
+    and add them to a dataframe for many real networks.
 
     recompute: (bool) If we want to recompute the effective ranks of the
                       networks from Netzschleuder that

@@ -3,11 +3,29 @@
 
 import networkx as nx
 import numpy as np
-# from scipy.stats import powerlaw
+import tenpy as tp
+from graphs.random_matrix_generators import perturbed_gaussian,\
+    tenpy_random_matrix
 from graphs.generate_s1_random_graph import s1_model
 
 
 def random_graph_generators(graph_str, N):
+
+    """
+
+    :param graph_str: name of the generator. Options:
+        "gnp", "SBM", "watts_strogatz", "barabasi_albert",
+        "hard_configuration", "directed_hard_configuration",
+        "chung_lu", "s1", "random_regular", "GOE", "GUE", "COE", "CUE"
+        "perturbed_gaussian
+    :param N: number of vertices, must be a multiple of 2 and 5
+    :return: generator and its (fixed) arguments
+
+    Note that for "tenpy_random_matrix" and "perturbed_gaussian" an instance W
+    of the random matrix is obtained as W = generator(*args).
+
+    Else, W = nx.to_numpy_array(generator(*args))
+    """
 
     assert N % 5 == 0
     assert N % 2 == 0
@@ -24,11 +42,13 @@ def random_graph_generators(graph_str, N):
 
     elif graph_str == "SBM":
         generator = nx.stochastic_block_model
-        pq = [[0.40, 0.10, 0.30, 0.01, 0.001],
+        pq = [[0.42, 0.09, 0.30, 0.02, 0.003],
               [0.05, 0.60, 0.20, 0.10, 0.05],
-              [0.20, 0.01, 0.70, 0.20, 0.01],
+              [0.20, 0.02, 0.70, 0.20, 0.02],
               [0.15, 0.05, 0.05, 0.80, 0.01],
               [0.01, 0.10, 0.05, 0.20, 0.50]]
+
+        # print(np.linalg.matrix_rank(pq)) = 5
         sizes = [N//10, 2*N//5, N//10, N//5, N//5]
         #                          directed+self-loops
         args = (sizes, pq, None, None, True, True, True)
@@ -56,8 +76,7 @@ def random_graph_generators(graph_str, N):
     elif graph_str == "directed_hard_configuration":
         generator = nx.directed_configuration_model
         indeg_sequence = \
-            2 * np.random.multinomial(500,
-                                      np.random.dirichlet(np.ones(N) * 0.1))
+            2*np.random.multinomial(500, np.random.dirichlet(np.ones(N) * 0.1))
         # outdeg_sequence = \
         #     2*np.random.multinomial(500, np.random.dirichlet(np.ones(N)*0.1))
         sum_indeg = np.sum(indeg_sequence)
@@ -83,15 +102,37 @@ def random_graph_generators(graph_str, N):
         gamma = 2.5
         args = (N, beta, kappa_min, kappa_max, gamma)
 
-    elif graph_str == "empty_graph":
-        generator = nx.empty_graph
-        args = (N, )
+    elif graph_str == "perturbed_gaussian":
+        generator = perturbed_gaussian
+        rank = 5
+        L = np.random.uniform(0, 1/np.sqrt(N), (N, rank))
+        R = np.random.normal(0, 1, (rank, N))
+        g = 1    # Strength of the random part
+        var = g**2/N
+        args = (N, L, R, var)
 
+    elif graph_str == "GOE":
+        generator = tenpy_random_matrix
+        args = (N, tp.linalg.random_matrix.GOE)
+
+    elif graph_str == "GUE":
+        generator = tenpy_random_matrix
+        args = (N, tp.linalg.random_matrix.GUE)
+
+    elif graph_str == "COE":
+        generator = tenpy_random_matrix
+        args = (N, tp.linalg.random_matrix.COE)
+
+    elif graph_str == "CUE":
+        generator = tenpy_random_matrix
+        args = (N, tp.linalg.random_matrix.CUE)
+    
     else:
         raise ValueError("No graph_str as this name, choose between "
                          "gnp, SBM, watts_strogatz, barabasi_albert,"
                          " hard_configuration, directed_hard_configuration,"
-                         "chung_lu, s1", "random_regular")
+                         "chung_lu, s1, random_regular, GOE, GUE, COE, CUE, "
+                         "perturbed_gaussian")
 
     return generator, args
 

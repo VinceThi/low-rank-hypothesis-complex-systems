@@ -193,15 +193,17 @@ def plot_singular_values_histogram_random_networks(random_graph_generator,
                                                    ylabel="Spectral density"
                                                           " $\\rho(\\sigma)$"):
     # from singular_values.marchenko_pastur_pdf import marchenko_pastur_pdf
+    graph_str = random_graph_generator.__name__
     fig = plt.figure(figsize=(6, 4))
     singularValues = np.array([])
-    i = 0
-    for k in tqdm(range(0, nb_networks)):
-        A = nx.to_numpy_array(random_graph_generator(*random_graph_args))
-        singularValues_instance = svdvals(A)
+    for _ in tqdm(range(0, nb_networks)):
+        if graph_str in ["tenpy_random_matrix", "perturbed_gaussian"]:
+            W = random_graph_generator(*random_graph_args)
+        else:
+            W = nx.to_numpy_array(random_graph_generator(*random_graph_args))
+        singularValues_instance = svdvals(W)
         singularValues = np.concatenate((singularValues,
                                          singularValues_instance))
-        i += 1
     weights = np.ones_like(singularValues) / float(len(singularValues))
     # N = random_graph_args[0]
     # p = 0.1
@@ -227,11 +229,10 @@ def plot_singular_values_histogram_random_networks(random_graph_generator,
                "low-rank-hypothesis-complex-systems/" \
                "singular_values/properties/singular_values_random_graphs/"
         timestr = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")
-        graph_str = random_graph_generator.__name__
         parameters_dictionary = {"graph_str": graph_str,
                                  "args graph gen": random_graph_args,
                                  "nb_samples (nb_networks)": nb_networks,
-                                 "nb_bins hitogram": nb_bins}
+                                 "nb_bins histogram": nb_bins}
 
         fig.savefig(path + f'{timestr}_{file}_singular_values_histogram'
                            f'_{graph_str}.pdf')
@@ -250,35 +251,6 @@ def plot_singular_values_histogram_random_networks(random_graph_generator,
                          f'_{graph_str}_parameters_dictionary.json',
                   'w') as outfile:
             json.dump(parameters_dictionary, outfile)
-
-
-def plot_singular_values_histogram_random_matrices(random_matrix_generator,
-                                                   random_matrix_args,
-                                                   nb_networks=1000,
-                                                   nb_bins=1000,
-                                                   bar_color="#064878",
-                                                   xlabel="Singular"
-                                                          " values $\\sigma$",
-                                                   ylabel="Spectral density"
-                                                          " $\\rho(\\sigma)$"):
-    plt.figure(figsize=(6, 4))
-    singularValues = np.array([])
-    i = 0
-    for k in tqdm(range(0, nb_networks)):
-        A = random_matrix_generator(*random_matrix_args)
-        singularValues_instance = svdvals(A)
-        singularValues = np.concatenate((singularValues,
-                                         singularValues_instance))
-        i += 1
-    weights = np.ones_like(singularValues) / float(len(singularValues))
-    plt.hist(singularValues, bins=nb_bins,
-             color=bar_color, edgecolor=None,
-             linewidth=1, weights=weights)
-    plt.tick_params(axis='both', which='major')
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel, labelpad=20)
-    plt.tight_layout()
-    plt.show()
 
 
 def plot_singular_values_given_effective_ranks(singularValues, effectiveRanks):
