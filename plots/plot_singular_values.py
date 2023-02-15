@@ -1,5 +1,5 @@
 # -​*- coding: utf-8 -*​-
-# @author: Antoine Allard <antoineallard.info> and Vincent Thibeault
+# @author: Vincent Thibeault and Antoine Allard <antoineallard.info>
 from itertools import cycle
 import numpy as np
 from scipy.linalg import svdvals
@@ -247,6 +247,67 @@ def plot_singular_values_histogram_random_networks(random_graph_generator,
                          f'_{graph_str}.json', 'w') \
                 as outfile:
             json.dump(weights.tolist(), outfile)
+        with open(path + f'{timestr}_{file}_singular_values_histogram'
+                         f'_{graph_str}_parameters_dictionary.json',
+                  'w') as outfile:
+            json.dump(parameters_dictionary, outfile)
+
+
+def plot_singular_values_scree_random_networks(random_graph_generator,
+                                               random_graph_args,
+                                               nb_vertices,
+                                               nb_networks=1000,
+                                               xlabel="Index $i$",
+                                               ylabel="Average rescaled "
+                                                      "singular\n values "
+                                                      "$\\sigma_i/\\sigma_1$"):
+    graph_str = random_graph_generator.__name__
+    fig = plt.figure(figsize=(6, 4))
+    singularValues = np.zeros((nb_networks, nb_vertices))
+    for i in tqdm(range(0, nb_networks)):
+        if graph_str in ["tenpy_random_matrix", "perturbed_gaussian"]:
+            W = random_graph_generator(*random_graph_args)
+        else:
+            W = nx.to_numpy_array(random_graph_generator(*random_graph_args))
+        singularValues_instance = svdvals(W)
+        singularValues[i, :] = singularValues_instance
+    mean_singularValues = np.mean(singularValues, axis=0)
+    std_singularValues = np.std(singularValues, axis=0)
+    plt.scatter(np.arange(1, len(singularValues_instance) + 1, 1),
+                mean_singularValues, s=3, color=deep[0])
+    plt.fill_between(np.arange(1, len(singularValues_instance) + 1, 1),
+                     mean_singularValues - std_singularValues,
+                     mean_singularValues + std_singularValues,
+                     color=deep[0], alpha=0.2)
+    plt.tick_params(axis='both', which='major')
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel, labelpad=20)
+    plt.tight_layout()
+    plt.show()
+    if messagebox.askyesno("Python",
+                           "Would you like to save the parameters,"
+                           " the data, and the plot?"):
+        window = tkinter.Tk()
+        window.withdraw()  # hides the window
+        file = tkinter.simpledialog.askstring("File: ", "Enter your file name")
+        path = "C:/Users/thivi/Documents/GitHub/" \
+               "low-rank-hypothesis-complex-systems/" \
+               "singular_values/properties/singular_values_random_graphs/"
+        timestr = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")
+        parameters_dictionary = {"graph_str": graph_str,
+                                 "args graph gen": random_graph_args,
+                                 "nb_vertices": nb_vertices,
+                                 "nb_samples (nb_networks)": nb_networks}
+
+        fig.savefig(path + f'{timestr}_{file}_singular_values_histogram'
+                           f'_{graph_str}.pdf')
+        fig.savefig(path + f'{timestr}_{file}_singular_values_histogram'
+                           f'_{graph_str}.png')
+
+        with open(path + f'{timestr}_{file}_concatenated_singular_values'
+                         f'_{graph_str}.json', 'w') \
+                as outfile:
+            json.dump(singularValues.tolist(), outfile)
         with open(path + f'{timestr}_{file}_singular_values_histogram'
                          f'_{graph_str}_parameters_dictionary.json',
                   'w') as outfile:

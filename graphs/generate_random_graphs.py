@@ -4,9 +4,21 @@
 import networkx as nx
 import numpy as np
 import tenpy as tp
+from scipy.stats import pareto
 from graphs.random_matrix_generators import perturbed_gaussian,\
     tenpy_random_matrix
 from graphs.generate_s1_random_graph import s1_model
+from graphs.generate_soft_configuration_model import soft_configuration_model
+
+
+def truncated_pareto(N, kappa_min, kappa_max, gamma):
+    kappas = [val for val in kappa_min * pareto.rvs(gamma - 1, size=N)
+              if val < kappa_max]
+    while len(kappas) < N:
+        kappas.extend([val for val
+                       in kappa_min*pareto.rvs(gamma-1, size=N-len(kappas))
+                       if val < kappa_max])
+    return np.array(kappas)
 
 
 def random_graph_generators(graph_str, N):
@@ -15,14 +27,14 @@ def random_graph_generators(graph_str, N):
 
     :param graph_str: name of the generator. Options:
         "gnp", "SBM", "watts_strogatz", "barabasi_albert",
-        "hard_configuration", "directed_hard_configuration",
+        "configuration", "directed_configuration", "soft_configuration_model",
         "chung_lu", "s1", "random_regular", "GOE", "GUE", "COE", "CUE"
         "perturbed_gaussian
     :param N: number of vertices, must be a multiple of 2 and 5
     :return: generator and its (fixed) arguments
 
-    Note that for "tenpy_random_matrix" and "perturbed_gaussian" an instance W
-    of the random matrix is obtained as W = generator(*args).
+    Note that for the tenpy random matrices and "perturbed_gaussian"
+     an instance W of the random matrix is obtained as W = generator(*args).
 
     Else, W = nx.to_numpy_array(generator(*args))
     """
@@ -57,23 +69,29 @@ def random_graph_generators(graph_str, N):
         raise ValueError("DCSBM is not coded yet."
                          " It is not on networkx, but it is on graph tool.")
 
-    elif graph_str == "watts_strogatz":
-        generator = nx.watts_strogatz_graph
-        k = 3
-        p = 0.1
-        args = (N, k, p)
+    elif graph_str == "chung_lu":
+        generator = nx.expected_degree_graph
+        kappa_min = 3
+        kappa_max = 20
+        gamma = 2.5
+        kappas = truncated_pareto(N, kappa_min, kappa_max, gamma)
+        args = (kappas,)
 
-    elif graph_str == "barabasi_albert":
-        generator = nx.barabasi_albert_graph
-        m = 10
-        args = (N, m)
+    elif graph_str == "soft_configuration_model":
+        generator = soft_configuration_model
+        k = 8
+        alpha = (np.ones((N, 1)) - np.random.uniform(0, 1, (N, 1)))/np.sqrt(k)
+        beta = (np.ones((N, 1)) - np.random.uniform(0, 1, (N, 1)))/np.sqrt(k)
+        # f"\nbar kin = {np.sum(meanA, axis=1)}",
+        # f"\nbar kout = {np.sum(meanA, axis=0)}")
+        args = (N, alpha, beta, )
 
-    elif graph_str == "hard_configuration":
+    elif graph_str == "configuration":
         generator = nx.configuration_model
         deg_sequence = 2*np.random.randint(0, 20, N)
         args = (N, deg_sequence)
 
-    elif graph_str == "directed_hard_configuration":
+    elif graph_str == "directed_configuration":
         generator = nx.directed_configuration_model
         indeg_sequence = \
             2*np.random.multinomial(500, np.random.dirichlet(np.ones(N) * 0.1))
@@ -87,11 +105,16 @@ def random_graph_generators(graph_str, N):
             outdeg_sequence = outdeg_sequence
         args = (indeg_sequence, outdeg_sequence)
 
-    elif graph_str == "chung_lu":
-        generator = nx.expected_degree_graph
-        w = np.random.uniform(1, 5,
-                              size=N)  # powerlaw.rvs(2.5, size=N)
-        args = (w,)
+    elif graph_str == "watts_strogatz":
+        generator = nx.watts_strogatz_graph
+        k = 3
+        p = 0.1
+        args = (N, k, p)
+
+    elif graph_str == "barabasi_albert":
+        generator = nx.barabasi_albert_graph
+        m = 10
+        args = (N, m)
 
     elif graph_str == "s1":
         generator = s1_model
@@ -105,7 +128,7 @@ def random_graph_generators(graph_str, N):
     elif graph_str == "perturbed_gaussian":
         generator = perturbed_gaussian
         rank = 5
-        L = np.random.uniform(0, 1/np.sqrt(N), (N, rank))
+        L = np.random.normal(0, 1/np.sqrt(N), (N, rank))
         R = np.random.normal(0, 1, (rank, N))
         g = 1    # Strength of the random part
         var = g**2/N

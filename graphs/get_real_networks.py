@@ -15,7 +15,8 @@ def get_connectome_weight_matrix(graph_name):
     """
     Return the weight matrix for a given graph.
     graph_name (str): "mouse_meso", "zebrafish_meso", "celegans",
-                      "celegans_signed", "drosophila", "ciona"
+                      "celegans_signed", "drosophila", "ciona",
+                      "platynereis_dumerilii_neuronal"
     """
     path_str = "C:/Users/thivi/Documents/GitHub/" \
                "low-rank-hypothesis-complex-systems/" \
@@ -149,6 +150,17 @@ def get_connectome_weight_matrix(graph_name):
         A = adjacency + np.eye(len(adjacency[0]))
         # N = 71
         # rank_zebrafish_meso = 71
+
+    elif graph_name == "platynereis_dumerilii_neuronal":
+        G_platynereis = nx.read_graphml(path_str +
+                                        "platynereis_dumerilii_neuronal.xml")
+        A = nx.to_numpy_array(G_platynereis)
+
+    elif graph_name == "platynereis_dumerilii_desmosomal":
+        G_platynereis = \
+            nx.read_graphml(path_str +
+                            "platynereis_dumerilii_desmosomal_undirected.xml")
+        A = nx.to_numpy_array(G_platynereis)
 
     else:
         raise ValueError("This graph_str connectome is not an option. "

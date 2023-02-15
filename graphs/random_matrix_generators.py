@@ -29,4 +29,3 @@ def perturbed_gaussian(N, L, R, var):
     gaussian = np.random.normal(0, np.sqrt(var), (N, N))
     # print(np.linalg.norm(L@R), np.linalg.norm(gaussian))
     return perturbation + gaussian
-

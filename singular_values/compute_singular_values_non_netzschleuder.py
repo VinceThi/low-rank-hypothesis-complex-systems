@@ -6,8 +6,8 @@ from plots.plot_singular_values import plot_singular_values
 from graphs.get_real_networks import *
 from singular_values.compute_effective_ranks import *
 
-graph_str = "microbiome"
-save_data = False
+graph_str = "connectome"
+save_data = True
 compute_effective_ranks = True
 plot_singular_vals = True
 
@@ -44,9 +44,10 @@ elif graph_str == "economic":
     singularValues = la.svdvals(W)
 
 elif graph_str == "connectome":
-    networkName = "celegans_signed"
+    networkName = "mouse_meso"   # "celegans_signed"
     # "mouse_meso", "zebrafish_meso", "celegans",
-    # "celegans_signed", "drosophila", "ciona"
+    # "celegans_signed", "drosophila", "ciona",
+    #   "platynereis_dumerilii_neuronal", "platynereis_dumerilii_desmosomal"
     singularValuesFilename = 'properties/' + networkName \
                              + '_singular_values.txt'
 

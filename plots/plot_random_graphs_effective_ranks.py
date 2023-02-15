@@ -8,7 +8,7 @@ import json
 import numpy as np
 from plots.config_rcparams import *
 
-compute_ranks = False
+compute_ranks = True
 path_str = "C:/Users/thivi/Documents/GitHub/" \
            "low-rank-hypothesis-complex-systems/singular_values/properties/" \
            "singular_values_random_graphs/"
@@ -18,7 +18,7 @@ N = 1000
 nb_graphs = 100
 graph_str = "perturbed_gaussian"
 # Choices of graph_str
-#  "gnp, SBM, watts_strogatz, barabasi_albert,"
+# "gnp, SBM, watts_strogatz, barabasi_albert,"
 # " hard_configuration, directed_hard_configuration,"
 # "chung_lu, s1", "random_regular", "GOE", "GUE", "COE",
 # "CUE", "perturbed_gaussian"
@@ -152,4 +152,3 @@ else:
     ax8.set_xlim([999, 1001])
 
     plt.show()
-

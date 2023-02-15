@@ -43,7 +43,7 @@ def reduced_microbial(t, X, calW_tensor3, coupling,
     C: Carrying capacity
     K: Allee effect strength
     Typical params: F = 5, B = 3, C = 3, K = 10
-                    a = 5, b = 13, c =10/3, D = 30*np.eye(N)
+                    a = 5, b = 13, c = 1, D = 30*np.eye(N)
 
                     F = 1/4, B = 1, C = 3, K = 10
                     a = 1/4, b = 13/3, c = 1/3, D = 10*np.eye(N)
