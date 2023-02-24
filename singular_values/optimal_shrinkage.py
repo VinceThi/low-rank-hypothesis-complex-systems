@@ -58,7 +58,8 @@ def optimal_threshold(singvals, beta, sigma=None, target_rank=True):
     The singular values for the given input matrix.
     :param beta: scalar or array_like
         Scalar determining the aspect ratio of a matrix, i.e., ``beta = m/n``,
-        where ``m >= n``.  Instead the input matrix can be provided and the
+        where ``m >= n``. m is the number of rows and n is the number of
+        columns. Instead the input matrix can be provided and the
         aspect ratio is determined automatically.
     :param sigma:  real, optional
         Noise level if known.

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # @author: Vincent Thibeault
 
-import numpy as np
 from numpy.linalg import norm
 from scipy.linalg import svdvals
 from plots.config_rcparams import *
@@ -9,9 +8,9 @@ import time
 import json
 import tkinter.simpledialog
 from tkinter import messagebox
-import networkx as nx
+from graphs.generate_s1_random_graph import *
+from graphs.generate_truncated_pareto import truncated_pareto
 from tqdm import tqdm
-from graphs.sbm_properties import get_density, expected_adjacency_matrix
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 path_str = "C:/Users/thivi/Documents/GitHub/" \
@@ -19,38 +18,44 @@ path_str = "C:/Users/thivi/Documents/GitHub/" \
            "singular_values_random_graphs/"
 
 """ Random graph parameters """
-graph_str = "sbm"
-N = 1000
-nb_networks = 10     # 1000
-directed = True
+graph_str = "s1"
 selfloops = True
+directed = True
+N = 1000
+nb_networks = 10    # 1000
+kappa_in_min = 5
+kappa_in_max = 100
+gamma_in = 2.5
+kappa_in = truncated_pareto(N, kappa_in_min, kappa_in_max, gamma_in)
+kappa_out_min = 3
+kappa_out_max = 50
+gamma_out = 2
+kappa_out = truncated_pareto(N, kappa_out_min,
+                             kappa_out_max, gamma_out)
+kappa_in, kappa_out = \
+    generate_nonnegative_arrays_with_same_average(kappa_in, kappa_out)
+
+theta = 2*np.pi*uniform.rvs(size=N)
+temperature = 0.2  # 0.1 and 0.8
 norm_choice = 2
-pq0 = np.array([[0.10, 0.02, 0.01, 0.02, 0.003],
-                [0.005, 0.10, 0.002, 0.05, 0.005],
-                [0.002, 0.02, 0.05, 0.05, 0.02],
-                [0.01, 0.005, 0.005, 0.10, 0.01],
-                [0.01, 0.01, 0.005, 0.05, 0.05]])
-sizes = [N//10, 2*N//5, N//10, N//5, N//5]
-pq = 0.1*pq0   # pq = 8*pq0, 3*pq0
-EW = expected_adjacency_matrix(pq, sizes, self_loops=selfloops)
-singularValues_EW = svdvals(EW)
-norm_EW = norm(EW, ord=norm_choice)
+
+
 norm_R = np.zeros(nb_networks)
-density = get_density(pq, sizes, ensemble='directed')
 
 
 """ Get singular values """
 singularValues = np.zeros((nb_networks, N))
 singularValues_R = np.zeros((nb_networks, N))
 for i in tqdm(range(0, nb_networks)):
-    W = nx.to_numpy_array(nx.stochastic_block_model(sizes, pq.tolist(),
-                                                    directed=directed,
-                                                    selfloops=selfloops))
+    W, EW = s1_model(1/temperature, kappa_in, kappa_out, theta,
+                     selfloops=selfloops, directed=directed, expected=True)
     R = W - EW
     norm_R[i] = norm(R, ord=norm_choice)
     singularValues[i, :] = svdvals(W)
     singularValues_R[i, :] = svdvals(R)
 
+norm_EW = norm(EW, ord=norm_choice)
+singularValues_EW = svdvals(EW)
 norm_ratio = np.mean(norm_R)/norm_EW
 print(norm_ratio)
 
@@ -161,14 +166,23 @@ if messagebox.askyesno("Python",
            "low-rank-hypothesis-complex-systems/" \
            "singular_values/properties/singular_values_random_graphs/"
     timestr = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")
-    parameters_dictionary = {"graph_str": graph_str, "sizes": sizes,
-                             "N": N, "density": density, "pq": pq.tolist(),
+    parameters_dictionary = {"graph_str": graph_str,
                              "directed": directed, "selfloops": selfloops,
-                             "nb_samples (nb_networks)": nb_networks,
-                             "norm_EW": norm_EW.tolist(),
+                             "N": N, "kappa_in_min": kappa_in_min,
+                             "kappa_in_max": kappa_in_max,
+                             "gamma_in": gamma_in,
+                             "kappa_out_min": kappa_out_min,
+                             "kappa_out_max": kappa_out_max,
+                             "gamma_out": gamma_out,
+                             "kappa_in": kappa_in,
+                             "kappa_out": kappa_out,
+                             "temperature": temperature,
+                             "norm_EW": norm_EW,
                              "norm_R": norm_R.tolist(),
-                             "norm_ratio": norm_ratio,
-                             "norm_choice": norm_choice}
+                             "norm_ratio": norm_ratio.tolist(),
+                             "nb_samples (nb_networks)": nb_networks,
+                             "norm_choice": norm_choice
+                             }
 
     fig.savefig(path + f'{timestr}_{file}_singular_values_{graph_str}.pdf')
     fig.savefig(path + f'{timestr}_{file}_singular_values_{graph_str}.png')

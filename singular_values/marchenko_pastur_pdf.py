@@ -7,16 +7,35 @@ Gavish and Donoho 2017.
 """
 import numpy as np
 from scipy.integrate import quad
+import pandas as pd
 
 
 def marchenko_pastur_pdf(x, var, beta):
-    """ Marchenko-Pastur probability density function"""
+    """
+    Marchenko-Pastur probability density function
+    :param x: (float)
+    :param var: (float) variance
+    :param beta: (float) aspect ratio of the matrix beta = m/n,
+                         where m is the number of rows and n is the
+                         number of columns
+
+    :return: The Marchenko-Pastur pdf evaluated at x
+    """
     botSpec = var*(1 - np.sqrt(beta))**2
     topSpec = var*(1 + np.sqrt(beta))**2
     if np.all((topSpec - x) * (x - botSpec) > 0):
-        return np.sqrt((topSpec - x)*(x - botSpec))/(beta*x)/(2*np.pi*var)
+        return np.sqrt((topSpec - x)*(x - botSpec))/(2*np.pi*var*beta*x)
     else:
         return 0
+
+
+def marchenko_pastur_generator(var, beta, nb_pts):
+    botSpec = var*(1 - np.sqrt(beta))**2
+    topSpec = var*(1 + np.sqrt(beta))**2
+    x_array = np.linspace(botSpec, topSpec, nb_pts)
+    pdf = np.nan_to_num(np.sqrt((topSpec - x_array)*(x_array - botSpec))
+                        / (2*np.pi*var*beta*x_array))
+    return pd.Series(pdf, index=x_array)
 
 
 def median_marcenko_pastur(beta):

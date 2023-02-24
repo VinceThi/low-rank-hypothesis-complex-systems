@@ -6,32 +6,64 @@ import numpy as np
 from scipy.stats import uniform
 
 
-def soft_configuration_model(N, alpha, beta, selfloops=False, directed=True,
-                             expected=False):
+def soft_configuration_model(alpha, beta, g, expected=False):
     """
-    The density from which the expected degrees are drawn is a truncated pareto
+    Generator of the directed soft configuration model with self loops.
+
     :param N: Number of vertices
-    :param alpha:
-    :param beta:
-    :param selfloops: (bool) if the graph has selfloops
-    :param directed: (bool) if the graph is directed or not
+    :param alpha: positive number related to the expected in degrees
+                 through the Lagrange multipliers
+    :param beta: positive number related to the expected out degrees
+                 through the Lagrange multipliers
+    :param g: global parameter controlling the probabilities
     :param expected: (bool) if the expected adjacency matrix is returned or not
 
     :return:
-    An instance of the soft configuration model and the expected matrix if
+    An instance w of the soft configuration model and the expected matrix if
     expected is True
     """
 
     # Builds the expected adjacency matrix (probabilities of connection)
-    pij = np.outer(alpha, beta)/(np.ones((N, N)) + np.outer(alpha, beta))
+    pij = g*np.outer(alpha, beta)/(1 + np.outer(alpha, beta))
+
+    if np.any(pij > 1):
+        raise ValueError("A probability of connection pij is greater than 1.")
 
     # Assigns which links exist.
-    p = pij > uniform.rvs(size=pij.shape)
-    if not selfloops:
-        np.fill_diagonal(pij, 0)
-    if not directed:
-        p = np.tril(p) + np.tril(p).T  # Get an undirected graph
+    w = pij > uniform.rvs(size=pij.shape)
+
     if expected:
-        return nx.from_numpy_array(p), pij
+        return w, pij
     else:
-        return nx.from_numpy_array(p)
+        return w
+
+
+def weighted_soft_configuration_model(y, z, expected=False):
+    """
+    Generator of the weighted directed soft configuration model with self loops
+
+    It is the model 3 of Garlaschelli and Loffredo, PRL, 2009 when w*-> \infty
+
+    :param y: N-dimensional array related to the expected in strengths ,
+              pij = y_i z_j must be between 0 and 1
+    :param z: N-dimensional array related to the expected out strengths,
+              pij = y_i z_j must be between 0 and 1
+    :param expected: (bool) if the expected adjacency matrix is returned or not
+
+    :return:
+    An instance of the weighted soft configuration model
+    and the expected matrix if expected is True
+    """
+
+    # Builds the expected adjacency matrix (probabilities of connection)
+    pij = np.outer(y, z)
+    if np.any(pij > 1):
+        raise ValueError("A probability of connection pij is greater than 1.")
+
+    # Assigns weights
+    w = np.random.default_rng().geometric(1 - pij) - 1
+
+    if expected:
+        return w, pij/(1 - pij)
+    else:
+        return w

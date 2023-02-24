@@ -4,21 +4,14 @@
 import networkx as nx
 import numpy as np
 import tenpy as tp
-from scipy.stats import pareto
-from graphs.random_matrix_generators import perturbed_gaussian,\
+from scipy.stats import uniform
+from graphs.generate_truncated_pareto import truncated_pareto
+from graphs.generate_random_matrices import perturbed_gaussian,\
     tenpy_random_matrix
-from graphs.generate_s1_random_graph import s1_model
-from graphs.generate_soft_configuration_model import soft_configuration_model
-
-
-def truncated_pareto(N, kappa_min, kappa_max, gamma):
-    kappas = [val for val in kappa_min * pareto.rvs(gamma - 1, size=N)
-              if val < kappa_max]
-    while len(kappas) < N:
-        kappas.extend([val for val
-                       in kappa_min*pareto.rvs(gamma-1, size=N-len(kappas))
-                       if val < kappa_max])
-    return np.array(kappas)
+from graphs.generate_s1_random_graph import s1_model, \
+    generate_nonnegative_arrays_with_same_average
+from graphs.generate_soft_configuration_model import soft_configuration_model,\
+    weighted_soft_configuration_model
 
 
 def random_graph_generators(graph_str, N):
@@ -28,12 +21,15 @@ def random_graph_generators(graph_str, N):
     :param graph_str: name of the generator. Options:
         "gnp", "SBM", "watts_strogatz", "barabasi_albert",
         "configuration", "directed_configuration", "soft_configuration_model",
-        "chung_lu", "s1", "random_regular", "GOE", "GUE", "COE", "CUE"
+        "weighted_soft_configuration_model", "chung_lu", "s1",
+        "random_regular", "GOE", "GUE", "COE", "CUE"
         "perturbed_gaussian
     :param N: number of vertices, must be a multiple of 2 and 5
     :return: generator and its (fixed) arguments
 
-    Note that for the tenpy random matrices and "perturbed_gaussian"
+    Note that for the s1_model, soft_configuration_model,
+     weighted_soft_configuration_model, tenpy random matrices,
+     "perturbed_gaussian"
      an instance W of the random matrix is obtained as W = generator(*args).
 
     Else, W = nx.to_numpy_array(generator(*args))
@@ -79,12 +75,22 @@ def random_graph_generators(graph_str, N):
 
     elif graph_str == "soft_configuration_model":
         generator = soft_configuration_model
-        k = 8
-        alpha = (np.ones((N, 1)) - np.random.uniform(0, 1, (N, 1)))/np.sqrt(k)
-        beta = (np.ones((N, 1)) - np.random.uniform(0, 1, (N, 1)))/np.sqrt(k)
-        # f"\nbar kin = {np.sum(meanA, axis=1)}",
-        # f"\nbar kout = {np.sum(meanA, axis=0)}")
-        args = (N, alpha, beta, )
+        alpha_min = 10
+        beta_min = 5
+        alpha_max = 50
+        beta_max = 30
+        gamma = 2.5
+        alpha = truncated_pareto(N, alpha_min, alpha_max, gamma) / np.sqrt(N)
+        beta = truncated_pareto(N, beta_min, beta_max, gamma) / np.sqrt(N)
+
+        g = 1
+        args = (N, alpha, beta, g)
+
+    elif graph_str == "weighted_soft_configuration_model":
+        generator = weighted_soft_configuration_model
+        y = truncated_pareto(N, 0, 1, 2.5)
+        z = truncated_pareto(N, 0, 1, 3)
+        args = (y, z)
 
     elif graph_str == "configuration":
         generator = nx.configuration_model
@@ -120,10 +126,21 @@ def random_graph_generators(graph_str, N):
         generator = s1_model
         beta = 2.5
         # ^ Controls the clustering, (1, inf) -> lower to higher clustering
-        kappa_min = 3
-        kappa_max = 20
-        gamma = 2.5
-        args = (N, beta, kappa_min, kappa_max, gamma)
+        kappa_in_min = 5
+        kappa_in_max = 100
+        gamma_in = 2.5
+        kappa_in = truncated_pareto(N, kappa_in_min, kappa_in_max, gamma_in)
+        kappa_out_min = 3
+        kappa_out_max = 50
+        gamma_out = 2
+        kappa_out = truncated_pareto(N, kappa_out_min,
+                                     kappa_out_max, gamma_out)
+        kappa_in, kappa_out = \
+            generate_nonnegative_arrays_with_same_average(kappa_in, kappa_out)
+
+        theta = 2*np.pi*uniform.rvs(size=N)
+
+        args = (beta, kappa_in, kappa_out, theta)
 
     elif graph_str == "perturbed_gaussian":
         generator = perturbed_gaussian
@@ -242,12 +259,23 @@ def random_graph_ensemble_generators(graph_str, N):
 
     elif graph_str == "s1":
         generator = s1_model
-        beta = np.random.randint(1, 5)  # 2.5
+        beta = 2.5
         # ^ Controls the clustering, (1, inf) -> lower to higher clustering
-        kappa_min = np.random.randint(1, 10)  # 3
-        kappa_max = np.random.randint(10, 30)  # 20
-        gamma = np.random.uniform(1, 4)  # 2.5
-        args = (N, beta, kappa_min, kappa_max, gamma)
+        kappa_in_min = np.random.randint(3, 6, N)
+        kappa_in_max = np.random.randint(20, 200, N)
+        gamma_in = np.random.randint(1.1, 5, N)
+        kappa_in = truncated_pareto(N, kappa_in_min, kappa_in_max, gamma_in)
+        kappa_out_min = np.random.randint(3, 6, N)
+        kappa_out_max = np.random.randint(20, 200, N)
+        gamma_out = np.random.randint(1.1, 5, N)
+        kappa_out = truncated_pareto(N, kappa_out_min,
+                                     kappa_out_max, gamma_out)
+        kappa_in, kappa_out = \
+            generate_nonnegative_arrays_with_same_average(kappa_in, kappa_out)
+
+        theta = 2*np.pi*uniform.rvs(size=N)
+
+        args = (beta, kappa_in, kappa_out, theta)
 
     else:
         raise ValueError("No graph_str as this name, choose between "

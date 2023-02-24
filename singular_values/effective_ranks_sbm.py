@@ -14,6 +14,8 @@ from plots.plot_weight_matrix import plot_weight_matrix
 plot_expected_weight_matrix = False
 plot_histogram = False
 plot_scree = False
+plot_singvals_W_EW_R = False
+plot_norms = False
 path_str = "C:/Users/thivi/Documents/GitHub/" \
            "low-rank-hypothesis-complex-systems/singular_values/properties/" \
            "singular_values_random_graphs/"
@@ -21,7 +23,7 @@ path_str = "C:/Users/thivi/Documents/GitHub/" \
 """ Random graph parameters """
 graph_str = "sbm"
 N = 1000
-nb_graphs = 1000     # 1000
+nb_graphs = 50   # 1000
 directed = True
 selfloops = True
 # pq0 = np.array([[0.20, 0.09, 0.10, 0.02, 0.003],
@@ -40,12 +42,14 @@ sizes = [N//10, 2*N//5, N//10, N//5, N//5]
 """ Get effective ranks vs. norm ratio (through edge density variation) """
 min_strength = 3
 max_strength = 1/np.max(pq0)
-nb_strength = 50
+nb_strength = 10
 strength_array = np.linspace(min_strength, max_strength, nb_strength)[::-1]
 density = np.zeros(len(strength_array))
 
 pq_list = []
 
+norm_choice = 2   # 'fro': frobenius norm, 2: spectral norm
+norm_W = np.zeros((nb_graphs, nb_strength))
 norm_EW = np.zeros(nb_strength)
 norm_R = np.zeros((nb_graphs, nb_strength))
 
@@ -65,24 +69,29 @@ for j, g in enumerate(tqdm(strength_array, position=0, desc="Strength",
     # print("pq = ", pq)
     pq_list.append(pq.tolist())
     density[j] = get_density(pq, sizes, ensemble='directed')
-    print("density =", density[j])
+    # print("density =", density[j])
     for i in tqdm(range(0, nb_graphs), position=1, desc="Graph", leave=False,
                   ncols=80):
         W = nx.to_numpy_array(nx.stochastic_block_model(sizes, pq.tolist(),
                                                         directed=directed,
                                                         selfloops=selfloops))
+        norm_W[i, j] = norm(W, ord=norm_choice)
+
         EW = expected_adjacency_matrix(pq, sizes, self_loops=selfloops)
         if plot_expected_weight_matrix:
             plot_weight_matrix(EW)
-        norm_R[i, j] = norm(W - EW)
-        # print("||R||/||<W>|| = ", norm(W-EW)/norm(EW))
+        R = W - EW
+        norm_R[i, j] = norm(R, ord=norm_choice)
+        # print("||R||/||<W>|| = ",
+        #       norm(W-EW, ord=norm_choice)/norm(EW, ord=norm_choice))
 
         singularValues_instance = svdvals(W)
         singularValues = np.concatenate((singularValues,
                                          singularValues_instance))
         rank[i, j] = computeRank(singularValues_instance)
         thrank[i, j] = computeOptimalThreshold(singularValues_instance)
-        shrank[i, j] = computeOptimalShrinkage(singularValues_instance)
+        shrank[i, j] = computeOptimalShrinkage(singularValues_instance,
+                                               norm="operator")
         erank[i, j] = computeERank(singularValues_instance)
         elbow[i, j] = findEffectiveRankElbow(singularValues_instance)
         energy[i, j] = computeEffectiveRankEnergyRatio(singularValues_instance,
@@ -93,7 +102,19 @@ for j, g in enumerate(tqdm(strength_array, position=0, desc="Strength",
         if plot_scree:
             plot_singular_values(singularValues_instance, effective_ranks=True)
 
-    norm_EW[j] = norm(EW)
+        if plot_singvals_W_EW_R:
+            plt.figure(figsize=(4, 4))
+            indices = np.arange(1, N + 1, 1)
+            plt.scatter(indices, singularValues_instance, label="$W$", s=20)
+            plt.scatter(indices, svdvals(EW), label="$\\langle W \\rangle$",
+                        s=3)
+            plt.scatter(indices, svdvals(R), label="$R$", s=3)
+            plt.legend(loc=1)
+            plt.xlabel("Index $i$")
+            plt.ylabel("Singular values $\\sigma_i$")
+            plt.show()
+
+    norm_EW[j] = norm(EW, ord=norm_choice)
 
     if plot_histogram:
         nb_bins = 1000
@@ -127,17 +148,27 @@ std_energy = np.std(energy, axis=0)/N
 std_srank = np.std(srank, axis=0)/N
 std_nrank = np.std(nrank, axis=0)/N
 
-norm_ratio = np.mean(norm_R, axis=0)/norm_EW
+# norm_ratio = np.mean(norm_R, axis=0)/norm_EW
+norm_ratio = np.mean(norm_R, axis=0)/np.mean(norm_W, axis=0)
 
-
-# plt.plot(density, np.mean(norm_R, axis=0), label="Noise")
-# plt.plot(density, norm_EW, label="Expected")
-# plt.xlabel("Density")
-# plt.legend()
-# plt.show()
+if plot_norms:
+    plt.figure(figsize=(4, 4)) 
+    plt.scatter(density, np.mean(norm_R, axis=0), label="Noise", s=3)
+    plt.scatter(density, norm_EW, label="Expected", s=3)
+    plt.xlabel("Density")
+    plt.legend()
+    plt.show()
 
 # xlabel = "Edge density"
-xlabel = "$\\langle ||R||_F \\rangle\,/\,||\\langle W \\rangle||_F$"
+# xlabel = "Edge density"
+if norm_choice == 'fro':
+    # xlabel = "$\\langle ||R||_F \\rangle\,/\,||\\langle W \\rangle||_F$"
+    xlabel = "$\\langle ||R||_F \\rangle\,/\,\\langle ||W||_F \\rangle$"
+elif norm_choice == 2:
+    # xlabel = "$\\langle ||R||_2 \\rangle\,/\,||\\langle W \\rangle||_2$"
+    xlabel = "$\\langle ||R||_2 \\rangle\,/\,\\langle ||W||_2 \\rangle$"
+else:
+    xlabel = None
 color = dark_grey
 alpha = 0.2
 s = 3
@@ -248,13 +279,18 @@ if messagebox.askyesno("Python",
                              "norm_ratio": norm_ratio.tolist(),
                              "pq_list": pq_list,
                              "density": density.tolist(),
-                             "nb_samples (nb_graphs)": nb_graphs
+                             "nb_samples (nb_graphs)": nb_graphs,
+                             "norm_choice": norm_choice
                              }
 
     fig.savefig(path + f'{timestr}_{file}_effective_ranks_vs_norm_ratio'
                        f'_{graph_str}.pdf')
     fig.savefig(path + f'{timestr}_{file}_effective_ranks_vs_norm_ratio'
                        f'_{graph_str}.png')
+
+    with open(path + f'{timestr}_{file}_norm_W_{graph_str}.json', 'w') \
+            as outfile:
+        json.dump(norm_W.tolist(), outfile)
 
     with open(path + f'{timestr}_{file}_norm_EW_{graph_str}.json', 'w') \
             as outfile:

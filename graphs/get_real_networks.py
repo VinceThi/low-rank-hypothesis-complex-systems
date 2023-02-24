@@ -159,8 +159,19 @@ def get_connectome_weight_matrix(graph_name):
     elif graph_name == "platynereis_dumerilii_desmosomal":
         G_platynereis = \
             nx.read_graphml(path_str +
-                            "platynereis_dumerilii_desmosomal_undirected.xml")
-        A = nx.to_numpy_array(G_platynereis)
+                            "platynereis_dumerilii_desmosomal_undirected.xml",
+                            force_multigraph=True)
+        print(G_platynereis)
+        print(G_platynereis.number_of_edges())
+        print(len(G_platynereis.edges()))
+        A = nx.to_numpy_array(G_platynereis, nodelist=sorted(G_platynereis.nodes()))
+        import matplotlib.pyplot as plt
+        plt.plot(A.flatten())
+        plt.show()
+        print(np.max(A), np.sum(A), np.sum(A > 0.5) / 2, np.all(A == A.T), np.sum(np.diag(A)))
+
+        G = nx.from_numpy_array(A, parallel_edges=True)
+        print(G.number_of_edges())
 
     else:
         raise ValueError("This graph_str connectome is not an option. "

@@ -2,13 +2,16 @@
 # @author: Vincent Thibeault
 
 from singular_values.compute_effective_ranks import *
+from singular_values.marchenko_pastur_pdf import marchenko_pastur_generator
 from numpy.linalg import norm
 import json
 import numpy as np
 from tqdm.auto import tqdm
 from plots.config_rcparams import *
 
+plot_singvals = False
 plot_histogram = False
+plot_norms = False
 path_str = "C:/Users/thivi/Documents/GitHub/" \
            "low-rank-hypothesis-complex-systems/singular_values/properties/" \
            "singular_values_random_graphs/"
@@ -16,29 +19,36 @@ path_str = "C:/Users/thivi/Documents/GitHub/" \
 """ Random graph parameters """
 graph_str = "perturbed_gaussian"
 N = 1000
-nb_graphs = 1000    # 1000
-rank = 5
-prng = np.random.RandomState(1234567890)
-# First try
-# L = prng.uniform(0, 1/np.sqrt(N), (N, rank))  # max_strength = 4
-# R = prng.normal(0, 1, (rank, N))    # prng.uniform(0, 1, (rank, N))   #
+nb_graphs = 50     # 1000
+# rank = 5
+prng1 = np.random.RandomState(1234567890)
+prng2 = np.random.RandomState(1334567890)
+prng3 = np.random.RandomState(1434567890)
+prng4 = np.random.RandomState(1534567890)
+prng5 = np.random.RandomState(1634567890)
+m1 = prng1.normal(0, 1/np.sqrt(N), (N, ))
+n1 = prng1.normal(0, 0.1, (N, ))
+m2 = prng2.normal(0, 1/np.sqrt(N), (N, ))
+n2 = prng2.normal(0.1, 0.2, (N, ))
+m3 = prng3.normal(0, 1/np.sqrt(N), (N, ))
+n3 = prng3.normal(0.2, 0.3, (N, ))
+m4 = prng4.normal(0, 1/np.sqrt(N), (N, ))
+n4 = prng4.normal(0.3, 0.4, (N, ))
+m5 = prng5.normal(0, 1/np.sqrt(N), (N, ))
+n5 = prng5.normal(0.4, 0.5, (N, ))
+P = np.array([m1, m2, m3, m4, m5]).T
+Q = np.array([n1, n2, n3, n4, n5]).T
+EW = P@Q.T
 
-# Second try
-# R = prng.normal(0, 0.2, (rank, N))   # max_strength = 2
-# L = R.T/np.sqrt(N)
-
-# Third try
-L = prng.normal(0, 1/np.sqrt(N), (N, rank))
-R = prng.normal(0, 0.5, (rank, N))
-EW = L@R
-norm_LR = np.linalg.norm(L@R)
 
 """ Get effective ranks vs. noise strength"""
 min_strength = 0.01
 max_strength = 2.5
-nb_strength = 50
+nb_strength = 10
 strength_array = np.linspace(min_strength, max_strength, nb_strength)
 
+norm_choice = 2   # 'fro': frobenius norm, 2: spectral norm
+norm_W = np.zeros((nb_graphs, nb_strength))
 norm_EW = np.zeros(nb_strength)
 norm_R = np.zeros((nb_graphs, nb_strength))
 
@@ -50,46 +60,65 @@ elbow = np.zeros((nb_graphs, nb_strength))
 energy = np.zeros((nb_graphs, nb_strength))
 srank = np.zeros((nb_graphs, nb_strength))
 nrank = np.zeros((nb_graphs, nb_strength))
-frobenius_norm_noise = np.zeros((nb_graphs, nb_strength))
 for j, g in enumerate(tqdm(strength_array, position=0, desc="Strength",
                            leave=True, ncols=80)):
     singularValues = np.array([])
+    singularValues_R = np.array([])
     var = g**2/N
     for i in tqdm(range(0, nb_graphs), position=1, desc="Graph", leave=False,
                   ncols=80):
-        gaussian = np.random.normal(0, np.sqrt(var), (N, N))
-        W = EW + gaussian
-
-        norm_R[i, j] = norm(W - EW)
-
+        R = np.random.normal(0, np.sqrt(var), (N, N))
+        norm_R[i, j] = norm(R, ord=norm_choice)
+        W = EW + R
+        norm_W[i, j] = norm(W, ord=norm_choice)
         singularValues_instance = svdvals(W)
         singularValues = np.concatenate((singularValues,
                                          singularValues_instance))
+        singularValues_R_instance = svdvals(R)
+        singularValues_R = np.concatenate((singularValues_R,
+                                           singularValues_R_instance))
+
         rank[i, j] = computeRank(singularValues_instance)
         thrank[i, j] = computeOptimalThreshold(singularValues_instance)
-        shrank[i, j] = computeOptimalShrinkage(singularValues_instance)
+        shrank[i, j] = computeOptimalShrinkage(singularValues_instance,
+                                               norm="operator")
         erank[i, j] = computeERank(singularValues_instance)
         elbow[i, j] = findEffectiveRankElbow(singularValues_instance)
         energy[i, j] = computeEffectiveRankEnergyRatio(singularValues_instance,
                                                        threshold=0.5)
         srank[i, j] = computeStableRank(singularValues_instance)
         nrank[i, j] = computeNuclearRank(singularValues_instance)
-        frobenius_norm_noise[i, j] = np.linalg.norm(gaussian)
+
+        if plot_singvals:
+            plt.figure(figsize=(4, 4))
+            indices = np.arange(1, N+1, 1)
+            plt.scatter(indices, singularValues_instance, label="$W$", s=20)
+            plt.scatter(indices, svdvals(EW), label="$\\langle W \\rangle$",
+                        s=3)
+            plt.scatter(indices, svdvals(W - EW), label="$R$", s=3)
+            plt.legend(loc=1)
+            plt.xlabel("Index $i$")
+            plt.ylabel("Singular values $\\sigma_i$")
+            plt.show()
 
     if plot_histogram:
         nb_bins = 1000
-        bar_color = "#064878"
-        weights = np.ones_like(singularValues) / float(len(singularValues))
-        plt.hist(singularValues,  bins=nb_bins,
-                 color=bar_color, edgecolor=None,
-                 linewidth=1, weights=weights)
+        plt.hist(singularValues**2/N, bins=nb_bins,
+                 color=deep[0], edgecolor=None,
+                 linewidth=1, density=True)
+        plt.hist(singularValues_R**2/N, bins=nb_bins//20,
+                 color=deep[1], edgecolor=None,
+                 linewidth=1, density=True)
+        plt.plot(marchenko_pastur_generator(var, 1, 1000),
+                 linewidth=2, color=deep[9], label="Marchenko-Pastur pdf")
         plt.tick_params(axis='both', which='major')
-        plt.xlabel("Singular values $\\sigma$")
-        plt.ylabel("Spectral density $\\rho(\\sigma)$", labelpad=20)
+        plt.xlabel("Singular values $\\sigma^2$")
+        plt.ylabel("Spectral density $\\rho(\\sigma^2)$", labelpad=20)
+        plt.ylim([0, 500])
         plt.tight_layout()
         plt.show()
 
-    norm_EW[j] = norm(EW)
+    norm_EW[j] = norm(EW, ord=norm_choice)
 
 mean_rank = np.mean(rank, axis=0)/N
 mean_thrank = np.mean(thrank, axis=0)/N
@@ -109,10 +138,25 @@ std_energy = np.std(energy, axis=0)/N
 std_srank = np.std(srank, axis=0)/N
 std_nrank = np.std(nrank, axis=0)/N        
 
-norm_ratio = np.mean(norm_R, axis=0)/norm_EW
+# norm_ratio = np.mean(norm_R, axis=0)/norm_EW
+norm_ratio = np.mean(norm_R, axis=0)/np.mean(norm_W, axis=0)
 
+if plot_norms:
+    plt.figure(figsize=(4, 4))
+    plt.plot(strength_array, np.mean(norm_R, axis=0), label="Noise", s=3)
+    plt.plot(strength_array, norm_EW, label="Expected", s=3)
+    plt.xlabel("Density")
+    plt.legend()
+    plt.show()
 
-xlabel = "$\\langle ||R||_F \\rangle\,/\,||\\langle W \\rangle||_F$"
+if norm_choice == 'fro':
+    # xlabel = "$\\langle ||R||_F \\rangle\,/\,||\\langle W \\rangle||_F$"
+    xlabel = "$\\langle ||R||_F \\rangle\,/\,\\langle ||W||_F \\rangle$"
+elif norm_choice == 2:
+    # xlabel = "$\\langle ||R||_2 \\rangle\,/\,||\\langle W \\rangle||_2$"
+    xlabel = "$\\langle ||R||_2 \\rangle\,/\,\\langle ||W||_2 \\rangle$"
+else:
+    xlabel = None
 # "Noise strength $g$"
 color = dark_grey
 alpha = 0.2
@@ -235,16 +279,20 @@ if messagebox.askyesno("Python",
            "singular_values/properties/" + graph_str + "/"
     timestr = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")
     parameters_dictionary = {"graph_str": graph_str,
-                             "L": L.tolist(), "R": R.tolist(), "N": N,
+                             "P": P.tolist(), "Q": Q.tolist(), "N": N,
                              "strength_array": strength_array.tolist(),
                              "nb_samples (nb_graphs)": nb_graphs,
-                             "frobenius norm of L@R": norm_LR
+                             "norm_choice": norm_choice
                              }
 
     fig.savefig(path + f'{timestr}_{file}_effective_ranks_histogram'
                        f'_{graph_str}.pdf')
     fig.savefig(path + f'{timestr}_{file}_effective_ranks_histogram'
                        f'_{graph_str}.png')
+
+    with open(path + f'{timestr}_{file}_norm_W_{graph_str}.json', 'w') \
+            as outfile:
+        json.dump(norm_W.tolist(), outfile)
 
     with open(path + f'{timestr}_{file}_norm_EW_{graph_str}.json', 'w') \
             as outfile:

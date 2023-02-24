@@ -4,7 +4,6 @@
 from graphs.generate_random_graphs import random_graph_generators
 from scipy.linalg import svdvals
 import networkx as nx
-import numpy as np
 from plots.plot_singular_values import plot_singular_values,\
     plot_singular_values_histogram_random_networks, \
     plot_singular_values_scree_random_networks

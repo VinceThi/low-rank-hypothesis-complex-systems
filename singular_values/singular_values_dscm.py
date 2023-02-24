@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # @author: Vincent Thibeault
 
-import numpy as np
 from numpy.linalg import norm
 from scipy.linalg import svdvals
 from plots.config_rcparams import *
@@ -9,9 +8,9 @@ import time
 import json
 import tkinter.simpledialog
 from tkinter import messagebox
-import networkx as nx
+from graphs.generate_soft_configuration_model import *
+from graphs.generate_random_graphs import truncated_pareto
 from tqdm import tqdm
-from graphs.sbm_properties import get_density, expected_adjacency_matrix
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 path_str = "C:/Users/thivi/Documents/GitHub/" \
@@ -19,39 +18,41 @@ path_str = "C:/Users/thivi/Documents/GitHub/" \
            "singular_values_random_graphs/"
 
 """ Random graph parameters """
-graph_str = "sbm"
+graph_str = "soft_configuration_model"
+selfloops = False
 N = 1000
-nb_networks = 10     # 1000
-directed = True
-selfloops = True
+nb_networks = 10    # 1000
+alpha_min = 10
+beta_min = 5
+alpha_max = 50
+beta_max = 30
+gamma = 2.5
+alpha = truncated_pareto(N, alpha_min, alpha_max, gamma)/np.sqrt(N)
+beta = truncated_pareto(N, beta_min, beta_max, gamma)/np.sqrt(N)
+
+g = 0.2  # 0.2, 1.6
+
 norm_choice = 2
-pq0 = np.array([[0.10, 0.02, 0.01, 0.02, 0.003],
-                [0.005, 0.10, 0.002, 0.05, 0.005],
-                [0.002, 0.02, 0.05, 0.05, 0.02],
-                [0.01, 0.005, 0.005, 0.10, 0.01],
-                [0.01, 0.01, 0.005, 0.05, 0.05]])
-sizes = [N//10, 2*N//5, N//10, N//5, N//5]
-pq = 0.1*pq0   # pq = 8*pq0, 3*pq0
-EW = expected_adjacency_matrix(pq, sizes, self_loops=selfloops)
-singularValues_EW = svdvals(EW)
-norm_EW = norm(EW, ord=norm_choice)
 norm_R = np.zeros(nb_networks)
-density = get_density(pq, sizes, ensemble='directed')
+norm_W = np.zeros(nb_networks)
 
 
 """ Get singular values """
 singularValues = np.zeros((nb_networks, N))
 singularValues_R = np.zeros((nb_networks, N))
 for i in tqdm(range(0, nb_networks)):
-    W = nx.to_numpy_array(nx.stochastic_block_model(sizes, pq.tolist(),
-                                                    directed=directed,
-                                                    selfloops=selfloops))
+    G, EW = soft_configuration_model(N, alpha, beta, g, selfloops=selfloops,
+                                     expected=True)
+    W = nx.to_numpy_array(G)
     R = W - EW
     norm_R[i] = norm(R, ord=norm_choice)
+    norm_W[i] = norm(W, ord=norm_choice)
     singularValues[i, :] = svdvals(W)
     singularValues_R[i, :] = svdvals(R)
 
-norm_ratio = np.mean(norm_R)/norm_EW
+norm_EW = norm(EW, ord=norm_choice)
+singularValues_EW = svdvals(EW)
+norm_ratio = np.mean(norm_R)/np.mean(norm_W)   # norm_EW
 print(norm_ratio)
 
 
@@ -61,7 +62,7 @@ xlabel = "Index $i$"
 # ylabel = "Average rescaled singular\n values $\\sigma_i/\\sigma_1$"
 # ylabel = "Average singular values"
 
-mean_norm_W = np.mean(singularValues[:, 0])
+mean_norm_W = np.mean(norm_W)
 mean_singularValues = np.mean(singularValues, axis=0)
 bar_singularValues = np.std(singularValues, axis=0)
 
@@ -161,14 +162,18 @@ if messagebox.askyesno("Python",
            "low-rank-hypothesis-complex-systems/" \
            "singular_values/properties/singular_values_random_graphs/"
     timestr = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")
-    parameters_dictionary = {"graph_str": graph_str, "sizes": sizes,
-                             "N": N, "density": density, "pq": pq.tolist(),
-                             "directed": directed, "selfloops": selfloops,
-                             "nb_samples (nb_networks)": nb_networks,
-                             "norm_EW": norm_EW.tolist(),
+    parameters_dictionary = {"graph_str": graph_str,
+                             "N": N, "alpha_max": alpha_max,
+                             "beta_max": beta_max, "alpha_min": alpha_min,
+                             "beta_min": beta_min, "gamma": gamma,
+                             "selfloops": selfloops,
+                             "g": g, "norm_W": norm_W.tolist(),
+                             "norm_EW": norm_EW,
                              "norm_R": norm_R.tolist(),
-                             "norm_ratio": norm_ratio,
-                             "norm_choice": norm_choice}
+                             "norm_ratio": norm_ratio.tolist(),
+                             "nb_samples (nb_networks)": nb_networks,
+                             "norm_choice": norm_choice
+                             }
 
     fig.savefig(path + f'{timestr}_{file}_singular_values_{graph_str}.pdf')
     fig.savefig(path + f'{timestr}_{file}_singular_values_{graph_str}.png')

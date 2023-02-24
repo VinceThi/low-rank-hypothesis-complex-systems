@@ -18,10 +18,11 @@ N = 1000
 nb_graphs = 100
 graph_str = "perturbed_gaussian"
 # Choices of graph_str
-# "gnp, SBM, watts_strogatz, barabasi_albert,"
-# " hard_configuration, directed_hard_configuration,"
-# "chung_lu, s1", "random_regular", "GOE", "GUE", "COE",
-# "CUE", "perturbed_gaussian"
+# gnp, SBM, watts_strogatz, barabasi_albert,
+#  hard_configuration, directed_hard_configuration,
+# chung_lu, s1, random_regular, GOE, GUE, COE,
+# CUE, perturbed_gaussian, soft_configuration_model,
+# weighted_soft_configuration_model
 G, args = random_graph_generators(graph_str, N)
 
 if compute_ranks:

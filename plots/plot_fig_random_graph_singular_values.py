@@ -6,6 +6,8 @@ import numpy as np
 from plots.config_rcparams import *
 from singular_values.compute_effective_ranks import computeEffectiveRanks
 
+# TODO NOTE This was removed from the supplementary information
+
 plot_histogram = True
 path_str = "C:/Users/thivi/Documents/GitHub/" \
            "low-rank-hypothesis-complex-systems/singular_values/properties/" \

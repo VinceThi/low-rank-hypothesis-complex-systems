@@ -7,7 +7,7 @@ from graphs.get_real_networks import *
 from singular_values.compute_effective_ranks import *
 
 graph_str = "connectome"
-save_data = True
+save_data = False
 compute_effective_ranks = True
 plot_singular_vals = True
 
@@ -44,7 +44,7 @@ elif graph_str == "economic":
     singularValues = la.svdvals(W)
 
 elif graph_str == "connectome":
-    networkName = "mouse_meso"   # "celegans_signed"
+    networkName = "platynereis_dumerilii_desmosomal"   # "celegans_signed"
     # "mouse_meso", "zebrafish_meso", "celegans",
     # "celegans_signed", "drosophila", "ciona",
     #   "platynereis_dumerilii_neuronal", "platynereis_dumerilii_desmosomal"
@@ -53,6 +53,7 @@ elif graph_str == "connectome":
 
     W = get_connectome_weight_matrix(networkName)
     N = len(W[0])
+    # print(np.sum(W), np.sum(W > 0)/2, np.all(W == W.T))
     singularValues = la.svdvals(W)
 
 elif graph_str == "microbiome":

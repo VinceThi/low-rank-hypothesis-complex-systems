@@ -2,7 +2,9 @@
 # @author: Vincent Thibeault
 
 from singular_values.compute_effective_ranks import *
+# from singular_values.marchenko_pastur_pdf import marchenko_pastur_generator
 from graphs.generate_s1_random_graph import *
+from graphs.generate_truncated_pareto import truncated_pareto
 import json
 import numpy as np
 from numpy.linalg import norm
@@ -12,6 +14,8 @@ from plots.config_rcparams import *
 
 plot_histogram = False
 plot_scree = False
+plot_singvals_W_EW_R = False
+plot_norms = False
 path_str = "C:/Users/thivi/Documents/GitHub/" \
            "low-rank-hypothesis-complex-systems/singular_values/properties/" \
            "singular_values_random_graphs/"
@@ -19,22 +23,36 @@ path_str = "C:/Users/thivi/Documents/GitHub/" \
 """ Random graph parameters """
 graph_str = "s1"
 directed = True
+selfloops = True
 expected = True
 N = 1000
-nb_graphs = 1000
-kappa_min = 5   # Minimum expected degree
-kappa_max = 50  # Maximum expected degree
-gamma = 2.5  # shape parameter (gamma + 1) of the Pareto distribution
+nb_graphs = 1  # 50    # 1000
+kappa_in_min = 5
+kappa_in_max = 100
+gamma_in = 2.5
+kappa_in = truncated_pareto(N, kappa_in_min, kappa_in_max, gamma_in)
+kappa_out_min = 3
+kappa_out_max = 50
+gamma_out = 2
+kappa_out = truncated_pareto(N, kappa_out_min,
+                             kappa_out_max, gamma_out)
+kappa_in, kappa_out = \
+    generate_nonnegative_arrays_with_same_average(kappa_in, kappa_out)
+
+theta = 2*np.pi*uniform.rvs(size=N)
+
 
 """ Get effective ranks vs. norm ratio (through temperature variation) """
 # ^ Inverse temperature, controls the clustering
 #  (1, inf) -> lower to higher clustering
 min_temperature = 0.01  # 1.1
 max_temperature = 0.9  # 10
-nb_temperature = 50
+nb_temperature = 10
 temperature_array = np.linspace(min_temperature, max_temperature,
                                 nb_temperature)
 
+norm_choice = 2   # 'fro': frobenius norm, 2: spectral norm
+norm_W = np.zeros((nb_graphs, nb_temperature))
 norm_EW = np.zeros(nb_temperature)
 norm_R = np.zeros((nb_graphs, nb_temperature))
 
@@ -50,14 +68,17 @@ for j, temperature in enumerate(tqdm(temperature_array, position=0,
                                 desc="Temperature",
                                 leave=True, ncols=80)):
     singularValues = np.array([])
+    singularValues_R = np.array([])
+    # R_list = []
 
     for i in tqdm(range(0, nb_graphs), position=1, desc="Graph", leave=False,
                   ncols=80):
-        G, EW = s1_model(N, 1/temperature, kappa_min, kappa_max, gamma,
-                         expected=True)
-        W = nx.to_numpy_array(G)
-        norm_R[i, j] = norm(W - EW)
-        # print(norm(EW), norm(W - EW), norm(W - EW)/ norm(EW))
+        W, EW = s1_model(1 / temperature, kappa_in, kappa_out, theta,
+                         selfloops=selfloops, directed=directed, expected=True)
+        norm_W[i, j] = norm(W, ord=norm_choice)
+        R = W - EW
+        # R_list.append(R)
+        norm_R[i, j] = norm(R, ord=norm_choice)
         # plt.hist(np.sum(EW, axis=1), bins=100)
         # plt.hist(np.sum(EW, axis=0), bins=100)
         # plt.show()
@@ -67,7 +88,8 @@ for j, temperature in enumerate(tqdm(temperature_array, position=0,
                                          singularValues_instance))
         rank[i, j] = computeRank(singularValues_instance)
         thrank[i, j] = computeOptimalThreshold(singularValues_instance)
-        shrank[i, j] = computeOptimalShrinkage(singularValues_instance)
+        shrank[i, j] = computeOptimalShrinkage(singularValues_instance,
+                                               norm="operator")
         erank[i, j] = computeERank(singularValues_instance)
         elbow[i, j] = findEffectiveRankElbow(singularValues_instance)
         energy[i, j] = computeEffectiveRankEnergyRatio(singularValues_instance,
@@ -78,18 +100,37 @@ for j, temperature in enumerate(tqdm(temperature_array, position=0,
         if plot_scree:
             plot_singular_values(singularValues_instance, effective_ranks=True)
 
-    norm_EW[j] = norm(EW)
+        if plot_singvals_W_EW_R:
+            plt.figure(figsize=(4, 4))
+            indices = np.arange(1, N + 1, 1)
+            plt.scatter(indices, singularValues_instance, label="$W$", s=20)
+            plt.scatter(indices, svdvals(EW), label="$\\langle W \\rangle$",
+                        s=3)
+            plt.scatter(indices, svdvals(R), label="$R$", s=3)
+            plt.legend(loc=1)
+            plt.xlabel("Index $i$")
+            plt.ylabel("Singular values $\\sigma_i$")
+            plt.show()
+
+    norm_EW[j] = norm(EW, ord=norm_choice)
 
     if plot_histogram:
-        nb_bins = 1000
-        bar_color = "#064878"
-        weights = np.ones_like(singularValues) / float(len(singularValues))
-        plt.hist(singularValues,  bins=nb_bins,
-                 color=bar_color, edgecolor=None,
-                 linewidth=1, weights=weights)
+        # var = np.var(R_list)  # np.sum(EW*(np.ones((N, N)) - EW))
+        nb_bins = 500
+        plt.hist(singularValues**2/N,  bins=nb_bins,
+                 color=deep[0], edgecolor=None,
+                 linewidth=1, density=True)
+        plt.hist(singularValues_R**2/N, bins=nb_bins//10,
+                 color=deep[1], edgecolor=None,
+                 linewidth=1, density=True)
+        plt.hist(svdvals(EW)**2/N, bins=nb_bins,
+                 color=deep[2], edgecolor=None,
+                 linewidth=1, density=True)
+        # plt.plot(marchenko_pastur_generator(var, 1, 1000),
+        #          linewidth=2, color=deep[9], label="Marchenko-Pastur pdf")
         plt.tick_params(axis='both', which='major')
-        plt.xlabel("Singular values $\\sigma$")
-        plt.ylabel("Spectral density $\\rho(\\sigma)$", labelpad=20)
+        plt.xlabel("Singular values $\\sigma^2$")
+        plt.ylabel("Spectral density $\\rho(\\sigma^2)$", labelpad=20)
         plt.tight_layout()
         plt.show()
 
@@ -112,11 +153,27 @@ std_energy = np.std(energy, axis=0)/N
 std_srank = np.std(srank, axis=0)/N
 std_nrank = np.std(nrank, axis=0)/N
 
-norm_ratio = np.mean(norm_R, axis=0)/norm_EW
+# norm_ratio = np.mean(norm_R, axis=0)/norm_EW
+norm_ratio = np.mean(norm_R, axis=0)/np.mean(norm_W, axis=0)
+
+if plot_norms:
+    plt.figure(figsize=(4, 4))
+    plt.scatter(temperature_array, np.mean(norm_R, axis=0), label="Noise", s=3)
+    plt.scatter(temperature_array, norm_EW, label="Expected", s=3)
+    plt.xlabel("Temperature")
+    plt.legend()
+    plt.show()
 
 
-# xlabel = "Temperature"
-xlabel = "$\\langle ||R||_F \\rangle\,/\,||\\langle W \\rangle||_F$"
+if norm_choice == 'fro':
+    # xlabel = "$\\langle ||R||_F \\rangle\,/\,||\\langle W \\rangle||_F$"
+    xlabel = "$\\langle ||R||_F \\rangle\,/\,\\langle ||W||_F \\rangle$"
+elif norm_choice == 2:
+    # xlabel = "$\\langle ||R||_2 \\rangle\,/\,||\\langle W \\rangle||_2$"
+    xlabel = "$\\langle ||R||_2 \\rangle\,/\,\\langle ||W||_2 \\rangle$"
+else:
+    xlabel = None
+# "Temperature"
 color = dark_grey
 alpha = 0.2
 s = 3
@@ -221,18 +278,29 @@ if messagebox.askyesno("Python",
            "singular_values/properties/" + graph_str + "/"
     timestr = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")
     parameters_dictionary = {"graph_str": graph_str,
-                             "directed": directed,
-                             "N": N, "kappa_min": kappa_min,
-                             "kappa_max": kappa_max, "gamma": gamma,
+                             "directed": directed, "selfloops": selfloops,
+                             "N": N, "kappa_in_min": kappa_in_min,
+                             "kappa_in_max": kappa_in_max,
+                             "gamma_in": gamma_in,
+                             "kappa_out_min": kappa_out_min,
+                             "kappa_out_max": kappa_out_max,
+                             "gamma_out": gamma_out,
+                             "kappa_in": kappa_in,
+                             "kappa_out": kappa_out,
                              "temperature_array": temperature_array.tolist(),
                              "norm_ratio": norm_ratio.tolist(),
-                             "nb_samples (nb_graphs)": nb_graphs
+                             "nb_samples (nb_graphs)": nb_graphs,
+                             "norm_choice": norm_choice
                              }
 
     fig.savefig(path + f'{timestr}_{file}_effective_ranks_vs_norm_ratio'
                        f'_{graph_str}.pdf')
     fig.savefig(path + f'{timestr}_{file}_effective_ranks_vs_norm_ratio'
                        f'_{graph_str}.png')
+
+    with open(path + f'{timestr}_{file}_norm_W_{graph_str}.json', 'w')\
+            as outfile:
+        json.dump(norm_W.tolist(), outfile)
 
     with open(path + f'{timestr}_{file}_norm_EW_{graph_str}.json', 'w') \
             as outfile:

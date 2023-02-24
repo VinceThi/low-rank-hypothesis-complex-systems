@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # @author: Vincent Thibeault
 
-import numpy as np
 from numpy.linalg import norm
 from scipy.linalg import svdvals
 from plots.config_rcparams import *
@@ -9,48 +8,60 @@ import time
 import json
 import tkinter.simpledialog
 from tkinter import messagebox
-import networkx as nx
+from graphs.generate_s1_random_graph import *
 from tqdm import tqdm
-from graphs.sbm_properties import get_density, expected_adjacency_matrix
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+
 
 path_str = "C:/Users/thivi/Documents/GitHub/" \
            "low-rank-hypothesis-complex-systems/singular_values/properties/" \
            "singular_values_random_graphs/"
 
 """ Random graph parameters """
-graph_str = "sbm"
-N = 1000
-nb_networks = 10     # 1000
+graph_str = "perturbed_gaussian"
 directed = True
-selfloops = True
+expected = True
+N = 1000
+nb_networks = 100    # 1000
+rank = 5
+prng1 = np.random.RandomState(1234567890)
+prng2 = np.random.RandomState(1334567890)
+prng3 = np.random.RandomState(1434567890)
+prng4 = np.random.RandomState(1534567890)
+prng5 = np.random.RandomState(1634567890)
+m1 = prng1.normal(0, 1/np.sqrt(N), (N, ))
+n1 = prng1.normal(0, 0.1, (N, ))
+m2 = prng2.normal(0, 1/np.sqrt(N), (N, ))
+n2 = prng2.normal(0.1, 0.2, (N, ))
+m3 = prng3.normal(0, 1/np.sqrt(N), (N, ))
+n3 = prng3.normal(0.2, 0.3, (N, ))
+m4 = prng4.normal(0, 1/np.sqrt(N), (N, ))
+n4 = prng4.normal(0.3, 0.4, (N, ))
+m5 = prng5.normal(0, 1/np.sqrt(N), (N, ))
+n5 = prng5.normal(0.4, 0.5, (N, ))
+P = np.array([m1, m2, m3, m4, m5]).T
+Q = np.array([n1, n2, n3, n4, n5]).T
+EW = P@Q.T  
+g = 2   # 0.1, 2
+var = g**2/N
+
+
 norm_choice = 2
-pq0 = np.array([[0.10, 0.02, 0.01, 0.02, 0.003],
-                [0.005, 0.10, 0.002, 0.05, 0.005],
-                [0.002, 0.02, 0.05, 0.05, 0.02],
-                [0.01, 0.005, 0.005, 0.10, 0.01],
-                [0.01, 0.01, 0.005, 0.05, 0.05]])
-sizes = [N//10, 2*N//5, N//10, N//5, N//5]
-pq = 0.1*pq0   # pq = 8*pq0, 3*pq0
-EW = expected_adjacency_matrix(pq, sizes, self_loops=selfloops)
-singularValues_EW = svdvals(EW)
-norm_EW = norm(EW, ord=norm_choice)
 norm_R = np.zeros(nb_networks)
-density = get_density(pq, sizes, ensemble='directed')
 
 
 """ Get singular values """
 singularValues = np.zeros((nb_networks, N))
 singularValues_R = np.zeros((nb_networks, N))
 for i in tqdm(range(0, nb_networks)):
-    W = nx.to_numpy_array(nx.stochastic_block_model(sizes, pq.tolist(),
-                                                    directed=directed,
-                                                    selfloops=selfloops))
-    R = W - EW
+    R = np.random.normal(0, np.sqrt(var), (N, N))
+    W = EW + R
     norm_R[i] = norm(R, ord=norm_choice)
     singularValues[i, :] = svdvals(W)
     singularValues_R[i, :] = svdvals(R)
 
+norm_EW = norm(EW, ord=norm_choice)
+singularValues_EW = svdvals(EW)
 norm_ratio = np.mean(norm_R)/norm_EW
 print(norm_ratio)
 
@@ -161,14 +172,15 @@ if messagebox.askyesno("Python",
            "low-rank-hypothesis-complex-systems/" \
            "singular_values/properties/singular_values_random_graphs/"
     timestr = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")
-    parameters_dictionary = {"graph_str": graph_str, "sizes": sizes,
-                             "N": N, "density": density, "pq": pq.tolist(),
-                             "directed": directed, "selfloops": selfloops,
-                             "nb_samples (nb_networks)": nb_networks,
-                             "norm_EW": norm_EW.tolist(),
+    parameters_dictionary = {"graph_str": graph_str,
+                             "directed": directed,
+                             "N": N, "P": P.tolist(), "Q": Q.tolist(),
+                             "norm_EW": norm_EW,
                              "norm_R": norm_R.tolist(),
-                             "norm_ratio": norm_ratio,
-                             "norm_choice": norm_choice}
+                             "norm_ratio": norm_ratio.tolist(),
+                             "nb_samples (nb_networks)": nb_networks,
+                             "norm_choice": norm_choice
+                             }
 
     fig.savefig(path + f'{timestr}_{file}_singular_values_{graph_str}.pdf')
     fig.savefig(path + f'{timestr}_{file}_singular_values_{graph_str}.png')
