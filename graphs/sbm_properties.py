@@ -10,6 +10,9 @@ ensemble_types = ['simple_undirected', 'simple_directed',
                   'undirected', 'directed']
 
 
+""" General functions """
+
+
 def get_m(A, sizes):
     """
     Get the number of edges counts between block pairs.
@@ -93,7 +96,6 @@ def get_probability_SBM(A, sizes, pq):
 
 def get_density(pq, sizes, ensemble='simple_undirected'):
     """
-
     :param pq: Affinity matrix (probability of connections within and between
                the blocks)
     :param sizes: size of each blocks
@@ -114,10 +116,10 @@ def get_density(pq, sizes, ensemble='simple_undirected'):
 
 
 def expected_adjacency_matrix(pq, sizes, self_loops=True):
-    n = len(sizes)
-    for mu in range(n):
+    q = len(sizes)
+    for mu in range(q):
         row_blocks = []
-        for nu in range(n):
+        for nu in range(q):
             row_blocks.append(pq[mu][nu]*np.ones((sizes[mu], sizes[nu])))
         if not mu:
             expected_adjacency_mat = np.block(row_blocks)
@@ -128,6 +130,38 @@ def expected_adjacency_matrix(pq, sizes, self_loops=True):
     if not self_loops:
         np.fill_diagonal(expected_adjacency_mat, 0)
     return expected_adjacency_mat
+
+
+def get_membership_array(sizes):
+    """ Blocks are labelled from 0 to q-1"""
+    q = len(sizes)
+    membership_array = np.array([])
+    for mu in range(q):
+        membership_array = np.concatenate([membership_array,
+                                           mu*np.ones(sizes[mu].astype(int))])
+    return membership_array.astype(int)
+
+
+def normalize_degree_propensity(theta, sizes):
+    """ Impose the normalization as in Eq.(15) of Karrer and Newman 2011
+     for the degree-corrected stochastic block model. """
+    N = len(theta)
+    sizes = sizes.astype(int)
+    membership_array = get_membership_array(sizes)
+    normalized_theta = np.zeros(N)
+    lower_bound = 0
+    upper_bound = sizes[0]
+    for i in range(N):
+        mu = membership_array[i]
+        if i == upper_bound:
+            lower_bound += sizes[mu - 1]
+            upper_bound += sizes[mu]
+        partial_theta = theta[lower_bound: upper_bound]
+        normalized_theta[i] = theta[i]/np.sum(partial_theta)
+    return normalized_theta
+
+
+""" For the SBM (planted partition) with two blocks """
 
 
 def get_p(w, p_out, p_in):

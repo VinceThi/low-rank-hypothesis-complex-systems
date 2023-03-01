@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # @author: Vincent Thibeault
 
+import numpy as np
 from numpy.linalg import norm
 from scipy.linalg import svdvals
 from plots.config_rcparams import *
@@ -8,67 +9,65 @@ import time
 import json
 import tkinter.simpledialog
 from tkinter import messagebox
-from graphs.generate_soft_configuration_model import *
-from graphs.generate_random_graphs import truncated_pareto
-from singular_values.compute_singular_values_dscm_upper_bounds import\
-    upper_bound_singvals_infinite_sum_sparser, \
-    upper_bound_singvals_infinite_sum_denser
 from tqdm import tqdm
+from plots.plot_weight_matrix import plot_weight_matrix
+from graphs.sbm_properties import normalize_degree_propensity
+from graphs.generate_truncated_pareto import truncated_pareto
+from graphs.generate_degree_corrected_stochastic_block_model import \
+    degree_corrected_stochastic_block_model
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 path_str = "C:/Users/thivi/Documents/GitHub/" \
            "low-rank-hypothesis-complex-systems/singular_values/properties/" \
            "singular_values_random_graphs/"
 
+plot_weight_mat = False
 plot_degrees = False
 
 """ Random graph parameters """
-graph_str = "soft_configuration_model"
-selfloops = True
+graph_str = "sbm"
 N = 1000
-nb_networks = 10    # 1000
-regime = "denser"  # "denser", "sparser"
-
-if regime == "sparser":
-    alpha_min = 2
-    beta_min = 1
-    alpha_max = 20
-    beta_max = 15
-    gamma_in = 2
-    gamma_out = 2.5
-    alpha = truncated_pareto(N, alpha_min, alpha_max, gamma_in) / np.sqrt(N)
-    beta = truncated_pareto(N, beta_min, beta_max, gamma_out) / np.sqrt(N)
-
-else:  # "denser"
-    alpha_min = 80
-    beta_min = 60
-    alpha_max = 200
-    beta_max = 150
-    gamma_in = 3
-    gamma_out = 3.5
-    alpha = truncated_pareto(N, alpha_min, alpha_max, gamma_in) / np.sqrt(N)
-    beta = truncated_pareto(N, beta_min, beta_max, gamma_out) / np.sqrt(N)
-
-g = 1
-
+nb_networks = 1    # 1000
+directed = True
+selfloops = True
 norm_choice = 2
-norm_R = np.zeros(nb_networks)
-norm_W = np.zeros(nb_networks)
+expected_nb_edges = N*np.array([[0.30, 0.10, 0.10, 0.02, 0.13],
+                                [0.05, 0.80, 0.02, 0.09, 0.10],
+                                [0.02, 0.02, 0.20, 0.05, 0.02],
+                                [0.10, 0.05, 0.05, 0.40, 0.01],
+                                [0.10, 0.09, 0.05, 0.05, 0.60]])
 
+g = 100   # 100, 5
+expected_nb_edges = g*expected_nb_edges
+
+sizes = np.array([N//10, 2*N//5, N//10, N//5, N//5])
+
+kappa_in_min = 5
+kappa_in_max = 100
+gamma_in = 2.5
+kappa_in = truncated_pareto(N, kappa_in_min, kappa_in_max, gamma_in)
+nkappa_in = normalize_degree_propensity(kappa_in, sizes)
+
+kappa_out_min = 3
+kappa_out_max = 50
+gamma_out = 2
+kappa_out = truncated_pareto(N, kappa_out_min, kappa_out_max, gamma_out)
+nkappa_out = normalize_degree_propensity(kappa_out, sizes)
+
+
+norm_R = np.zeros(nb_networks)
 
 """ Get singular values """
 singularValues = np.zeros((nb_networks, N))
 singularValues_R = np.zeros((nb_networks, N))
 for i in tqdm(range(0, nb_networks)):
-    W, EW = soft_configuration_model(alpha, beta, g, selfloops=selfloops,
-                                     expected=True)
-    print(np.min(EW), np.max(EW))
-    R = W - EW
-    norm_R[i] = norm(R, ord=norm_choice)
-    norm_W[i] = norm(W, ord=norm_choice)
-    singularValues[i, :] = svdvals(W)
-    singularValues_R[i, :] = svdvals(R)
+    W, EW = degree_corrected_stochastic_block_model(
+        sizes, expected_nb_edges, nkappa_in, nkappa_out,
+        selfloops=True, expected=True)
+    if plot_weight_mat:
+        plot_weight_matrix(W)
     if plot_degrees:
+        plt.figure(figsize=(6, 4))
         plt.hist(np.sum(EW, axis=1), bins=100, label="$\\kappa_{in}$",
                  density=True)
         plt.hist(np.sum(EW, axis=0), bins=100, label="$\\kappa_{out}$",
@@ -77,12 +76,13 @@ for i in tqdm(range(0, nb_networks)):
         plt.legend(loc=1)
         plt.show()
 
-norm_EW = norm(EW, ord=norm_choice)
+    R = W - EW
+    norm_R[i] = norm(R, ord=norm_choice)
+    singularValues[i, :] = svdvals(W)
+    singularValues_R[i, :] = svdvals(R)
+
 singularValues_EW = svdvals(EW)
-mean_norm_R = np.mean(norm_R)
-mean_norm_W = np.mean(norm_W)
-norm_ratio = mean_norm_R/mean_norm_W   # norm_EW
-print(norm_ratio)
+norm_EW = norm(EW, ord=norm_choice)
 
 
 """ Plot singular values and Weyl's theorem"""
@@ -90,6 +90,10 @@ print(norm_ratio)
 xlabel = "Index $i$"
 # ylabel = "Average rescaled singular\n values $\\sigma_i/\\sigma_1$"
 # ylabel = "Average singular values"
+
+mean_norm_W = np.mean(singularValues[:, 0])
+mean_norm_R = np.mean(norm_R)
+norm_ratio = mean_norm_R/mean_norm_W
 
 mean_singularValues = np.mean(singularValues, axis=0)
 bar_singularValues = np.std(singularValues, axis=0)
@@ -100,17 +104,6 @@ bar_singularValues_R = np.std(singularValues_R,  axis=0)
 fig = plt.figure(figsize=(4, 4))
 ax1 = plt.subplot(111)
 indices = np.arange(1, N + 1, 1)
-if regime == "sparser":
-    upper_bound_singvals = np.zeros(N)
-    for i in tqdm(indices):
-        upper_bound_singvals[i-1] = \
-            upper_bound_singvals_infinite_sum_sparser(i, alpha, beta, 1e-8)
-else:  # regime == "denser"
-    upper_bound_singvals = np.zeros(N)
-    for i in tqdm(indices):
-        upper_bound_singvals[i-1] = \
-            upper_bound_singvals_infinite_sum_denser(i, alpha, beta, 1e-8)
-
 # ax1.scatter(indices, mean_singularValues/mean_norm_W, s=30, color=deep[0],
 #             label="$\\langle\\sigma_i(W)\\rangle\,/"
 #                   "\,\\langle\,||W||_2\,\\rangle$")
@@ -118,7 +111,6 @@ else:  # regime == "denser"
 #                  (mean_singularValues - std_singularValues)/mean_norm_W,
 #                  (mean_singularValues + std_singularValues)/mean_norm_W,
 #                  color=deep[0], alpha=0.2)
-ax1.scatter(indices, upper_bound_singvals/mean_norm_W, color=dark_grey, s=2)
 ax1.errorbar(x=indices, y=mean_singularValues/mean_norm_W,
              yerr=bar_singularValues/mean_norm_W, fmt="o", color=deep[0],
              zorder=-30, markersize=5, capsize=1, elinewidth=1,
@@ -170,17 +162,7 @@ axins.scatter(indices,
               np.mean(np.abs(singularValues-np.outer(np.ones(nb_networks),
                                                      singularValues_EW)),
                       axis=0)/mean_norm_W,
-              color="#cccccc", s=10)
-axins.scatter(indices,
-              np.mean(np.abs(singularValues-np.outer(np.ones(nb_networks),
-                                                     upper_bound_singvals)),
-                      axis=0)/mean_norm_W,
-              color=dark_grey, s=0.5)
-# axins.plot(indices,
-#            np.mean(np.abs(singularValues-np.outer(np.ones(nb_networks),
-#                                                   upper_bound_singvals)),
-#                    axis=0)/mean_norm_W,
-#            color=dark_grey, linestyle="--", linewidth=0.5)
+              color=deep[7], s=2)
 # axins.errorbar(x=indices, y=np.mean(np.abs(singularValues-singularValues_EW),
 #                                     axis=0)/mean_norm_W,
 #                yerr=np.std(np.abs(singularValues-singularValues_EW),
@@ -212,19 +194,25 @@ if messagebox.askyesno("Python",
            "low-rank-hypothesis-complex-systems/" \
            "singular_values/properties/singular_values_random_graphs/"
     timestr = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")
-    parameters_dictionary = {"graph_str": graph_str,
-                             "alpha,beta distribution": "truncated_pareto",
-                             "N": N, "alpha_min": alpha_min,
-                             "alpha_max": alpha_max, "beta_min": beta_min,
-                             "beta_max": beta_max, "gamma_in": gamma_in,
-                             "gamma_out": gamma_out, "g": g,
-                             "selfloops": selfloops, "norm_W": norm_W.tolist(),
-                             "norm_EW": norm_EW,
-                             "norm_R": norm_R.tolist(),
-                             "norm_ratio": norm_ratio.tolist(),
+    parameters_dictionary = {"graph_str": graph_str, "sizes": sizes,
+                             "N": N,
+                             "expected_nb_edges": expected_nb_edges.tolist(),
+                             "kappa_in_min": kappa_in_min,
+                             "kappa_in_max": kappa_in_max,
+                             "gamma_in": gamma_in,
+                             "kappa_out_min": kappa_out_min,
+                             "kappa_out_max": kappa_out_max,
+                             "gamma_out": gamma_out,
+                             "kappa_in": kappa_in.tolist(),
+                             "kappa_out": kappa_out.tolist(),
+                             "nkappa_in": nkappa_in.tolist(),
+                             "nkappa_out": nkappa_out.tolist(),
+                             "directed": directed, "selfloops": selfloops,
                              "nb_samples (nb_networks)": nb_networks,
-                             "norm_choice": norm_choice
-                             }
+                             "norm_EW": norm_EW.tolist(),
+                             "norm_R": norm_R.tolist(),
+                             "norm_ratio": norm_ratio,
+                             "norm_choice": norm_choice}
 
     fig.savefig(path + f'{timestr}_{file}_singular_values_{graph_str}.pdf')
     fig.savefig(path + f'{timestr}_{file}_singular_values_{graph_str}.png')

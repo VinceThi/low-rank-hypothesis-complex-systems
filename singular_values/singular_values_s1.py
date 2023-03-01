@@ -36,7 +36,7 @@ kappa_in, kappa_out = \
     generate_nonnegative_arrays_with_same_average(kappa_in, kappa_out)
 
 theta = 2*np.pi*uniform.rvs(size=N)
-temperature = 0.2  # 0.1 and 0.8
+temperature = 0.8  # 0.1 and 0.8
 norm_choice = 2
 
 
@@ -56,8 +56,6 @@ for i in tqdm(range(0, nb_networks)):
 
 norm_EW = norm(EW, ord=norm_choice)
 singularValues_EW = svdvals(EW)
-norm_ratio = np.mean(norm_R)/norm_EW
-print(norm_ratio)
 
 
 """ Plot singular values and Weyl's theorem"""
@@ -67,6 +65,9 @@ xlabel = "Index $i$"
 # ylabel = "Average singular values"
 
 mean_norm_W = np.mean(singularValues[:, 0])
+norm_ratio = np.mean(norm_R)/mean_norm_W
+print(norm_ratio)
+
 mean_singularValues = np.mean(singularValues, axis=0)
 bar_singularValues = np.std(singularValues, axis=0)
 
@@ -174,8 +175,8 @@ if messagebox.askyesno("Python",
                              "kappa_out_min": kappa_out_min,
                              "kappa_out_max": kappa_out_max,
                              "gamma_out": gamma_out,
-                             "kappa_in": kappa_in,
-                             "kappa_out": kappa_out,
+                             "kappa_in": kappa_in.tolist(),
+                             "kappa_out": kappa_out.tolist(),
                              "temperature": temperature,
                              "norm_EW": norm_EW,
                              "norm_R": norm_R.tolist(),

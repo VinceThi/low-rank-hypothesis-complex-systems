@@ -2,11 +2,15 @@
 # @author: Vincent Thibeault
 
 import scipy.linalg as la
+import matplotlib.pyplot as plt
 from plots.plot_singular_values import plot_singular_values
+from plots.plot_weight_matrix import plot_weight_matrix
 from graphs.get_real_networks import *
 from singular_values.compute_effective_ranks import *
 
 graph_str = "connectome"
+plot_degrees = True
+plot_weight_mat = False
 save_data = False
 compute_effective_ranks = True
 plot_singular_vals = True
@@ -64,6 +68,19 @@ elif graph_str == "microbiome":
     W = get_microbiome_weight_matrix(networkName)
     N = len(W[0])
     singularValues = la.svdvals(W)
+
+if plot_degrees:
+    plt.figure(figsize=(6, 4))
+    plt.hist(np.sum(W, axis=1), bins=100, label="$\\kappa_{in}$",
+             density=True)
+    plt.hist(np.sum(W, axis=0), bins=100, label="$\\kappa_{out}$",
+             density=True)
+    plt.ylabel("Density")
+    plt.legend(loc=1)
+    plt.show()
+
+if plot_weight_mat:
+    plot_weight_matrix((np.abs(W) > 0).astype(float))
 
 if save_data:
     with open(singularValuesFilename, 'wb') as singularValuesFile:

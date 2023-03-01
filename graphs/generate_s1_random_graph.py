@@ -12,6 +12,10 @@ def s1_model(beta, kappa_in, kappa_out, theta, directed=True, selfloops=True,
      kappa_in and kappa_out must have the same average
     (see the function generate_nonnegative_arrays_with_same_average
     for one way to respect the constraint).
+
+    See Allard et al., Geometric description of clustering in directed networks
+    (section "The directed S1 model", arXiv:2302.09055v1)
+
     :param beta:  (float) Inverse temperature. It controls the clustering.
                  (1, infinity) -> lower to higher clustering
     :param kappa_in: Array of expected in-degrees with average <kappa>
@@ -22,7 +26,7 @@ def s1_model(beta, kappa_in, kappa_out, theta, directed=True, selfloops=True,
     :param expected: (bool) if the expected adjacency matrix is returned or not
 
     :return:
-    An instance of the S1 random graph model without self-loops and
+    An instance [(N, N)-array] of the S1 random graph model and
     the expected matrix if expected is True
     """
 
@@ -32,17 +36,17 @@ def s1_model(beta, kappa_in, kappa_out, theta, directed=True, selfloops=True,
 
     # Builds the expected adjacency matrix (probabilities of connection)
     mu = beta*np.sin(np.pi/beta)/(2*np.pi*np.average(kappa_in))
-    pij = np.absolute(theta.reshape(-1, 1) - theta)
-    pij = np.pi - np.absolute(np.pi - pij)  # option 1
-    # pij = np.minimum(pij, 2*np.pi - pij) # option 2
-    pij = 1/(1 + (len(kappa_in)*pij /
+    thetaij = np.absolute(theta.reshape(-1, 1) - theta)
+    thetaij = np.pi - np.absolute(np.pi - thetaij)  # option 1
+    # thetaij = np.minimum(thetaij, 2*np.pi - thetaij) # option 2
+    pij = 1/(1 + (len(kappa_in)*thetaij /
                   (2*np.pi*mu*np.outer(kappa_in, kappa_out)))**beta)
+
+    if not selfloops:
+        np.fill_diagonal(pij, 0)         # Remove self-loops
 
     # Assigns which links exist.
     W = pij > uniform.rvs(size=pij.shape)
-
-    if not selfloops:
-        np.fill_diagonal(W, 0)         # Remove self-loops
 
     if not directed:
         W = np.tril(W) + np.tril(W).T  # Get an undirected graph

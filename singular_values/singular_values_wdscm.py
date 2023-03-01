@@ -11,8 +11,7 @@ from tkinter import messagebox
 from graphs.generate_soft_configuration_model import *
 from graphs.generate_random_graphs import truncated_pareto
 from singular_values.compute_singular_values_dscm_upper_bounds import\
-    upper_bound_singvals_infinite_sum_sparser, \
-    upper_bound_singvals_infinite_sum_denser
+    upper_bound_singvals_infinite_sum_weighted
 from tqdm import tqdm
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
@@ -27,29 +26,12 @@ graph_str = "soft_configuration_model"
 selfloops = True
 N = 1000
 nb_networks = 10    # 1000
-regime = "denser"  # "denser", "sparser"
-
-if regime == "sparser":
-    alpha_min = 2
-    beta_min = 1
-    alpha_max = 20
-    beta_max = 15
-    gamma_in = 2
-    gamma_out = 2.5
-    alpha = truncated_pareto(N, alpha_min, alpha_max, gamma_in) / np.sqrt(N)
-    beta = truncated_pareto(N, beta_min, beta_max, gamma_out) / np.sqrt(N)
-
-else:  # "denser"
-    alpha_min = 80
-    beta_min = 60
-    alpha_max = 200
-    beta_max = 150
-    gamma_in = 3
-    gamma_out = 3.5
-    alpha = truncated_pareto(N, alpha_min, alpha_max, gamma_in) / np.sqrt(N)
-    beta = truncated_pareto(N, beta_min, beta_max, gamma_out) / np.sqrt(N)
-
-g = 1
+ymin, ymax = 0.3, 0.8     # ymin = 0.06 and 0.3
+zmin, zmax = 0.3, 0.7     # zmin = 0.06 and 0.3
+gamma_in = 2.5
+gamma_out = 3
+y = truncated_pareto(N, ymin, ymax, gamma_in)
+z = truncated_pareto(N, zmin, zmax, gamma_out)
 
 norm_choice = 2
 norm_R = np.zeros(nb_networks)
@@ -60,21 +42,16 @@ norm_W = np.zeros(nb_networks)
 singularValues = np.zeros((nb_networks, N))
 singularValues_R = np.zeros((nb_networks, N))
 for i in tqdm(range(0, nb_networks)):
-    W, EW = soft_configuration_model(alpha, beta, g, selfloops=selfloops,
-                                     expected=True)
-    print(np.min(EW), np.max(EW))
+    W, EW = weighted_soft_configuration_model(y, z, selfloops=selfloops,
+                                              expected=True)
     R = W - EW
     norm_R[i] = norm(R, ord=norm_choice)
     norm_W[i] = norm(W, ord=norm_choice)
     singularValues[i, :] = svdvals(W)
     singularValues_R[i, :] = svdvals(R)
     if plot_degrees:
-        plt.hist(np.sum(EW, axis=1), bins=100, label="$\\kappa_{in}$",
-                 density=True)
-        plt.hist(np.sum(EW, axis=0), bins=100, label="$\\kappa_{out}$",
-                 density=True)
-        plt.ylabel("Density")
-        plt.legend(loc=1)
+        plt.hist(np.sum(EW, axis=1), bins=100)
+        plt.hist(np.sum(EW, axis=0), bins=100)
         plt.show()
 
 norm_EW = norm(EW, ord=norm_choice)
@@ -100,17 +77,12 @@ bar_singularValues_R = np.std(singularValues_R,  axis=0)
 fig = plt.figure(figsize=(4, 4))
 ax1 = plt.subplot(111)
 indices = np.arange(1, N + 1, 1)
-if regime == "sparser":
-    upper_bound_singvals = np.zeros(N)
-    for i in tqdm(indices):
-        upper_bound_singvals[i-1] = \
-            upper_bound_singvals_infinite_sum_sparser(i, alpha, beta, 1e-8)
-else:  # regime == "denser"
-    upper_bound_singvals = np.zeros(N)
-    for i in tqdm(indices):
-        upper_bound_singvals[i-1] = \
-            upper_bound_singvals_infinite_sum_denser(i, alpha, beta, 1e-8)
-
+upper_bound_singvals = np.zeros(N)
+for i in tqdm(indices):
+    upper_bound_singvals[i-1] = \
+        upper_bound_singvals_infinite_sum_weighted(i, y, z, 1e-8)
+# upper_bound_singvals = \
+#     upper_bound_singvals_exponential_weighted(N, indices, tau)
 # ax1.scatter(indices, mean_singularValues/mean_norm_W, s=30, color=deep[0],
 #             label="$\\langle\\sigma_i(W)\\rangle\,/"
 #                   "\,\\langle\,||W||_2\,\\rangle$")
@@ -118,7 +90,8 @@ else:  # regime == "denser"
 #                  (mean_singularValues - std_singularValues)/mean_norm_W,
 #                  (mean_singularValues + std_singularValues)/mean_norm_W,
 #                  color=deep[0], alpha=0.2)
-ax1.scatter(indices, upper_bound_singvals/mean_norm_W, color=dark_grey, s=2)
+plt.scatter(indices, upper_bound_singvals/mean_norm_W, color=dark_grey, s=2)
+# plt.scatter(indices, upper_bound_singvals/mean_norm_W, color=dark_grey, s=2)
 ax1.errorbar(x=indices, y=mean_singularValues/mean_norm_W,
              yerr=bar_singularValues/mean_norm_W, fmt="o", color=deep[0],
              zorder=-30, markersize=5, capsize=1, elinewidth=1,
@@ -213,11 +186,10 @@ if messagebox.askyesno("Python",
            "singular_values/properties/singular_values_random_graphs/"
     timestr = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")
     parameters_dictionary = {"graph_str": graph_str,
-                             "alpha,beta distribution": "truncated_pareto",
-                             "N": N, "alpha_min": alpha_min,
-                             "alpha_max": alpha_max, "beta_min": beta_min,
-                             "beta_max": beta_max, "gamma_in": gamma_in,
-                             "gamma_out": gamma_out, "g": g,
+                             "N": N, "ymax": ymax,
+                             "zmax": zmax, "ymin": ymin,
+                             "zmin": zmin, "gamma_in": gamma_in,
+                             "gamma_out": gamma_out,
                              "selfloops": selfloops, "norm_W": norm_W.tolist(),
                              "norm_EW": norm_EW,
                              "norm_R": norm_R.tolist(),

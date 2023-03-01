@@ -12,6 +12,9 @@ from graphs.generate_s1_random_graph import s1_model, \
     generate_nonnegative_arrays_with_same_average
 from graphs.generate_soft_configuration_model import soft_configuration_model,\
     weighted_soft_configuration_model
+from graphs.generate_degree_corrected_stochastic_block_model import\
+    degree_corrected_stochastic_block_model
+from graphs.sbm_properties import normalize_degree_propensity
 
 
 def random_graph_generators(graph_str, N):
@@ -27,7 +30,7 @@ def random_graph_generators(graph_str, N):
     :param N: number of vertices, must be a multiple of 2 and 5
     :return: generator and its (fixed) arguments
 
-    Note that for the s1_model, soft_configuration_model,
+    Note that for the s1_model, soft_configuration_model, DCSBM
      weighted_soft_configuration_model, tenpy random matrices,
      "perturbed_gaussian"
      an instance W of the random matrix is obtained as W = generator(*args).
@@ -62,8 +65,27 @@ def random_graph_generators(graph_str, N):
         args = (sizes, pq, None, None, True, True, True)
 
     elif graph_str == "DCSBM":
-        raise ValueError("DCSBM is not coded yet."
-                         " It is not on networkx, but it is on graph tool.")
+        generator = degree_corrected_stochastic_block_model
+        edge_propensities = N*np.array([[0.42, 0.09, 0.30, 0.02, 0.003],
+                                        [0.05, 0.60, 0.20, 0.10, 0.05],
+                                        [0.20, 0.02, 0.70, 0.20, 0.02],
+                                        [0.15, 0.05, 0.05, 0.80, 0.01],
+                                        [0.01, 0.10, 0.05, 0.20, 0.50]])
+        sizes = [N//10, 2*N//5, N//10, N//5, N//5]
+
+        kappa_in_min = 5
+        kappa_in_max = 100
+        gamma_in = 2.5
+        kappa_in = truncated_pareto(N, kappa_in_min, kappa_in_max, gamma_in)
+        nkappa_in = normalize_degree_propensity(kappa_in, sizes)
+        kappa_out_min = 3
+        kappa_out_max = 50
+        gamma_out = 2
+        kappa_out = truncated_pareto(N, kappa_out_min,
+                                     kappa_out_max, gamma_out)
+        nkappa_out = normalize_degree_propensity(kappa_out, sizes)
+
+        args = (sizes, edge_propensities, nkappa_in, nkappa_out)
 
     elif graph_str == "chung_lu":
         generator = nx.expected_degree_graph

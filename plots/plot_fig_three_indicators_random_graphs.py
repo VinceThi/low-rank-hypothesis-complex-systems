@@ -11,36 +11,36 @@ path_str = "C:/Users/thivi/Documents/GitHub/" \
            "low-rank-hypothesis-complex-systems/" \
            "singular_values/properties/"
 
-
-""" Soft configuration model """
-graph_str_scm = "soft_configuration_model"
-spec_path_str_scm = "2023_02_21_14h24min17sec_50graphs_10s"
-spec_path_str_scm_svdvals_1 = "2023_02_21_14h59min04sec_100graphs_g_1_6_r0_48"  # g inversed
-spec_path_str_scm_svdvals_2 = "2023_02_21_14h58min14sec_100graphs_g_0_2_r0_55"  # g inversed
-effrank_indicator_list_scm = [1, 0, 1, 0, 1, 1, 0, 0]
-
-""" SBM """
-graph_str_SBM = "sbm"
-spec_path_str_SBM_svdvals_1 = "2023_02_20_14h58min44sec_8pq0_normratio_0_066"
-spec_path_str_SBM_svdvals_2 = "2023_02_20_14h26min10sec_3pq0_normratio_0_1515"
-spec_path_str_SBM = "2023_02_21_13h59min53sec_50graphs_10s"
-effrank_indicator_list_SBM = [1, 0, 1, 0, 1, 1, 0, 0]
-
-""" S1 """
-graph_str_S1 = "s1"
-spec_path_str_S1_svdvals_1 = "2023_02_20_21h06min58sec_100graphs" \
-                             "_temp0_1_normratio_0_17"
-spec_path_str_S1_svdvals_2 = "2023_02_20_21h07min42sec_100graphs" \
-                             "_temp0_8_normratio_0_48"
-spec_path_str_S1 = "2023_02_21_13h57min39sec_50graphs_10s"
-effrank_indicator_list_S1 = [1, 0, 1, 0, 1, 1, 0, 0]
-
 """ Perturbed gaussian """
 graph_str_gauss = "perturbed_gaussian"
 spec_path_str_gauss = "2023_02_21_13h58min54sec_50graphs_10s"
 spec_path_str_gauss_svdvals_1 = "2023_02_21_14h40min09sec_100graphs_g_0_1"
 spec_path_str_gauss_svdvals_2 = "2023_02_21_14h40min38sec_100graphs_g_2"
 effrank_indicator_list_gauss = [1, 0, 1, 0, 1, 1, 0, 0]
+
+""" Degree-corrected stochastic block model """
+graph_str_SBM = "sbm"
+spec_path_str_SBM_svdvals_1 = "2023_02_20_14h58min44sec_8pq0_normratio_0_066"
+spec_path_str_SBM_svdvals_2 = "2023_02_20_14h26min10sec_3pq0_normratio_0_1515"
+spec_path_str_SBM = "2023_02_21_13h59min53sec_50graphs_10s"
+effrank_indicator_list_SBM = [1, 0, 1, 0, 1, 1, 0, 0]
+
+""" Soft configuration model """
+graph_str_scm = "soft_configuration_model"
+spec_path_str_scm_svdvals_1 = "2023_02_27_11h15min29sec_10graphs" \
+                              "_yzmin0_3_ratio0_155"
+spec_path_str_scm_svdvals_2 = "2023_02_27_11h12min30sec_10graphs" \
+                              "_yzmin0_06_ratio0_52"
+spec_path_str_scm = "2023_02_27_11h30min02sec_50graphs_10s"
+effrank_indicator_list_scm = [1, 0, 1, 0, 1, 1, 0, 0]
+
+""" S1 """
+graph_str_S1 = "s1"
+spec_path_str_S1_svdvals_1 = "2023_02_27_10h59min57sec_10graphs_ratio0_16"
+spec_path_str_S1_svdvals_2 = "2023_02_27_11h03min39sec_10graphs" \
+                             "_temp0_8_ratio0_48"
+spec_path_str_S1 = "2023_02_27_13h22min52sec_50graphs_10s"
+effrank_indicator_list_S1 = [1, 0, 1, 0, 1, 1, 0, 0]
 
 
 def plot_singular_values_random_graphs(ax, graph_str, spec_path_str):
@@ -145,11 +145,14 @@ def plot_singular_values_random_graphs(ax, graph_str, spec_path_str):
     #                yerr=np.std(np.abs(singularValues-singularValues_EW),
     #                            axis=0)/mean_norm_W, fmt="o", color=deep[7],
     #                markersize=1, capsize=0, elinewidth=1)
-    axins.set_ylabel("$\\langle\,\,|\,\\sigma_i(W)"
-                     " - \\sigma_i(\\langle W\\rangle)\,|\,\,\\rangle"
+    # axins.set_ylabel("$\\langle\,\,|\,\\sigma_i(W)"
+    #                  " - \\sigma_i(\\langle W\\rangle)\,|\,\,\\rangle"
+    #                  "\,\,/\,\,\\langle\,||W||_2\,\\rangle$",
+    #                  fontsize=6)
+    axins.set_ylabel("$\\langle\,\\Delta\,\\rangle"
                      "\,\,/\,\,\\langle\,||W||_2\,\\rangle$",
-                     fontsize=6)
-    axins.set_xlabel("Index $i$", fontsize=6)
+                     fontsize=8)
+    axins.set_xlabel("Index $i$", fontsize=8)
     ticks = axins.get_xticks()
     ticks[ticks.tolist().index(0)] = 1
     axins.set_xticks(ticks[ticks > 0])
@@ -216,9 +219,9 @@ title_pad = 0
 fig, ((ax1, ax2, ax3, ax4), (ax5, ax6, ax7, ax8), (ax9, ax10, ax11, ax12)) =\
     plt.subplots(nrows=3, ncols=4, figsize=(12, 8))    # figsize=(10, 8)
 
-plot_singular_values_random_graphs(ax1, graph_str_scm,
-                                   spec_path_str_scm_svdvals_1)
-ax1.set_title("Soft configuration", fontsize=fontsize_title,
+plot_singular_values_random_graphs(ax1, graph_str_gauss,
+                                   spec_path_str_gauss_svdvals_1)
+ax1.set_title(" Rank-perturbed Gaussian", fontsize=fontsize_title,
               pad=title_pad)
 ax1.text(letter_posx, letter_posy, "b", fontweight="bold",
          horizontalalignment="center", verticalalignment="top",
@@ -232,24 +235,26 @@ ax2.text(letter_posx, letter_posy, "c", fontweight="bold",
          horizontalalignment="center", verticalalignment="top",
          transform=ax2.transAxes)
 
-plot_singular_values_random_graphs(ax3, graph_str_S1,
-                                   spec_path_str_S1_svdvals_1)
-ax3.set_title("$S^1$ random geometric", fontsize=fontsize_title,
+
+plot_singular_values_random_graphs(ax3, graph_str_scm,
+                                   spec_path_str_scm_svdvals_1)
+ax3.set_title("Soft configuration", fontsize=fontsize_title,
               pad=title_pad)
 ax3.text(letter_posx, letter_posy, "d", fontweight="bold",
          horizontalalignment="center", verticalalignment="top",
          transform=ax3.transAxes)
 
-plot_singular_values_random_graphs(ax4, graph_str_gauss,
-                                   spec_path_str_gauss_svdvals_1)
-ax4.set_title(" Rank-perturbed Gaussian", fontsize=fontsize_title,
+
+plot_singular_values_random_graphs(ax4, graph_str_S1,
+                                   spec_path_str_S1_svdvals_1)
+ax4.set_title("$S^1$ random geometric", fontsize=fontsize_title,
               pad=title_pad)
 ax4.text(letter_posx, letter_posy, "e", fontweight="bold",
          horizontalalignment="center", verticalalignment="top",
          transform=ax4.transAxes)
 
-plot_singular_values_random_graphs(ax5, graph_str_scm,
-                                   spec_path_str_scm_svdvals_2)
+plot_singular_values_random_graphs(ax5, graph_str_gauss,
+                                   spec_path_str_gauss_svdvals_2)
 ax5.text(letter_posx, letter_posy, "f", fontweight="bold",
          horizontalalignment="center", verticalalignment="top",
          transform=ax5.transAxes)
@@ -260,26 +265,29 @@ ax6.text(letter_posx, letter_posy, "g", fontweight="bold",
          horizontalalignment="center", verticalalignment="top",
          transform=ax6.transAxes)
 
-plot_singular_values_random_graphs(ax7, graph_str_S1,
-                                   spec_path_str_S1_svdvals_2)
+
+plot_singular_values_random_graphs(ax7, graph_str_scm,
+                                   spec_path_str_scm_svdvals_2)
 ax7.text(letter_posx, letter_posy, "h", fontweight="bold",
          horizontalalignment="center", verticalalignment="top",
          transform=ax7.transAxes)
 
-plot_singular_values_random_graphs(ax8, graph_str_gauss,
-                                   spec_path_str_gauss_svdvals_2)
+
+plot_singular_values_random_graphs(ax8, graph_str_S1,
+                                   spec_path_str_S1_svdvals_2)
 ax8.text(letter_posx, letter_posy, "i", fontweight="bold",
          horizontalalignment="center", verticalalignment="top",
          transform=ax8.transAxes)
 
 
-plot_effective_ranks_random_graphs(ax9, graph_str_scm, spec_path_str_scm,
-                                   effrank_indicator_list_scm)
+plot_effective_ranks_random_graphs(ax9, graph_str_gauss, spec_path_str_gauss,
+                                   effrank_indicator_list_gauss)
 ax9.text(letter_posx, letter_posy, "k", fontweight="bold",
          horizontalalignment="center", verticalalignment="top",
          transform=ax9.transAxes)
 # ax9.set_yticks([0, 0.01, 0.02])
 # ax9.set_ylim([0, 0.025])
+ax9.set_yticks([0, 0.01, 0.02])
 
 plot_effective_ranks_random_graphs(ax10, graph_str_SBM, spec_path_str_SBM,
                                    effrank_indicator_list_SBM)
@@ -287,19 +295,21 @@ ax10.text(letter_posx, letter_posy, "l", fontweight="bold",
           horizontalalignment="center", verticalalignment="top",
           transform=ax10.transAxes)
 
-plot_effective_ranks_random_graphs(ax11, graph_str_S1, spec_path_str_S1,
-                                   effrank_indicator_list_S1)
+
+plot_effective_ranks_random_graphs(ax11, graph_str_scm, spec_path_str_scm,
+                                   effrank_indicator_list_scm)
 ax11.tick_params(axis='both', which='major')
 ax11.text(letter_posx, letter_posy, "m", fontweight="bold",
           horizontalalignment="center", verticalalignment="top",
           transform=ax11.transAxes)
-ax11.set_yticks([0, 0.1, 0.2])
 
-plot_effective_ranks_random_graphs(ax12, graph_str_gauss, spec_path_str_gauss,
-                                   effrank_indicator_list_gauss)
+
+plot_effective_ranks_random_graphs(ax12, graph_str_S1, spec_path_str_S1,
+                                   effrank_indicator_list_S1)
 ax12.text(letter_posx, letter_posy, "n", fontweight="bold",
           horizontalalignment="center", verticalalignment="top",
           transform=ax12.transAxes)
-ax12.set_yticks([0, 0.01, 0.02])
+ax12.set_yticks([0, 0.1, 0.2])
+
 
 plt.show()

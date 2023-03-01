@@ -2,7 +2,8 @@
 # @author: Vincent Thibeault
 
 from singular_values.compute_effective_ranks import *
-from graphs.generate_soft_configuration_model import soft_configuration_model
+from graphs.generate_soft_configuration_model import\
+    weighted_soft_configuration_model
 import json
 import numpy as np
 from numpy.linalg import norm
@@ -15,7 +16,7 @@ from graphs.generate_random_graphs import truncated_pareto
 plot_singvals_W_EW_R = False
 plot_expected_weight_matrix = False
 plot_histogram = False
-plot_degrees = False
+plot_degrees = True
 plot_scree = False
 plot_norms = False
 path_str = "C:/Users/thivi/Documents/GitHub/" \
@@ -24,20 +25,19 @@ path_str = "C:/Users/thivi/Documents/GitHub/" \
 
 """ Random graph parameters """
 graph_str = "soft_configuration_model"
+selfloops = True
 N = 1000
-nb_graphs = 50    # 1000
-selfloops = False
-alpha_min = 10
-beta_min = 5
-alpha_max = 50
-beta_max = 30
-gamma = 2.5
-y = truncated_pareto(N, 0, 1, 2.5)
-z = truncated_pareto(N, 0, 1, 3)
+nb_graphs = 1    # 1000
+# ymax = 0.8
+# zmax = 0.7
+ymin = 0.05
+zmin = 0.05
+gamma_in = 2.5
+gamma_out = 3
 
-""" Get effective ranks vs. norm ratio (through Pareto shape param.) """
-min_strength = 0.1
-max_strength = 1.65
+""" Get effective ranks vs. norm ratio (through ymin, zmin) """
+min_strength = 0.1  # 0.06
+max_strength = 0.99  # 0.6
 nb_strength = 10
 strength_array = np.linspace(min_strength, max_strength, nb_strength)[::-1]
 
@@ -58,22 +58,22 @@ for j, g in enumerate(tqdm(strength_array, position=0, desc="strength",
                            leave=True, ncols=80)):
     singularValues = np.array([])
 
+    y = truncated_pareto(N, ymin, g, gamma_in)   # ymax,
+    z = truncated_pareto(N, zmin, g, gamma_out)  # zmax,
     for i in tqdm(range(0, nb_graphs), position=1, desc="Graph", leave=False,
                   ncols=80):
 
-        G, EW = soft_configuration_model(N, alpha, beta, g,
-                                         selfloops=selfloops,
-                                         expected=True)
-        W = nx.to_numpy_array(G)
+        W, EW = weighted_soft_configuration_model(y, z, selfloops=selfloops,
+                                                  expected=True)
         if plot_expected_weight_matrix:
             plot_weight_matrix(EW)
         norm_W[i, j] = norm(W, ord=norm_choice)
         norm_R[i, j] = norm(W - EW, ord=norm_choice)
-        # print("||R||/||<W>|| = ",
-        #       norm(W-EW, ord=norm_choice)/norm(EW, ord=norm_choice))
+        print("||R||/||W|| = ", norm_R[i, j]/norm_W[i, j])
         if plot_degrees:
-            plt.hist(np.sum(EW, axis=1), bins=100)
-            plt.hist(np.sum(EW, axis=0), bins=100)
+            WW = (W > 0).astype(float)
+            plt.hist(np.sum(WW, axis=1), bins=100)
+            plt.hist(np.sum(WW, axis=0), bins=100)
             plt.show()
         singularValues_instance = svdvals(W)
         singularValues = np.concatenate((singularValues,
@@ -264,10 +264,11 @@ if messagebox.askyesno("Python",
     timestr = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")
     parameters_dictionary = {"graph_str": graph_str,
                              "alpha, beta distribution": "truncated pareto",
-                             "N": N, "alpha_max": alpha_max,
-                             "beta_max": beta_max, "alpha_min": alpha_min,
-                             "beta_min": beta_min, "gamma": gamma,
-                              "selfloops": selfloops,
+                             "N": N,  # "ymax": ymax, "zmax": zmax,
+                             "ymin": "see strength_array",
+                             "zmin": "see strength_array",
+                             "gamma_in": gamma_in,
+                             "gamma_out": gamma_out, "selfloops": selfloops,
                              "strength_array": strength_array.tolist(),
                              "norm_ratio": norm_ratio.tolist(),
                              "nb_samples (nb_graphs)": nb_graphs,
