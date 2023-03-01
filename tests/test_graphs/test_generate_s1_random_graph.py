@@ -17,7 +17,7 @@ def test_s1_model():
                  directed=directed, expected=True)
 
     EW = np.zeros((N, N))
-    nb_instances = 10000
+    nb_instances = 100000
     for i in range(nb_instances):
         W = s1_model(beta, kappa_in, kappa_out, theta,
                      directed=directed, expected=False)
@@ -38,6 +38,18 @@ def test_generate_nonnegative_arrays_with_same_average():
     c, d = generate_nonnegative_arrays_with_same_average(c, d)
 
     assert np.mean(a) == np.mean(b) and np.mean(c) == np.mean(d)
+
+
+def test_thetaij_triangle_inequality():
+    N = 1000
+    theta = 2*np.pi*uniform.rvs(size=N)
+    thetaij = np.absolute(theta.reshape(-1, 1) - theta)
+    thetaij = np.pi - np.absolute(np.pi - thetaij)
+
+    for k in range(N):
+        row = thetaij[k, :].reshape(1, N)
+        col = thetaij[:, k].reshape(N, 1)
+        assert np.all(-1e-10 <= (row + col) - thetaij)
 
 
 if __name__ == "__main__":
