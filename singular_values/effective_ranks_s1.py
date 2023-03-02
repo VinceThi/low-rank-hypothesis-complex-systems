@@ -16,7 +16,7 @@ plot_histogram = False
 plot_scree = False
 plot_singvals_W_EW_R = False
 plot_norms = False
-plot_degrees = True
+plot_degrees = False
 path_str = "C:/Users/thivi/Documents/GitHub/" \
            "low-rank-hypothesis-complex-systems/singular_values/properties/" \
            "singular_values_random_graphs/"
@@ -27,12 +27,12 @@ directed = True
 selfloops = True
 expected = True
 N = 1000
-nb_graphs = 50    # 1000
-kappa_in_min = 5
+nb_graphs = 1000
+kappa_in_min = 2
 kappa_in_max = 100
 gamma_in = 2.5
 kappa_in = truncated_pareto(N, kappa_in_min, kappa_in_max, gamma_in)
-kappa_out_min = 3
+kappa_out_min = 1
 kappa_out_max = 50
 gamma_out = 2
 kappa_out = truncated_pareto(N, kappa_out_min,
@@ -40,15 +40,20 @@ kappa_out = truncated_pareto(N, kappa_out_min,
 kappa_in, kappa_out = \
     generate_nonnegative_arrays_with_same_average(kappa_in, kappa_out)
 
-theta = 2*np.pi*uniform.rvs(size=N)
-
+""" Warning: the computation of the singular values is very sensible depending
+on the choice of theta. See tests/test_graphs/test_generate_s1_random_graph 
+, the test "test_thetaij_rank" for more details. It is better to choose
+2*np.pi/np.random.randint(1, 50, N) if one wants to have a more precise 
+computation of the singular values. """
+# theta = 2*np.pi*uniform.rvs(size=N)
+theta = 2*np.pi/np.random.randint(1, 50, N)
 
 """ Get effective ranks vs. norm ratio (through temperature variation) """
 # ^ Inverse temperature, controls the clustering
 #  (1, inf) -> lower to higher clustering
 min_temperature = 0.01  # 1.1
-max_temperature = 0.9  # 10
-nb_temperature = 10
+max_temperature = 0.99   # 10
+nb_temperature = 50
 temperature_array = np.linspace(min_temperature, max_temperature,
                                 nb_temperature)
 
@@ -83,6 +88,7 @@ for j, temperature in enumerate(tqdm(temperature_array, position=0,
         # plt.hist(np.sum(EW, axis=1), bins=100)
         # plt.hist(np.sum(EW, axis=0), bins=100)
         # plt.show()
+        # print("||R||/||W|| = ", norm_R[i, j] / norm_W[i, j])
 
         singularValues_instance = svdvals(W)
         singularValues = np.concatenate((singularValues,

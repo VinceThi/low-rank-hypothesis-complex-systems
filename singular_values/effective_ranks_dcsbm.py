@@ -27,7 +27,7 @@ path_str = "C:/Users/thivi/Documents/GitHub/" \
 """ Random graph parameters """
 graph_str = "sbm"
 N = 1000
-nb_graphs = 1   # 1000
+nb_graphs = 1000
 directed = True
 selfloops = True
 expected_nb_edges0 = N*np.array([[0.40, 0.10, 0.10, 0.02, 0.13],
@@ -38,7 +38,7 @@ expected_nb_edges0 = N*np.array([[0.40, 0.10, 0.10, 0.02, 0.13],
 
 sizes = np.array([N//10, 2*N//5, N//10, N//5, N//5])
 
-kappa_in_min = 1
+kappa_in_min = 2
 kappa_in_max = 100
 gamma_in = 2.5
 kappa_in = truncated_pareto(N, kappa_in_min, kappa_in_max, gamma_in)
@@ -52,12 +52,12 @@ nkappa_out = normalize_degree_propensity(kappa_out, sizes)
 
 
 """ Get effective ranks vs. norm ratio (through expected nb edges variation)"""
-min_strength = 5
+min_strength = 6
 max_strength = 200
-nb_strength = 10
+nb_strength = 50
 strength_array = np.linspace(min_strength, max_strength, nb_strength)[::-1]
 
-expected_nb_edges_list = []
+# expected_nb_edges_list = []
 
 norm_choice = 2   # 'fro': frobenius norm, 2: spectral norm
 norm_W = np.zeros((nb_graphs, nb_strength))
@@ -76,7 +76,7 @@ for j, g in enumerate(tqdm(strength_array, position=0, desc="Strength",
                            leave=True, ncols=80)):
     singularValues = np.array([])
     expected_nb_edges = g*expected_nb_edges0
-    expected_nb_edges_list.append(expected_nb_edges.tolist())
+    # expected_nb_edges_list.append(expected_nb_edges.tolist())
     for i in tqdm(range(0, nb_graphs), position=1, desc="Graph", leave=False,
                   ncols=80):
         W, EW = degree_corrected_stochastic_block_model(
@@ -85,7 +85,7 @@ for j, g in enumerate(tqdm(strength_array, position=0, desc="Strength",
         norm_W[i, j] = norm(W, ord=norm_choice)
         R = W - EW
         norm_R[i, j] = norm(R, ord=norm_choice)
-        print("||R||/||W|| = ", norm_R[i, j]/norm_W[i, j])
+        # print("||R||/||W|| = ", norm_R[i, j]/norm_W[i, j])
 
         singularValues_instance = svdvals(W)
         singularValues = np.concatenate((singularValues,
@@ -276,7 +276,7 @@ if messagebox.askyesno("Python",
            "singular_values/properties/" + graph_str + "/"
     timestr = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")
     parameters_dictionary = {"graph_str": graph_str,
-                             "N": N, "sizes": sizes,
+                             "N": N, "sizes": sizes.tolist(),
                              "kappa_in_min": kappa_in_min,
                              "kappa_in_max": kappa_in_max,
                              "gamma_in": gamma_in,
@@ -290,7 +290,7 @@ if messagebox.askyesno("Python",
                              "directed": directed, "selfloops": selfloops,
                              "strength_array": strength_array.tolist(),
                              "norm_ratio": norm_ratio.tolist(),
-                             "expected_nb_edges_list": expected_nb_edges_list,
+                             "expected_nb_edges0": expected_nb_edges0.tolist(),
                              "nb_samples (nb_graphs)": nb_graphs,
                              "norm_choice": norm_choice
                              }

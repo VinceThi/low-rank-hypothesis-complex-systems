@@ -44,7 +44,8 @@ def weighted_soft_configuration_model(y, z, selfloops=True, expected=False):
     """
     Generator of the weighted directed soft configuration model with self loops
 
-    It is the model 3 of Garlaschelli and Loffredo, PRL, 2009 when w*-> \infty
+    It is the model 3 of Garlaschelli and Loffredo, PRL, 2009 when
+    the maximum weight w*-> \infty.
 
     :param y: N-dimensional array related to the expected in strengths ,
               pij = y_i z_j must be between 0 and 1
@@ -58,7 +59,7 @@ def weighted_soft_configuration_model(y, z, selfloops=True, expected=False):
     and the expected matrix if expected is True
     """
 
-    # Builds the expected adjacency matrix (probabilities of connection)
+    # Probabilities of connection
     pij = np.outer(y, z)
     if np.any(pij > 1):
         raise ValueError("A probability of connection pij is greater than 1.")

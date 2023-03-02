@@ -2,6 +2,7 @@
 # @author: Vincent Thibeault
 
 from graphs.generate_degree_corrected_stochastic_block_model import *
+from singular_values.compute_effective_ranks import computeRank
 from plots.plot_weight_matrix import plot_weight_matrix
 import pytest
 
@@ -61,6 +62,24 @@ def test_degree_corrected_stochastic_block_model_propensities():
         and np.allclose(np.sum(expected_weight_matrix[2:, 2:]), 3)\
         and np.allclose(valid_expected_in_degrees, test_expected_in_degrees)\
         and np.allclose(valid_expected_out_degrees, test_expected_out_degrees)
+
+
+def test_rank_expected_degree_corrected_stochastic_block_model():
+    block_sizes = np.array([3, 2, 2])
+    N = np.sum(block_sizes)
+    expected_nb_edges = N*np.array([[0.8, 0.2, 0.1],
+                                    [0.4, 0.6, 0.2],
+                                    [0.01, 0.1, 0.3]])
+    nkappa_in = np.array([0.8, 0.15, 0.05, 0.9, 0.1, 0.5, 0.5])
+    # ^satisfies the normalization per group
+    nkappa_out = np.array([0.3, 0.6, 0.1, 0.25, 0.75, 0.2, 0.5])
+    # ^ satisfies the normalization per group
+    Lambda = expected_adjacency_matrix(expected_nb_edges, block_sizes,
+                                       self_loops=True)
+    EW = Lambda*np.outer(nkappa_in, nkappa_out)
+    singvals = np.linalg.svd(EW, compute_uv=False)
+
+    assert computeRank(singvals, tolerance=1e-6) <= len(block_sizes)
 
 
 if __name__ == "__main__":

@@ -23,11 +23,11 @@ selfloops = True
 directed = True
 N = 1000
 nb_networks = 10    # 1000
-kappa_in_min = 5
+kappa_in_min = 2
 kappa_in_max = 100
 gamma_in = 2.5
 kappa_in = truncated_pareto(N, kappa_in_min, kappa_in_max, gamma_in)
-kappa_out_min = 3
+kappa_out_min = 1
 kappa_out_max = 50
 gamma_out = 2
 kappa_out = truncated_pareto(N, kappa_out_min,
@@ -35,7 +35,13 @@ kappa_out = truncated_pareto(N, kappa_out_min,
 kappa_in, kappa_out = \
     generate_nonnegative_arrays_with_same_average(kappa_in, kappa_out)
 
-theta = 2*np.pi*uniform.rvs(size=N)
+""" Warning: the computation of the singular values is very sensible depending
+on the choice of theta. See tests/test_graphs/test_generate_s1_random_graph 
+and the test "test_thetaij_rank". It is better to choose
+2*np.pi/np.random.randint(1, 50, N) if one wants to have a more precise 
+computation of the singular values. """
+# theta = 2*np.pi*uniform.rvs(size=N)
+theta = 2*np.pi/np.random.randint(1, 50, N)
 temperature = 0.8  # 0.1 and 0.8
 norm_choice = 2
 

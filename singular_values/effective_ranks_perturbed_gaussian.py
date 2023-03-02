@@ -19,7 +19,7 @@ path_str = "C:/Users/thivi/Documents/GitHub/" \
 """ Random graph parameters """
 graph_str = "perturbed_gaussian"
 N = 1000
-nb_graphs = 50     # 1000
+nb_graphs = 1000
 # rank = 5
 prng1 = np.random.RandomState(1234567890)
 prng2 = np.random.RandomState(1334567890)
@@ -43,8 +43,8 @@ EW = P@Q.T
 
 """ Get effective ranks vs. noise strength"""
 min_strength = 0.01
-max_strength = 2.5
-nb_strength = 10
+max_strength = 4
+nb_strength = 50
 strength_array = np.linspace(min_strength, max_strength, nb_strength)
 
 norm_choice = 2   # 'fro': frobenius norm, 2: spectral norm
