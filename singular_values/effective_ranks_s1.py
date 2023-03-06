@@ -27,7 +27,7 @@ directed = True
 selfloops = True
 expected = True
 N = 1000
-nb_graphs = 1000
+nb_graphs = 100
 kappa_in_min = 2
 kappa_in_max = 100
 gamma_in = 2.5
@@ -52,8 +52,8 @@ theta = 2*np.pi/np.random.randint(1, 50, N)
 # ^ Inverse temperature, controls the clustering
 #  (1, inf) -> lower to higher clustering
 min_temperature = 0.01  # 1.1
-max_temperature = 0.99   # 10
-nb_temperature = 50
+max_temperature = 0.96   # 10
+nb_temperature = 30
 temperature_array = np.linspace(min_temperature, max_temperature,
                                 nb_temperature)
 

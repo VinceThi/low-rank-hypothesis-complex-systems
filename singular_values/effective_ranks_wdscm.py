@@ -27,7 +27,7 @@ path_str = "C:/Users/thivi/Documents/GitHub/" \
 graph_str = "soft_configuration_model"
 selfloops = True
 N = 1000
-nb_graphs = 1000
+nb_graphs = 100
 ymax = 0.8
 zmax = 0.7
 gamma_in = 2.5
@@ -37,7 +37,7 @@ gamma_out = 3
 """ Get effective ranks vs. norm ratio (through ymin, zmin) """
 min_strength = 0.1
 max_strength = 0.65
-nb_strength = 50
+nb_strength = 30
 strength_array = np.linspace(min_strength, max_strength, nb_strength)[::-1]
 
 norm_choice = 2   # 'fro': frobenius norm, 2: spectral norm

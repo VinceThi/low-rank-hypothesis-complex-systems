@@ -22,7 +22,7 @@ graph_str = "s1"
 selfloops = True
 directed = True
 N = 1000
-nb_networks = 10    # 1000
+nb_networks = 100
 kappa_in_min = 2
 kappa_in_max = 100
 gamma_in = 2.5
@@ -42,7 +42,7 @@ and the test "test_thetaij_rank". It is better to choose
 computation of the singular values. """
 # theta = 2*np.pi*uniform.rvs(size=N)
 theta = 2*np.pi/np.random.randint(1, 50, N)
-temperature = 0.8  # 0.1 and 0.8
+temperature = 0.95  # 0.2 and 0.95
 norm_choice = 2
 
 

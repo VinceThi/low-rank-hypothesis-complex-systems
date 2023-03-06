@@ -25,9 +25,9 @@ plot_degrees = False
 graph_str = "soft_configuration_model"
 selfloops = True
 N = 1000
-nb_networks = 10    # 1000
-ymin, ymax = 0.3, 0.8     # ymin = 0.06 and 0.3
-zmin, zmax = 0.3, 0.7     # zmin = 0.06 and 0.3
+nb_networks = 100
+ymin, ymax = 0.15, 0.8     # ymin = 0.6 and 0.15
+zmin, zmax = 0.15, 0.7     # zmin = 0.6 and 0.15
 gamma_in = 2.5
 gamma_out = 3
 y = truncated_pareto(N, ymin, ymax, gamma_in)
@@ -186,7 +186,8 @@ if messagebox.askyesno("Python",
            "singular_values/properties/singular_values_random_graphs/"
     timestr = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")
     parameters_dictionary = {"graph_str": graph_str,
-                             "N": N, "ymax": ymax,
+                             "N": N, "y": y.tolist(), "z": z.tolist(),
+                             "ymax": ymax,
                              "zmax": zmax, "ymin": ymin,
                              "zmin": zmin, "gamma_in": gamma_in,
                              "gamma_out": gamma_out,

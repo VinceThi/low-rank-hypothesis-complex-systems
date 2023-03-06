@@ -27,7 +27,7 @@ path_str = "C:/Users/thivi/Documents/GitHub/" \
 """ Random graph parameters """
 graph_str = "sbm"
 N = 1000
-nb_graphs = 1000
+nb_graphs = 100
 directed = True
 selfloops = True
 expected_nb_edges0 = N*np.array([[0.40, 0.10, 0.10, 0.02, 0.13],
@@ -54,7 +54,7 @@ nkappa_out = normalize_degree_propensity(kappa_out, sizes)
 """ Get effective ranks vs. norm ratio (through expected nb edges variation)"""
 min_strength = 6
 max_strength = 200
-nb_strength = 50
+nb_strength = 30
 strength_array = np.linspace(min_strength, max_strength, nb_strength)[::-1]
 
 # expected_nb_edges_list = []

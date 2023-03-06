@@ -27,7 +27,7 @@ plot_degrees = False
 """ Random graph parameters """
 graph_str = "sbm"
 N = 1000
-nb_networks = 1    # 1000
+nb_networks = 100
 directed = True
 selfloops = True
 norm_choice = 2
@@ -37,7 +37,7 @@ expected_nb_edges = N*np.array([[0.30, 0.10, 0.10, 0.02, 0.13],
                                 [0.10, 0.05, 0.05, 0.40, 0.01],
                                 [0.10, 0.09, 0.05, 0.05, 0.60]])
 
-g = 100   # 100, 5
+g = 10   # 100, 10
 expected_nb_edges = g*expected_nb_edges
 
 sizes = np.array([N//10, 2*N//5, N//10, N//5, N//5])
@@ -94,6 +94,8 @@ xlabel = "Index $i$"
 mean_norm_W = np.mean(singularValues[:, 0])
 mean_norm_R = np.mean(norm_R)
 norm_ratio = mean_norm_R/mean_norm_W
+
+print(norm_ratio)
 
 mean_singularValues = np.mean(singularValues, axis=0)
 bar_singularValues = np.std(singularValues, axis=0)
@@ -194,7 +196,7 @@ if messagebox.askyesno("Python",
            "low-rank-hypothesis-complex-systems/" \
            "singular_values/properties/singular_values_random_graphs/"
     timestr = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")
-    parameters_dictionary = {"graph_str": graph_str, "sizes": sizes,
+    parameters_dictionary = {"graph_str": graph_str, "sizes": sizes.tolist(),
                              "N": N,
                              "expected_nb_edges": expected_nb_edges.tolist(),
                              "kappa_in_min": kappa_in_min,
