@@ -38,7 +38,8 @@ m5 = prng5.normal(0, 1/np.sqrt(N), (N, ))
 n5 = prng5.normal(0.4, 0.5, (N, ))
 P = np.array([m1, m2, m3, m4, m5]).T
 Q = np.array([n1, n2, n3, n4, n5]).T
-print(norm(np.outer(n1, m1)), norm(np.outer(n2, m2)), norm(np.outer(n3, m3)), norm(np.outer(n4, m4)), norm(np.outer(n5, m5)))
+print(norm(np.outer(n1, m1)), norm(np.outer(n2, m2)), norm(np.outer(n3, m3)),
+      norm(np.outer(n4, m4)), norm(np.outer(n5, m5)))
 EW = P@Q.T
 
 

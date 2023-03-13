@@ -9,11 +9,11 @@ from graphs.get_real_networks import *
 from singular_values.compute_effective_ranks import *
 
 graph_str = "connectome"
-plot_degrees = True
+plot_degrees = False
 plot_weight_mat = False
-save_data = False
+save_data = True
 compute_effective_ranks = True
-plot_singular_vals = True
+plot_singular_vals = False
 
 
 if graph_str == "learned":
@@ -33,7 +33,14 @@ if graph_str == "learned":
 
     W = get_learned_weight_matrix(networkName)
     N = len(W[0])
+
+elif graph_str == "epidemiological":
+    networkName = "high_school_proximity"
+    singularValuesFilename = 'properties/' + networkName \
+                             + '_singular_values.txt'
+    W = get_epidemiological_weight_matrix(networkName)
     singularValues = la.svdvals(W)
+    N = len(W[0])
 
 elif graph_str == "economic":
     networkName = "non_financial_institution04-Jan-2001"
@@ -48,10 +55,10 @@ elif graph_str == "economic":
     singularValues = la.svdvals(W)
 
 elif graph_str == "connectome":
-    networkName = "platynereis_dumerilii_desmosomal"   # "celegans_signed"
+    networkName = "cintestinalis"   # "celegans_signed"
     # "mouse_meso", "zebrafish_meso", "celegans",
-    # "celegans_signed", "drosophila", "ciona",
-    #   "platynereis_dumerilii_neuronal", "platynereis_dumerilii_desmosomal"
+    # "celegans_signed", "drosophila", "cintestinalis",
+    #   "pdumerilii_neuronal", "pdumerilii_desmosomal"
     singularValuesFilename = 'properties/' + networkName \
                              + '_singular_values.txt'
 

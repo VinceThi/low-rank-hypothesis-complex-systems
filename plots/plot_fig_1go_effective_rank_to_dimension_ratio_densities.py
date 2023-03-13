@@ -55,7 +55,7 @@ def plotDensities(weightedDF, unweightedDF):
              color=color_w)
     for item in p:
         item.set_height(item.get_height()/sum(x))
-    plt.text(letter_posx, letter_posy, "f", fontweight="bold",
+    plt.text(letter_posx, letter_posy, "g", fontweight="bold",
              horizontalalignment="center",
              verticalalignment="top", transform=axes[0, 0].transAxes)
     axes[0][0].set_ylim([-0.02 * 0.85, 0.85])
@@ -88,7 +88,7 @@ def plotDensities(weightedDF, unweightedDF):
     for item in p:
         item.set_height(item.get_height() / sum(x))
 
-    plt.text(letter_posx, letter_posy, "g", fontweight="bold",      # erank",
+    plt.text(letter_posx, letter_posy, "h", fontweight="bold",      # erank",
              horizontalalignment="center",
              verticalalignment="top", transform=axes[0, 1].transAxes)
     axes[0][1].set_ylim([-0.02*0.5, 0.55])
@@ -119,7 +119,7 @@ def plotDensities(weightedDF, unweightedDF):
              color=color_w)
     for item in p:
         item.set_height(item.get_height() / sum(x))
-    plt.text(letter_posx, letter_posy, "h", fontweight="bold",  # Energy ratio"
+    plt.text(letter_posx, letter_posy, "i", fontweight="bold",  # Energy ratio"
              horizontalalignment="center",
              verticalalignment="top", transform=axes[0, 2].transAxes)
     axes[0][2].set_ylim([-0.02 * 0.5, 0.5])
@@ -151,7 +151,7 @@ def plotDensities(weightedDF, unweightedDF):
     for item in p:
         item.set_height(item.get_height() / sum(x))
 
-    plt.text(letter_posx, letter_posy, "i", fontweight="bold",      # Elbow",
+    plt.text(letter_posx, letter_posy, "j", fontweight="bold",      # Elbow",
              horizontalalignment="center",
              verticalalignment="top", transform=axes[1, 0].transAxes)
     axes[1][0].set_ylim([-0.02*0.5, 0.5])
@@ -183,7 +183,7 @@ def plotDensities(weightedDF, unweightedDF):
     for item in p:
         item.set_height(item.get_height() / sum(x))
 
-    plt.text(letter_posx, letter_posy, "j", fontweight="bold",
+    plt.text(letter_posx, letter_posy, "k", fontweight="bold",
              horizontalalignment="center", verticalalignment="top",
              transform=axes[1, 1].transAxes)
     axes[1][1].set_ylim([-0.02*0.5, 0.5])
@@ -215,7 +215,7 @@ def plotDensities(weightedDF, unweightedDF):
     for item in p:
         item.set_height(item.get_height() / sum(x))
 
-    plt.text(letter_posx, letter_posy, "k", fontweight="bold",
+    plt.text(letter_posx, letter_posy, "l", fontweight="bold",
              horizontalalignment="center", verticalalignment="top",
              transform=axes[1, 2].transAxes)
     axes[1][2].set_ylim([-0.02*0.5, 0.5])
@@ -247,7 +247,7 @@ def plotDensities(weightedDF, unweightedDF):
     for item in p:
         item.set_height(item.get_height() / sum(x))
 
-    plt.text(letter_posx, letter_posy, "l", fontweight="bold",
+    plt.text(letter_posx, letter_posy, "m", fontweight="bold",
              horizontalalignment="center", verticalalignment="top",
              transform=axes[2, 0].transAxes)
     axes[2][0].set_ylim([-0.02 * 0.5, 0.5])
@@ -279,7 +279,7 @@ def plotDensities(weightedDF, unweightedDF):
     for item in p:
         item.set_height(item.get_height() / sum(x))
 
-    plt.text(letter_posx, letter_posy, "m", fontweight="bold",  # Rank",
+    plt.text(letter_posx, letter_posy, "n", fontweight="bold",  # Rank",
              horizontalalignment="center",
              verticalalignment="top", transform=axes[2, 1].transAxes)
     axes[2][1].set_ylim([-0.02 * 0.5, 0.5])
@@ -302,7 +302,7 @@ def plotDensities(weightedDF, unweightedDF):
                                  density=True, color=color_w, alpha=alpha_w)
     for item in p:
         item.set_height(item.get_height() / sum(x))
-    plt.text(letter_posx, letter_posy, "n", fontweight="bold",
+    plt.text(letter_posx, letter_posy, "o", fontweight="bold",
              horizontalalignment="center",
              verticalalignment="top", transform=axes[2, 2].transAxes)
     axes[2][2].set_xscale('log')
@@ -330,6 +330,15 @@ def plotDensities(weightedDF, unweightedDF):
     axes[2, 1].set_xlabel('rank/N')
     axes[2, 2].set_xlabel('N')
     axes[2, 2].xaxis.set_label_coords(1.05, -0.025)
+
+    axes[0, 0].xaxis.set_label_coords(0.5, -0.08)
+    axes[0, 1].xaxis.set_label_coords(0.5, -0.08)
+    axes[0, 2].xaxis.set_label_coords(0.5, -0.08)
+    axes[1, 0].xaxis.set_label_coords(0.5, -0.08)
+    axes[1, 1].xaxis.set_label_coords(0.5, -0.08)
+    axes[1, 2].xaxis.set_label_coords(0.5, -0.08)
+    axes[2, 0].xaxis.set_label_coords(0.5, -0.08)
+    axes[2, 1].xaxis.set_label_coords(0.5, -0.08)
 
     # axes[0, 1].set_xlabel('Rank to dimension ratio')
     # axes[0, 2].set_xlabel('Stable rank to dimension ratio')

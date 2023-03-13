@@ -7,39 +7,42 @@ from plots.config_rcparams import *
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from singular_values.compute_singular_values_dscm_upper_bounds import\
     upper_bound_singvals_infinite_sum_weighted
+from dynamics.error_vector_fields import rmse
 from tqdm import tqdm
 
 path_str = "C:/Users/thivi/Documents/GitHub/" \
            "low-rank-hypothesis-complex-systems/" \
            "singular_values/properties/"
 
+global_effrank_list = [1, 1, 1, 0, 0, 0, 0, 0]
+
 """ Perturbed gaussian """
 graph_str_gauss = "perturbed_gaussian"
 spec_path_str_gauss = "2023_03_02_13h53min20sec_100graphs_30s"
 spec_path_str_gauss_svdvals_1 = "2023_03_02_22h59min37sec_100graphs_g1_r0_08"
 spec_path_str_gauss_svdvals_2 = "2023_03_02_23h00min31sec_100graphs_g3_r0_25"
-effrank_indicator_list_gauss = [1, 1, 1, 0, 0, 0, 0, 0]
+effrank_indicator_list_gauss = global_effrank_list
 
 """ Degree-corrected stochastic block model """
 graph_str_SBM = "sbm"
 spec_path_str_SBM_svdvals_1 = "2023_03_02_23h17min27sec_100graphs_g100_r0_091"
 spec_path_str_SBM_svdvals_2 = "2023_03_02_23h18min38sec_100graphs_g10_r0_285"
 spec_path_str_SBM = "2023_03_02_13h52min15sec_100graphs_30s"
-effrank_indicator_list_SBM = [1, 1, 1, 0, 0, 0, 0, 0]
+effrank_indicator_list_SBM = global_effrank_list
 
 """ Soft configuration model """
 graph_str_scm = "soft_configuration_model"
 spec_path_str_scm_svdvals_1 = "2023_03_04_15h05min39sec_100graphs_g0_6_r0_096"
 spec_path_str_scm_svdvals_2 = "2023_03_04_15h06min27sec_100graphs_g0_15_r0_268"
 spec_path_str_scm = "2023_03_02_13h53min07sec_100graphs_30s"
-effrank_indicator_list_scm = [1, 1, 1, 0, 0, 0, 0, 0]
+effrank_indicator_list_scm = global_effrank_list
 
 """ S1 """
 graph_str_S1 = "s1"
 spec_path_str_S1_svdvals_1 = "2023_03_02_23h11min06sec_100graphs_g0_2_r0_0657"
 spec_path_str_S1_svdvals_2 = "2023_03_02_23h11min57sec_100graphs_g0_95_r0_25"
 spec_path_str_S1 = "2023_03_02_22h58min15sec_100graphs_30s"
-effrank_indicator_list_S1 = [1, 1, 1, 0, 0, 0, 0, 0]
+effrank_indicator_list_S1 = global_effrank_list
 
 singvals_color1 = "#c6dbef"
 singvals_color2 = deep[9]  # "#6baed6"
@@ -144,6 +147,9 @@ def plot_singular_values_random_graphs(ax, graph_str, spec_path_str, ins_ylim,
                     fontsize=8)
         ax.plot(indices, upper_bound_singvals[:max_singvals] / mean_norm_W,
                 color=dark_grey, zorder=50, linestyle="--", linewidth=1)
+        rmse_bound = rmse(upper_bound_singvals/mean_norm_W,
+                          singularValues_EW/mean_norm_W)
+        print(f"rmse bound = {rmse_bound}")
 
     ticks = ax.get_xticks()
     ticks[ticks.tolist().index(0)] = 1
@@ -167,7 +173,7 @@ def plot_singular_values_random_graphs(ax, graph_str, spec_path_str, ins_ylim,
     ax.xaxis.set_label_coords(0.5, -0.08)
     # plt.ylabel(ylabel)  # , labelpad=20)
     # ax.set_xlim([-50, N + 50])
-    ax.set_ylim([-0.05, 1.05])
+    ax.set_ylim([-0.05, 1.08])
     ax.set_yticks([0, 0.5, 1])
 
     axins = inset_axes(ax, width="45%", height="45%",
@@ -199,7 +205,7 @@ def plot_singular_values_random_graphs(ax, graph_str, spec_path_str, ins_ylim,
     axins.yaxis.set_label_coords(-0.24, 0.4)
     ylab.set_rotation(0)
     axins.set_xlabel("$i$", fontsize=8)
-    axins.xaxis.set_label_coords(0.5, -0.1)
+    axins.xaxis.set_label_coords(0.5, -0.11)
     if graph_str == "soft_configuration_model" and plot_upper_bound:
         axins.set_xlim([0.1, max_singvals + 0.9])
     else:
@@ -269,6 +275,18 @@ def plot_effective_ranks_random_graphs(ax, graph_str, spec_path_str,
                             mean_effrank + std_effrank, color=color[j],
                             alpha=alpha)
             j += 1
+    ll = 0.5
+    if graph_str == "s1":
+        norm_ratio = np.concatenate([norm_ratio, np.array([0.29])])
+    ax.plot(norm_ratio, 0.05 * np.ones(len(norm_ratio)),
+            linestyle="--", color=deep[7], linewidth=ll, zorder=-100)
+    ax.text(norm_ratio[-1], 0.045, "$5\%$", fontsize=8)
+    ax.plot(norm_ratio, 0.1 * np.ones(len(norm_ratio)),
+            linestyle="--", color=deep[7], linewidth=ll, zorder=-100)
+    ax.text(norm_ratio[-1], 0.095, "$10\%$", fontsize=8)
+    ax.plot(norm_ratio, 0.15 * np.ones(len(norm_ratio)),
+            linestyle="--", color=deep[7], linewidth=ll, zorder=-100)
+    ax.text(norm_ratio[-1], 0.145, "$15\%$", fontsize=8)
     ax.tick_params(axis='both', which='major')
     ax.set_xlabel(xlabel)
     ax.set_ylim([-0.006, 0.15])
@@ -277,7 +295,7 @@ def plot_effective_ranks_random_graphs(ax, graph_str, spec_path_str,
 
 """ Plot """
 
-letter_posx, letter_posy = -0.25, 1.08
+letter_posx, letter_posy = -0.22, 1.08
 fontsize_legend = 8
 fontsize_title = 9.5
 title_pad = 0
@@ -374,7 +392,7 @@ ax9.scatter([0.0846], [markerpos], color=singvals_color1, zorder=10,
             clip_on=False, marker="s")
 ax9.scatter([0.250], [markerpos], color=singvals_color1, zorder=10,
             clip_on=False, marker="*")
-ax9.text(letter_posx, letter_posy, "k", fontweight="bold",
+ax9.text(letter_posx, letter_posy, "j", fontweight="bold",
          horizontalalignment="center", verticalalignment="top",
          transform=ax9.transAxes)
 # ax9.set_yticks([0, 0.01, 0.02])
@@ -394,7 +412,7 @@ ax10.scatter([0.0908], [markerpos], color=singvals_color1, zorder=10,
              clip_on=False, marker="s")
 ax10.scatter([0.285], [markerpos], color=singvals_color1, zorder=10,
              clip_on=False, marker="*")
-ax10.text(letter_posx, letter_posy, "l", fontweight="bold",
+ax10.text(letter_posx, letter_posy, "k", fontweight="bold",
           horizontalalignment="center", verticalalignment="top",
           transform=ax10.transAxes)
 ax10.set_xticks([0.1, 0.2, 0.3])
@@ -411,7 +429,7 @@ ax11.scatter([0.2504], [markerpos], color=singvals_color1, zorder=10,
 ax11.set_xticks([0, 0.1, 0.2, 0.3])
 # ax12.set_yticks([0, 0.1, 0.2])
 ax11.set_xlim([-0.006, 0.306])
-ax11.text(letter_posx, letter_posy, "m", fontweight="bold",
+ax11.text(letter_posx, letter_posy, "l", fontweight="bold",
           horizontalalignment="center", verticalalignment="top",
           transform=ax11.transAxes)
 
@@ -425,7 +443,7 @@ ax12.scatter([0.268], [markerpos], color=singvals_color1, zorder=10,
 ax12.set_xticks([0.1, 0.2, 0.3])
 # ax12.set_yticks([0, 0.1, 0.2])
 # ax12.set_ylim([0, 0.2])
-ax12.text(letter_posx, letter_posy, "n", fontweight="bold",
+ax12.text(letter_posx, letter_posy, "m", fontweight="bold",
           horizontalalignment="center", verticalalignment="top",
           transform=ax12.transAxes)
 

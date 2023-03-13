@@ -66,18 +66,15 @@ def plotEffectiveRanks_vs_density(effectiveRanksDF):
 
     nbVertices = effectiveRanksDF['Density']
     nbVertices = nbVertices.values
-    x, bins, p = axes[2][2].hist(nbVertices, bins=np.logspace(np.log10(0.1),
-                                                              np.log10(21000),
-                                                              40),
-                                 density=True, color=color)
+    x, bins, p = axes[2][2].hist(nbVertices, density=True, color=color)
     for item in p:
         item.set_height(item.get_height() / sum(x))
     plt.text(letter_posx, letter_posy, "f", fontweight="bold",
              horizontalalignment="center",
              verticalalignment="top", transform=axes[2, 2].transAxes)
-    axes[2][2].set_xscale('log')
-    axes[2][2].set_ylim([-0.02 * 0.40, 0.40])
-    # axes[2][2].set_xlim([0.5, 100])
+    # axes[2][2].set_xscale('log')
+    axes[2][2].set_ylim([-0.01, 1])
+    axes[2][2].set_xlim([-0.05, 1])
 
     axes[0, 0].set_xlabel('Density')
     axes[0, 1].set_xlabel('Density')
@@ -96,7 +93,7 @@ def plotEffectiveRanks_vs_density(effectiveRanksDF):
     axes[1, 2].set_ylabel('shrank')
     axes[2, 0].set_ylabel('erank')
     axes[2, 1].set_ylabel('rank')
-    axes[2, 2].set_ylabel('Fraction\nof graphs')
+    axes[2, 2].set_ylabel('Fraction\nof networks')
     # axes[2, 2].xaxis.set_label_coords(1.05, -0.025)
 
     # axes[0, 0].set_xticks([10**0, 10**2, 10**4])

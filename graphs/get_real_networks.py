@@ -82,7 +82,7 @@ def get_connectome_weight_matrix(graph_name):
         # N = 21733
         # srank = 11.5811
 
-    elif graph_name == "ciona":
+    elif graph_name == "cintestinalis":
         A_from_xlsx = pd.read_excel(path_str +
                                     'ciona_intestinalis_lavaire_elife-16962'
                                     '-fig16-data1-v1_modified.xlsx').values
@@ -151,29 +151,23 @@ def get_connectome_weight_matrix(graph_name):
         # N = 71
         # rank_zebrafish_meso = 71
 
-    elif graph_name == "platynereis_dumerilii_neuronal":
-        G_platynereis = nx.read_graphml(path_str +
-                                        "platynereis_dumerilii_neuronal.xml")
+    elif graph_name == "pdumerilii_neuronal":
+        G_platynereis = nx.read_graphml(path_str + "pdumerilii_neuronal.xml")
         A = nx.to_numpy_array(G_platynereis)
 
-    elif graph_name == "platynereis_dumerilii_desmosomal":
+    elif graph_name == "pdumerilii_desmosomal":
         G_platynereis = \
-            nx.read_graphml(path_str +
-                            "platynereis_dumerilii_desmosomal_undirected.xml",
+            nx.read_graphml(path_str + "pdumerilii_desmosomal.xml",
                             force_multigraph=True)
-        # print(G_platynereis.number_of_edges())
-        # print(G_platynereis.edges())
         A = nx.to_numpy_array(G_platynereis,
                               nodelist=sorted(G_platynereis.nodes()),
                               multigraph_weight=sum)
-        # import matplotlib.pyplot as plt
-        # plt.plot(A.flatten())
-        # plt.show()
+        """
+         Note: There are repeated edges in the dataset.
+         The number of edges, confirmed with G. Jékely, is 5455 and not 6961.
+        """
         # print(np.all(A.T == A), np.sum(np.triu((A > 0).astype(float), 1)),
         #       np.sum(np.triu(A)), np.sum(np.diag((A > 0).astype(float))))
-        #
-        # G = nx.from_numpy_array(A, parallel_edges=True)
-        # print(G.number_of_edges())
 
     else:
         raise ValueError("This graph_str connectome is not an option. "

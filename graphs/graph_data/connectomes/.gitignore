@@ -4,5 +4,8 @@
 !.gitignore
 !celegans_weighted_directed_signed.xls
 !C_Elegans.npy
+!pdumerilii_neuronal.xml
+!pdumerilii_desmosomal.xml
+!mouse_connectome-Oh_Nature_2014.csv
 !ABA_weight_mouse.txt
 !Connectivity_matrix_zebra_fish_mesoscopic.csv
