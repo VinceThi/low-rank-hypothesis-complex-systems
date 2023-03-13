@@ -174,7 +174,7 @@ def plot_singular_values_random_graphs(ax, graph_str, spec_path_str, ins_ylim,
     # plt.ylabel(ylabel)  # , labelpad=20)
     # ax.set_xlim([-50, N + 50])
     ax.set_ylim([-0.05, 1.08])
-    ax.set_yticks([0, 0.5, 1])
+    ax.set_yticks([0, 1])
 
     axins = inset_axes(ax, width="45%", height="45%",
                        bbox_to_anchor=(-0.1, -0.05, 1, 1.05),

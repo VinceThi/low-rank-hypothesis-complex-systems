@@ -11,10 +11,10 @@ from plots.config_rcparams import *
 
 separate_weighted = False
 path = "C:/Users/thivi/Documents/GitHub/low-rank-hypothesis-complex-systems/" \
-       "singular_values"
+       "singular_values/properties/"
 
-singularValuesFiles_list = glob.glob('properties/singular_values/'
-                                     '*_singular_values.txt')
+singularValuesFiles_list = glob.glob(path +
+                                     'singular_values/*_singular_values.txt')
 
 """ Get singular values """
 x = np.linspace(0, 1, 1000)
@@ -49,8 +49,8 @@ for networkName in tqdm(singularValuesFiles_list):
     elif networkName in drop_ego:
         pass
     else:
-        singularValuesFilename = 'properties/singular_values/' \
-                                 + networkName + '_singular_values.txt'
+        singularValuesFilename = path + 'singular_values/' + networkName\
+                                 + '_singular_values.txt'
         singularValues = np.loadtxt(singularValuesFilename)
 
         N = len(singularValues)
@@ -77,8 +77,7 @@ for networkName in tqdm(singularValuesFiles_list):
 for networkName in tqdm(glob.glob('properties/*_singular_values.txt')):
     networkName = networkName.split('_singular_values')[0].split('\\')[-1]
 
-    singularValuesFilename = 'properties/' \
-                             + networkName + '_singular_values.txt'
+    singularValuesFilename = path + networkName + '_singular_values.txt'
     singularValues = np.loadtxt(singularValuesFilename)
     """ Note that the zero singular values must be included here to compute
             the size of the networks with len(singularValues). """
@@ -209,7 +208,7 @@ else:
     t95 = plt.text(x[500], q95_singularValues[500]-q95_singularValues[500]/10,
                    f"95%", fontsize=8)
     t95.set_bbox(dict(facecolor=ptcolor, alpha=1, linewidth=0))
-    for q in [20, 40, 80]:
+    for q in [20, 50, 80]:
         percentile = np.percentile(singularValues_array, q=q, axis=0)
         plt.plot(x, percentile, color=pcolor, linewidth=plinewidth,
                  linestyle="--")
@@ -222,11 +221,14 @@ else:
     plt.fill_between(x, q5_singularValues, q95_singularValues, color=ptcolor,
                      alpha=1)
 
+    plt.tick_params(axis='y', which='both', right=False)
     plt.yscale("log")
     plt.ylim([0.001, 1.1])
     plt.xlabel("Rescaled singular value index")
     plt.ylabel("Rescaled singular values")
     plt.legend(loc=1, fontsize=10)
-    plt.tick_params(axis='y', which='both', right=False)
-
+    handles, labels = ax.get_legend_handles_labels()
+    order = [0, 2, 1]
+    plt.legend([handles[idx] for idx in order], [labels[idx] for idx in order],
+               loc=1, fontsize=10)
     plt.show()
