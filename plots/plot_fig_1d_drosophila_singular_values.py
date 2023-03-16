@@ -162,7 +162,7 @@ elif plot_first_version:  # Version of the first submission
 else:
     # Warning: the zero singular values are at 10^(-7)
     ymin = 10**(-7)
-    fig, ax = plt.subplots(1, figsize=(2.2, 2))
+    fig, ax = plt.subplots(1, figsize=(2.5, 2.5))
     normalized_singular_values = singularValues / singularValues[0]
     s = 2
     max_scatter = 50
@@ -217,23 +217,27 @@ else:
     # ax.text(21687-2000, normalized_singular_values[21686]-10**(-6),
     #         "21687", fontsize=8, color=dark_grey)
 
-    ylab = plt.ylabel("$\\frac{\sigma_i}{\sigma_1}$", fontsize=18)
-    ylab.set_rotation(0)
     plt.xlabel("$i$")
     # ax.legend(loc="lower center", bbox_to_anchor=(0.62, 0.04, 0, 0))
     ticks = ax.get_xticks()
     ticks[ticks.tolist().index(0)] = 1
     ticks = [i for i in ticks
              if -0.1 * len(singularValues) < i < 1.1 * len(singularValues)]
-    ticks.remove(10000)
+    # ticks.remove(10000)
     ax.set_xticks(ticks)
-    ax.xaxis.set_label_coords(0.4, -0.09)
+    # ax.xaxis.set_label_coords(0.4, -0.09)
+    ax.xaxis.set_label_coords(1.05, 0.05)
+
+    # ylab = plt.ylabel("$\\frac{\sigma_i}{\sigma_1}$", fontsize=18)
+    ylab = plt.ylabel("$\sigma_i/\sigma_1$")
+    ylab.set_rotation(0)
+    # ax.yaxis.set_label_coords(-0.2, 0.35)
+    ax.yaxis.set_label_coords(0, 1.05)
     plt.tick_params(axis='y', which='both', left=True,
                     right=False, labelbottom=False)
     ax.set_yscale('log')
-    ax.yaxis.set_label_coords(-0.2, 0.35)
     ax.set_ylim([ymin, 1.5])
-    ax.set_yticks([1, 10**(-7)])
+    ax.set_yticks([1, 10**(-3), 10**(-6), 10**(-7)])
     plt.tight_layout()
     # - To keep for the svg save ...
     # fig.savefig('drosophila_singular_values_cover.svg', transparent=True)

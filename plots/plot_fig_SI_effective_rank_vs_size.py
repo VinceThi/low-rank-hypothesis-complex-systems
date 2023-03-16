@@ -7,353 +7,182 @@ from numpy.linalg import norm
 from scipy.optimize import minimize
 from plots.config_rcparams import *
 import numpy as np
+from scipy.stats import pearsonr, binned_statistic
 
 
-# def linear_function(x, params):
-#     return params[0]*x + params[1]
+def power_function(x, params):
+    # return params[1]*x**(params[0])
+    return (x/10)**params
 
 
 def linear_function(x, params):
-    return params[0]*x + params[1]
+    # return params[0]*x + params[1]
+    return params[0]*(x - 1)
 
 
-def exponential_function(x, params):
-    return params[0]*np.log(x) + params[1]
+def objective_function(params, x, y, w, norm_choice):
+    return norm(w*(y - linear_function(x, params)), norm_choice)
 
 
-def objective_function(params, x, y, norm_choice):
-    return norm(y - linear_function(x, params), norm_choice)
+def plotEffectiveRank_vs_N(ax, letter_str, effRank_str, effrank_name,
+                           effectiveRanksDF, ylim, labelpad):
+    print(f"\n{effrank_name} vs. N\n--------------")
 
+    """ ----------------- Get and treat the data -------------------------- """
+    df = effectiveRanksDF.sort_values(by=['Size'])
+    min_size = np.min(df['Size'])
+    max_size = 5000   # np.max(df['Size'])
+    df = df[df['Size'] <= max_size]
+    size = df['Size'].array
+    effrank = df[effRank_str].array
 
-def objective_function2(params, x, y, norm_choice):
-    return norm(y - exponential_function(x, params), norm_choice)
+    print(f"{len(size)} networks with less than {max_size} vertices")
 
-
-def coefficient_of_variation(y, haty, cv_choice="L1"):
-    if cv_choice == "L1":
-        cv = 1 - np.sum(np.abs(y - haty))/np.sum(np.abs(y - np.mean(y)))
-    else:  # cv_choice = "L2"
-        cv = 1 - np.sum((y - haty)**2) / np.sum((y - np.mean(y))**2)
-    return cv
-
-
-def plotEffectiveRanks_vs_N(effectiveRanksDF):
-    color = "lightsteelblue"
-    letter_posx, letter_posy = 0.1, 1    # -0.25, 1.08
-    norm_choice = 1
-    ylim2 = [-1000, 10500]
+    """ ----------------- Plot effective ranks vs N ----------------------- """
     s = 2
+    letter_posx, letter_posy = 0.1, 1
+    # np.ones(len(size))/len(size)
+    ax.scatter(size, effrank, s=s)
+    ax.text(letter_posx, letter_posy, letter_str, fontweight="bold",
+            horizontalalignment="center",
+            verticalalignment="top", transform=ax.transAxes)
 
-    fig, axes = plt.subplots(nrows=2, ncols=4, figsize=(10, 4))
-    min_size = np.min(effectiveRanksDF['Size'])
-    max_size = np.max(effectiveRanksDF['Size'])
-    N_array = np.linspace(min_size, max_size, 1000)
+    """ ----------------- Regression with weights ------------------------- """
+    norm_choice = 1
 
-    axes[0][0].scatter(effectiveRanksDF['Size'],
-                       effectiveRanksDF['StableRank'], s=s)
-    axes[0][0].text(letter_posx, letter_posy, "a", fontweight="bold",
-                    horizontalalignment="center",
-                    verticalalignment="top", transform=axes[0, 0].transAxes)
-    axes[0][0].set_ylim([-20, 300])  # An outlier is not shown for viz
-    args = (effectiveRanksDF['Size'], effectiveRanksDF['StableRank'],
-            norm_choice)
-    # reg = minimize(objective_function2, np.array([1, 1]), args)
-    # line = exponential_function(N_array, reg.x)  #
-    # reg = minimize(objective_function, np.array([0.05, 10]), args)
-    # line = linear_function(N_array, reg.x)
-    reg = minimize(objective_function2, np.array([1, 1]), args)
-    line = exponential_function(N_array, reg.x)
-    axes[0][0].plot(N_array, line, color=dark_grey)
-    # axes[0][0].text(N_array[-1], line[-1] + 0.1, f"{np.round(reg.x[0], 3)}",
-    #                 fontsize=10)
-    print(reg.x)
-    # print("relative L1 error / nb_sample = ", objective_function2(reg.x, effectiveRanksDF['Size'],
-    #                                                       effectiveRanksDF['StableRank'], norm_choice)/len(effectiveRanksDF['Size'])/np.max(effectiveRanksDF['StableRank']))
-    print(objective_function2(reg.x, effectiveRanksDF['Size'], effectiveRanksDF['StableRank'], norm_choice))
-    print(coefficient_of_variation(effectiveRanksDF['StableRank'],
-                                   linear_function(effectiveRanksDF['Size'],
-                                                   reg.x)))
-    axes[0][0].set_xscale("log")
-    
-    # args = (np.log(effectiveRanksDF['Size']),
-    #         np.log(effectiveRanksDF['StableRank']), norm_choice)
-    # reg = minimize(objective_function, np.array([0.05, 10]), args)
-    # line = linear_function(np.log(effectiveRanksDF['Size']), reg.x)
-    # axes[0][0].plot(effectiveRanksDF['Size'], np.exp(line), color=dark_grey)
-    # axes[0][0].text(np.max(effectiveRanksDF['Size']),
-    #  np.exp(np.max(line[-1]))+20, f"{np.round(reg.x[0], 3)}",
-    #                 fontsize=10)
-    # print(coefficient_of_variation(np.log(effectiveRanksDF['StableRank']),
-    #                                linear_function(np.log(effectiveRanksDF['Size']),
-    #                                                reg.x)))
-    """ 
-    
-    Validation of the L2 regression with scipy:
-    
-    from scipy.stats import linregress  
-    
-    reg = linregress(effectiveRanksDF['Size'], effectiveRanksDF['StableRank'])           
-    line = reg.intercept + reg.slope * N_array
-    
-    is equivalent to 
-    
-    args = (effectiveRanksDF['Size'], effectiveRanksDF['StableRank'], 2) 
-    reg = minimize(objective_function, np.array([0.05, 10]), args)        
-    line = linear_function(N_array, reg.x)                               
-    """
+    # ----- Get weights
+    weights_choice = "uniform"
+    # uniform or inverse-variance
+    if weights_choice == "inverse-variance":
 
-    axes[0][1].scatter(effectiveRanksDF['Size'],
-                       effectiveRanksDF['NuclearRank'], s=s)
-    axes[0][1].text(letter_posx, letter_posy, "b", fontweight="bold",
-                    horizontalalignment="center",
-                    verticalalignment="top", transform=axes[0, 1].transAxes)
-    axes[0][1].set_ylim([-90, 1100])  # An outlier is removed for viz
-    args = (effectiveRanksDF['Size'], effectiveRanksDF['NuclearRank'],
-            norm_choice)
-    reg = minimize(objective_function, np.array([0.05, 10]), args)
-    line = linear_function(N_array, reg.x)
-    axes[0][1].plot(N_array, line, color=dark_grey)
-    axes[0][1].text(N_array[-1], line[-1] + 0.1, f"{np.round(reg.x[0], 3)}",
-                    fontsize=10)
-    print(coefficient_of_variation(effectiveRanksDF['NuclearRank'],
-                                   linear_function(effectiveRanksDF['Size'],
-                                                   reg.x)))
-    axes[0][1].set_xscale("log")
+        # ----- Choose bins
+        nb_bins = 5
+        bin_choice = "log-equal-frequency"
+        # ^ "log-equal-width" or "log-equal-frequency"
+        var_extension_choice = "interp"
+        # ^ "equal" or "interp"
 
+        if bin_choice == "log-equal-width":
+            bins = np.logspace(np.log10(min_size), np.log10(max_size), nb_bins)
 
+        elif bin_choice == "log-equal-frequency":
+            q, bins = pd.qcut(np.log10(df['Size']), q=nb_bins, retbins=True)
+            bins = 10 ** bins
 
-    axes[0][2].scatter(effectiveRanksDF['Size'],
-                       effectiveRanksDF['Elbow'], s=s)
-    axes[0][2].text(letter_posx, letter_posy, "c", fontweight="bold",
-                    horizontalalignment="center",
-                    verticalalignment="top", transform=axes[0, 2].transAxes)
-    axes[0][2].set_ylim([-200, 3200])
-    args = (effectiveRanksDF['Size'], effectiveRanksDF['Elbow'],
-            norm_choice)
-    reg = minimize(objective_function, np.array([0.05, 10]), args)
-    line = linear_function(N_array, reg.x)
-    axes[0][2].plot(N_array, line, color=dark_grey)
-    axes[0][2].text(N_array[-1], line[-1] + 0.1, f"{np.round(reg.x[0], 3)}",
-                    fontsize=10)
-    print(coefficient_of_variation(effectiveRanksDF['Elbow'],
-                                   linear_function(effectiveRanksDF['Size'],
-                                                   reg.x)))
-    axes[0][2].set_xscale("log")
+        else:
+            ValueError("The bin choice is either log-equal-frequency "
+                       "or log-equal-width")
 
+        variance, bin_edges, _ = \
+            binned_statistic(size, effrank, statistic=np.var, bins=bins)
+        count, _, _ = \
+            binned_statistic(size, effrank, statistic='count', bins=bins)
+        if var_extension_choice == "equal":
+            variance_extended = []
+            for i, var in enumerate(variance):
+                variance_extended += [var] * int(count[i])
+        elif var_extension_choice == "interp":
+            x = np.linspace(min_size, max_size, len(size))
+            variance_extended = np.interp(x, np.arange(len(variance)),
+                                          variance)
+        else:
+            raise ValueError("The bin choice is either log-equal-frequency "
+                             "or log-equal-width")
+        variance_extended = np.array(variance_extended)
+        inverse_variance = 1 / variance_extended
+        weights = inverse_variance / np.sum(inverse_variance)
+        ax.vlines(bin_edges, ylim[0], ylim[-1] // 20, zorder=-100,
+                  color="#ababab",
+                  linewidth=0.5, linestyles="--")
 
-    axes[0][3].scatter(effectiveRanksDF['Size'],
-                       effectiveRanksDF['EnergyRatio'], s=s)
-    axes[0][3].text(letter_posx, letter_posy, "d", fontweight="bold",
-                    horizontalalignment="center",
-                    verticalalignment="top", transform=axes[0, 3].transAxes)
-    axes[0][3].set_ylim([-500, 7000])
-    args = (effectiveRanksDF['Size'], effectiveRanksDF['EnergyRatio'],
-            norm_choice)
-    reg = minimize(objective_function, np.array([0.05, 10]), args)
-    line = linear_function(N_array, reg.x)
-    axes[0][3].plot(N_array, line, color=dark_grey)
-    axes[0][3].text(N_array[-1]-1000, line[-1] + 100, f"{np.round(reg.x[0], 3)}",
-                    fontsize=10)
-    print(coefficient_of_variation(effectiveRanksDF['EnergyRatio'],
-                                   linear_function(effectiveRanksDF['Size'],
-                                                   reg.x)))
-    axes[0][3].set_xscale("log")
+    elif weights_choice == "uniform":
+        weights = np.ones(len(size))/len(size)
 
-    axes[1][0].scatter(effectiveRanksDF['Size'],
-                       effectiveRanksDF['OptimalThreshold'], s=s)
-    axes[1][0].text(letter_posx, letter_posy, "e", fontweight="bold",
-                    horizontalalignment="center", verticalalignment="top",
-                    transform=axes[1, 0].transAxes)
-    axes[1][0].set_ylim(ylim2)
-    args = (effectiveRanksDF['Size'], effectiveRanksDF['OptimalThreshold'],
-            norm_choice)
-    reg = minimize(objective_function, np.array([0.05, 10]), args)
-    line = linear_function(N_array, reg.x)
-    axes[1][0].plot(N_array, line, color=dark_grey)
-    axes[1][0].text(N_array[-1], line[-1] + 0.1, f"{np.round(reg.x[0], 3)}",
-                    fontsize=10)
-    print(coefficient_of_variation(effectiveRanksDF['OptimalThreshold'],
-                                   linear_function(effectiveRanksDF['Size'],
-                                                   reg.x)))
-    axes[1][0].set_xscale("log")
+    else:
+        raise ValueError("The weights choice is uniform or inverse-variance")
+
+    # ----- Regression
+    args = (np.log10(size), np.log10(effrank), weights, norm_choice)
+    reg = minimize(objective_function, np.array([1]), args)
+    error = \
+        objective_function(reg.x, args[0], args[1], args[2], norm_choice)
+    print(f"Optimal exponent = {reg.x[0]}")
+    print(f"L{norm_choice} regression error = {error}")
+    N_array = np.linspace(min_size, max_size, 10000)
+    eval_reg = power_function(N_array, reg.x[0])
+    ax.plot(N_array, eval_reg, color=dark_grey,
+            label="Fit $\\left(\dfrac{N}{10}\\right)"
+                  + "^{{{}}}$".format(np.round(reg.x[0], 2)))
+
+    # ax.set_xscale("log")
+    # ax.set_yscale("log")
+    ax.set_xlabel('N')
+    ax.set_xticks([10, 5000])
+    ax.set_xlim([-100, 5100])
+    ax.xaxis.set_label_coords(0.5, -0.05)
+    ax.set_ylim(ylim)
+    ax.set_ylabel(effrank_name, labelpad=labelpad)
+    ax.set_yticks([1, ylim[1]])
+    ax.legend(loc=1)
+
+    """ ----------------- Print correlation measures  --------------------- """
+    corr = pearsonr(size, effrank)[0]
+    print(f"Pearson correlation coefficient = {corr}")
+    # from tests.zold.npeet import mi, entropy
+    # mutinf = mi(size, effrank)
+    # print(f"Estimated mutual information = {mutinf}")
+    # Nlist = [[x] for x in size]
+    # effranklist = [[x] for x in effrank]
+    # hN = entropy(Nlist)
+    # heffrank = entropy(effranklist)
+    # nmutinf = mutinf/np.max([hN, heffrank])   # (hN + heffrank - mutinf)
+    # print(f"Estimated uncertainty coefficient = {nmutinf}\n")
 
 
-    axes[1][1].scatter(effectiveRanksDF['Size'],
-                       effectiveRanksDF['OptimalShrinkage'], s=s)
-    axes[1][1].text(letter_posx, letter_posy, "f", fontweight="bold",
-                    horizontalalignment="center", verticalalignment="top",
-                    transform=axes[1, 1].transAxes)
-    axes[1][1].set_ylim(ylim2)
-    args = (effectiveRanksDF['Size'],
-            effectiveRanksDF['OptimalShrinkage'],
-            norm_choice)
-    reg = minimize(objective_function, np.array([0.05, 10]), args)
-    line = linear_function(N_array, reg.x)
-    axes[1][1].plot(N_array, line, color=dark_grey)
-    axes[1][1].text(N_array[-1], line[-1] + 0.1, f"{np.round(reg.x[0], 3)}",
-                    fontsize=10)
-    print(coefficient_of_variation(effectiveRanksDF['OptimalShrinkage'],
-                                   linear_function(effectiveRanksDF['Size'],
-                                                   reg.x)))
-    axes[1][1].set_xscale("log")
+def plot_effective_ranks_vs_N(effectiveRanksDF):
 
-    axes[1][2].scatter(effectiveRanksDF['Size'],
-                       effectiveRanksDF['Erank'], s=s)
-    axes[1][2].text(letter_posx, letter_posy, "g", fontweight="bold",
-                    horizontalalignment="center", verticalalignment="top",
-                    transform=axes[1, 2].transAxes)
-    axes[1][2].set_ylim(ylim2)
-    args = (effectiveRanksDF['Size'], effectiveRanksDF['Erank'],
-            norm_choice)
-    reg = minimize(objective_function, np.array([0.05, 10]), args)
-    line = linear_function(N_array, reg.x)
-    axes[1][2].plot(N_array, line, color=dark_grey)
-    axes[1][2].text(N_array[-1], line[-1] + 0.1, f"{np.round(reg.x[0], 3)}",
-                    fontsize=10)
-    print(coefficient_of_variation(effectiveRanksDF['Erank'],
-                                   linear_function(effectiveRanksDF['Size'],
-                                                   reg.x)))
-    axes[1][2].set_xscale("log")
+    plot_d_h = False
 
-    axes[1][3].scatter(effectiveRanksDF['Size'],
-                       effectiveRanksDF['Rank'], s=s)
-    axes[1][3].plot(effectiveRanksDF['Size'], effectiveRanksDF['Size'],
-                    linestyle="--", linewidth=1.5, color=reduced_grey)
-    axes[1][3].text(letter_posx, letter_posy, "h", fontweight="bold",  # Rank",
-                    horizontalalignment="center",
-                    verticalalignment="top", transform=axes[1, 3].transAxes)
-    axes[1][3].set_ylim([-2000, np.max(effectiveRanksDF['Size'])+3000])
-    args = (effectiveRanksDF['Size'], effectiveRanksDF['Rank'],
-            norm_choice)
-    reg = minimize(objective_function, np.array([0.05, 10]), args)
-    line = linear_function(N_array, reg.x)
-    axes[1][3].plot(N_array, line, color=dark_grey)
-    axes[1][3].text(N_array[-1]-1000, line[-1] + 500, f"{np.round(reg.x[0], 3)}",
-                    fontsize=10)
-    # print(reg, objective_function(reg.x, args[0], args[1], args[2]))
-    print(coefficient_of_variation(effectiveRanksDF['Rank'],
-                                   linear_function(effectiveRanksDF['Size'],
-                                                   reg.x)))
-    axes[1][3].set_xscale("log")
+    if plot_d_h:
+        fig, axes = plt.subplots(nrows=2, ncols=4, figsize=(10, 4))
+        plotEffectiveRank_vs_N(axes[0][0], "a", "StableRank", "srank",
+                               effectiveRanksDF, [-10, 200], -10)
 
-    # args = (np.log(effectiveRanksDF['Size']),
-    #         np.log(effectiveRanksDF['Rank']), norm_choice)
-    # reg = minimize(objective_function, np.array([0.05, 10]), args)
-    # line = linear_function(np.log(effectiveRanksDF['Size']), reg.x)
-    # axes[2][1].plot(effectiveRanksDF['Size'], np.exp(line), color=dark_grey)
-    # axes[2][1].text(np.max(effectiveRanksDF['Size']),
-    #                 np.exp(np.max(line[-1])) + 20,
-    # f"{np.round(reg.x[0], 3)}",
-    #                 fontsize=10)
-    # print(coefficient_of_variation(np.log(effectiveRanksDF['Rank']),
-    #                                linear_function(
-    #                                    np.log(effectiveRanksDF['Size']),
-    #                                    reg.x)))
+        plotEffectiveRank_vs_N(axes[0][1], "b", "NuclearRank", "nrank",
+                               effectiveRanksDF, [-50, 400], -20)
 
-    # nbVertices = effectiveRanksDF['Size']
-    # nbVertices = nbVertices.values
-    # x, bins, p = axes[2][2].hist(nbVertices, bins=np.logspace(np.log10(0.1),
-    #                                                           np.log10(21000),
-    #                                                           40),
-    #                              density=True, color=color)
-    # for item in p:
-    #     item.set_height(item.get_height() / sum(x))
-    # plt.text(letter_posx, letter_posy, "i", fontweight="bold",
-    #          horizontalalignment="center",
-    #          verticalalignment="top", transform=axes[2, 2].transAxes)
-    # axes[2][2].set_xscale('log')
-    # axes[2][2].set_ylim([-0.02 * 0.20, 0.20])
-    # axes[2][2].set_xlim([0.5, 9 * 10 ** 4])
-    # plt.xticks([1, 100, 10000])
+        plotEffectiveRank_vs_N(axes[0][2], "c", "Elbow", "elbow",
+                               effectiveRanksDF, [-50, 400], -20)
 
-    axes[0, 0].set_xlabel('N')
-    axes[0, 1].set_xlabel('N')
-    axes[0, 2].set_xlabel('N')
-    axes[0, 3].set_xlabel('N')
-    axes[1, 0].set_xlabel('N')
-    axes[1, 1].set_xlabel('N')
-    axes[1, 2].set_xlabel('N')
-    axes[1, 3].set_xlabel('N')
-    # axes[2, 2].set_xlabel('N')
-    axes[0, 0].set_ylabel('srank', labelpad=-10)
-    axes[0, 1].set_ylabel('nrank', labelpad=-20)
-    axes[0, 2].set_ylabel('elbow', labelpad=-20)
-    axes[0, 3].set_ylabel('energy', labelpad=-20)
-    axes[1, 0].set_ylabel('thrank', labelpad=-30)
-    axes[1, 1].set_ylabel('shrank', labelpad=-30)
-    axes[1, 2].set_ylabel('erank', labelpad=-30)
-    axes[1, 3].set_ylabel('rank', labelpad=-30)
-    # axes[2, 2].set_ylabel('Fraction\nof networks', labelpad=-20)
+        plotEffectiveRank_vs_N(axes[0][3], "d", "EnergyRatio", "energy",
+                               effectiveRanksDF, [-50, 1000], -20)
 
-    axes[0, 0].xaxis.set_label_coords(0.4, -0.08)
-    axes[0, 1].xaxis.set_label_coords(0.4, -0.08)
-    axes[0, 2].xaxis.set_label_coords(0.4, -0.08)
-    axes[0, 3].xaxis.set_label_coords(0.4, -0.08)
-    axes[1, 0].xaxis.set_label_coords(0.4, -0.08)
-    axes[1, 1].xaxis.set_label_coords(0.4, -0.08)
-    axes[1, 2].xaxis.set_label_coords(0.4, -0.08)
-    axes[1, 3].xaxis.set_label_coords(0.4, -0.08)
-    # axes[2, 2].xaxis.set_label_coords(1.05, -0.025)
+        plotEffectiveRank_vs_N(axes[1][0], "e", "OptimalThreshold", "thrank",
+                               effectiveRanksDF, [-100, 2000], -20)
 
-    # axes[0, 0].set_yscale("log")
-    # axes[0, 1].set_yscale("log")
-    # axes[0, 2].set_yscale("log")
-    # axes[1, 0].set_yscale("log")
-    # axes[1, 1].set_yscale("log")
-    # axes[1, 2].set_yscale("log")
-    # axes[2, 0].set_yscale("log")
-    # axes[2, 1].set_yscale("log")
-    #
-    # axes[0, 0].set_xscale("log")
-    # axes[0, 1].set_xscale("log")
-    # axes[0, 2].set_xscale("log")
-    # axes[1, 0].set_xscale("log")
-    # axes[1, 1].set_xscale("log")
-    # axes[1, 2].set_xscale("log")
-    # axes[2, 0].set_xscale("log")
-    # axes[2, 1].set_xscale("log")
-    #
-    # axes[0, 0].tick_params(which="both", top=False, right=False)
-    # axes[0, 1].tick_params(which="both", top=False, right=False)
-    # axes[0, 2].tick_params(which="both", top=False, right=False)
-    # axes[1, 0].tick_params(which="both", top=False, right=False)
-    # axes[1, 1].tick_params(which="both", top=False, right=False)
-    # axes[1, 2].tick_params(which="both", top=False, right=False)
-    # axes[2, 0].tick_params(which="both", top=False, right=False)
-    # axes[2, 1].tick_params(which="both", top=False, right=False)
-    #
-    # axes[0, 0].set_ylim([0.8, 25000])
-    # axes[0, 1].set_ylim([0.8, 25000])
-    # axes[0, 2].set_ylim([0.8, 25000])
-    # axes[1, 0].set_ylim([0.8, 25000])
-    # axes[1, 1].set_ylim([0.8, 25000])
-    # axes[1, 2].set_ylim([0.8, 25000])
-    # axes[2, 0].set_ylim([0.8, 25000])
-    # axes[2, 1].set_ylim([0.8, 25000])
-    #
-    axes[0, 0].set_yticks([1, 300])
-    axes[0, 1].set_yticks([1, 1000])
-    axes[0, 2].set_yticks([1, 3000])
-    axes[0, 3].set_yticks([1, 6000])
-    axes[1, 0].set_yticks([1, 10000])
-    axes[1, 1].set_yticks([1, 10000])
-    axes[1, 2].set_yticks([1, 10000])
-    axes[1, 3].set_yticks([1, 20000])
-    # axes[2, 2].set_yticks([0, 0.2])
+        plotEffectiveRank_vs_N(axes[1][1], "f", "OptimalShrinkage", "shrank",
+                               effectiveRanksDF, [-100, 2000], -20)
 
-    xticks = [10, 20000]
-    axes[0, 0].set_xticks(xticks)
-    axes[0, 1].set_xticks(xticks)
-    axes[0, 2].set_xticks(xticks)
-    axes[0, 3].set_xticks(xticks)
-    axes[1, 0].set_xticks(xticks)
-    axes[1, 1].set_xticks(xticks)
-    axes[1, 2].set_xticks(xticks)
-    axes[1, 3].set_xticks(xticks)
+        plotEffectiveRank_vs_N(axes[1][2], "g", "Erank", "erank",
+                               effectiveRanksDF, [-100, 2000], -20)
 
-    plt.subplots_adjust(right=0.5, left=0)
+        plotEffectiveRank_vs_N(axes[1][3], "h", "Rank", "rank",
+                               effectiveRanksDF,
+                               [-250, 5000], -30)
 
-    return fig
+        plt.subplots_adjust(right=0.5, left=0)
+
+    else:
+        fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(10, 3))
+
+        plotEffectiveRank_vs_N(axes[0], "a", "StableRank", "srank",
+                               effectiveRanksDF, [-1, 100], -10)
+
+        plotEffectiveRank_vs_N(axes[1], "b", "NuclearRank", "nrank",
+                               effectiveRanksDF, [-5, 400], -10)
+
+        plotEffectiveRank_vs_N(axes[2], "c", "Elbow", "elbow",
+                               effectiveRanksDF, [-5, 400], -10)
 
 
 def main():
@@ -366,10 +195,48 @@ def main():
     effectiveRanksDF = pd.read_table(effectiveRanksFilename, names=header,
                                      comment="#", delimiter=r"\s+")
     effectiveRanksDF.set_index('Name', inplace=True)
-    plotEffectiveRanks_vs_N(effectiveRanksDF)
+    # plotEffectiveRanks_vs_N(effectiveRanksDF)
     # plt.subplots_adjust(wspace=20, left=0, right=1)
+    plot_effective_ranks_vs_N(effectiveRanksDF)
     plt.show()
 
 
 if __name__ == "__main__":
     main()
+
+
+# nb_iterations = 10
+# regression_error = 10**10
+# best_regression = None
+# for _ in range(nb_iterations):  #  tqdm(range(nb_iterations)):
+#     exponent = np.random.uniform(0.05, 1)
+#     # offset = np.random.uniform(-2, 2)
+#     # r = minimize(objective_function, np.array([exponent,
+# offset]), args)
+#     r = minimize(objective_function, np.array([exponent]), args)
+#     L1_error = \
+#         objective_function(r.x, args[0], args[1], args[2], norm_choice)
+#
+#     if L1_error < regression_error:
+#         best_regression = r
+#         best_guess_exponent = exponent
+#         regression_error = L1_error
+#         # print(f"Regression parameters: {r.x}")
+#         # print(
+#         #     f"Regression error: "
+#         #     f"{objective_function(r.x, args[0], args[1],
+#         #  args[2], norm_choice)}")
+#
+# reg = best_regression
+# print(f"\nBest guess exponent = {best_guess_exponent}")
+# print(f"Regression parameters: {reg.x}")
+# print(f"Regression error: "
+#       f"{objective_function(reg.x, args[0], args[1], args[2], norm_choice)}")
+
+
+# def coefficient_of_determination(y, haty, cv_choice="L1"):
+#     if cv_choice == "L1":
+#         cv = 1 - np.sum(np.abs(y - haty))/np.sum(np.abs(y - np.mean(y)))
+#     else:  # cv_choice = "L2"
+#         cv = 1 - np.sum((y - haty)**2) / np.sum((y - np.mean(y))**2)
+#     return cv

@@ -8,10 +8,10 @@ from plots.plot_weight_matrix import plot_weight_matrix
 from graphs.get_real_networks import *
 from singular_values.compute_effective_ranks import *
 
-graph_str = "connectome"
+graph_str = "epidemiological"
 plot_degrees = False
 plot_weight_mat = False
-save_data = True
+save_data = False
 compute_effective_ranks = True
 plot_singular_vals = False
 

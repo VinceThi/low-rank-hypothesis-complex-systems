@@ -10,6 +10,7 @@ import glob
 from plots.config_rcparams import *
 
 separate_weighted = False
+plot_histogram = False
 path = "C:/Users/thivi/Documents/GitHub/low-rank-hypothesis-complex-systems/" \
        "singular_values/properties/"
 
@@ -18,6 +19,8 @@ singularValuesFiles_list = glob.glob(path +
 
 """ Get singular values """
 x = np.linspace(0, 1, 1000)
+
+# TODO Problème avec le nombre de réseau !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 drop_bd = ["board_directors_net1m_2002-06-01", "board_directors_net1m_2002-07-01", "board_directors_net1m_2002-08-01", "board_directors_net1m_2002-09-01", "board_directors_net1m_2002-10-01", "board_directors_net1m_2002-11-01", "board_directors_net1m_2003-02-01", "board_directors_net1m_2003-03-01", "board_directors_net1m_2003-04-01", "board_directors_net1m_2003-05-01", "board_directors_net1m_2003-06-01", "board_directors_net1m_2003-07-01", "board_directors_net1m_2003-08-01", "board_directors_net1m_2003-09-01", "board_directors_net1m_2003-10-01", "board_directors_net1m_2003-11-01", "board_directors_net1m_2004-02-01", "board_directors_net1m_2004-03-01", "board_directors_net1m_2004-04-01", "board_directors_net1m_2004-05-01", "board_directors_net1m_2004-06-01", "board_directors_net1m_2004-07-01", "board_directors_net1m_2004-08-01", "board_directors_net1m_2004-09-01", "board_directors_net1m_2004-10-01", "board_directors_net1m_2004-11-01", "board_directors_net1m_2005-02-01", "board_directors_net1m_2005-03-01", "board_directors_net1m_2005-04-01", "board_directors_net1m_2005-05-01", "board_directors_net1m_2005-06-01", "board_directors_net1m_2005-07-01", "board_directors_net1m_2005-08-01", "board_directors_net1m_2005-09-01", "board_directors_net1m_2005-10-01", "board_directors_net1m_2005-11-01", "board_directors_net1m_2006-02-01", "board_directors_net1m_2006-03-01", "board_directors_net1m_2006-04-01", "board_directors_net1m_2006-05-01", "board_directors_net1m_2006-06-01", "board_directors_net1m_2006-07-01", "board_directors_net1m_2006-08-01", "board_directors_net1m_2006-09-01", "board_directors_net1m_2006-10-01", "board_directors_net1m_2006-11-01", "board_directors_net1m_2007-02-01", "board_directors_net1m_2007-03-01", "board_directors_net1m_2007-04-01", "board_directors_net1m_2007-05-01", "board_directors_net1m_2007-06-01", "board_directors_net1m_2007-07-01", "board_directors_net1m_2007-08-01", "board_directors_net1m_2007-09-01", "board_directors_net1m_2007-10-01", "board_directors_net1m_2007-11-01", "board_directors_net1m_2008-02-01", "board_directors_net1m_2008-03-01", "board_directors_net1m_2008-04-01", "board_directors_net1m_2008-05-01", "board_directors_net1m_2008-06-01", "board_directors_net1m_2008-07-01", "board_directors_net1m_2008-08-01", "board_directors_net1m_2008-09-01", "board_directors_net1m_2008-10-01", "board_directors_net1m_2008-11-01", "board_directors_net1m_2009-02-01", "board_directors_net1m_2009-03-01", "board_directors_net1m_2009-04-01", "board_directors_net1m_2009-05-01", "board_directors_net1m_2009-06-01", "board_directors_net1m_2009-07-01", "board_directors_net1m_2009-08-01", "board_directors_net1m_2009-09-01", "board_directors_net1m_2009-10-01", "board_directors_net1m_2009-11-01", "board_directors_net1m_2010-02-01", "board_directors_net1m_2010-03-01", "board_directors_net1m_2010-04-01", "board_directors_net1m_2010-05-01", "board_directors_net1m_2010-06-01", "board_directors_net1m_2010-07-01", "board_directors_net1m_2010-08-01", "board_directors_net1m_2010-09-01", "board_directors_net1m_2010-10-01", "board_directors_net1m_2010-11-01", "board_directors_net1m_2011-02-01", "board_directors_net1m_2011-03-01", "board_directors_net1m_2011-04-01", "board_directors_net1m_2011-05-01", "board_directors_net1m_2011-06-01", "board_directors_net1m_2011-07-01", "board_directors_net1m_2011-08-01"]
 drop_wiki = ["edit_wikibooks_af", "edit_wikibooks_ak", "edit_wikibooks_als", "edit_wikibooks_ang", "edit_wikibooks_as", "edit_wikibooks_ast", "edit_wikibooks_bg", "edit_wikibooks_bi", "edit_wikibooks_bm", "edit_wikibooks_bn", "edit_wikibooks_bo", "edit_wikibooks_ch", "edit_wikibooks_co", "edit_wikibooks_cs", "edit_wikibooks_cv", "edit_wikibooks_el", "edit_wikibooks_eo", "edit_wikibooks_et", "edit_wikibooks_fi", "edit_wikibooks_got", "edit_wikibooks_gu"     , "edit_wikibooks_he", "edit_wikibooks_hi", "edit_wikibooks_hy", "edit_wikibooks_ia", "edit_wikibooks_id", "edit_wikibooks_is", "edit_wikibooks_kk", "edit_wikibooks_km", "edit_wikibooks_kn", "edit_wikibooks_ko", "edit_wikibooks_ks", "edit_wikibooks_ku", "edit_wikibooks_lb", "edit_wikibooks_li", "edit_wikibooks_ln", "edit_wikibooks_lt", "edit_wikibooks_lv", "edit_wikibooks_mg", "edit_wikibooks_mi"     , "edit_wikibooks_mk"     , "edit_wikibooks_ml"     , "edit_wikibooks_mn"     , "edit_wikibooks_mr"     , "edit_wikibooks_ms", "edit_wikibooks_nah"    , "edit_wikibooks_nds"    , "edit_wikibooks_ne", "edit_wikibooks_pa", "edit_wikibooks_ps", "edit_wikibooks_qu", "edit_wikibooks_rm", "edit_wikibooks_ro", "edit_wikibooks_ru", "edit_wikibooks_sa", "edit_wikibooks_se", "edit_wikibooks_simple", "edit_wikibooks_sk", "edit_wikibooks_sl", "edit_wikibooks_sq", "edit_wikibooks_su", "edit_wikibooks_sv", "edit_wikibooks_sw", "edit_wikibooks_ta", "edit_wikibooks_te", "edit_wikibooks_th", "edit_wikibooks_tk", "edit_wikibooks_tl", "edit_wikibooks_tr", "edit_wikibooks_ug", "edit_wikibooks_uk", "edit_wikibooks_uz", "edit_wikibooks_vi", "edit_wikibooks_vo", "edit_wikibooks_wa", "edit_wikibooks_yo", "edit_wikibooks_za", "edit_wikibooks_zh_min_nan", "edit_wikinews_bs", "edit_wikinews_ca", "edit_wikinews_cs", "edit_wikinews_eo", "edit_wikinews_fa", "edit_wikinews_fi"     , "edit_wikinews_he"     , "edit_wikinews_ko"     , "edit_wikinews_nl"     , "edit_wikinews_ro"     , "edit_wikinews_sd"     , "edit_wikinews_sq"     , "edit_wikinews_ta"    , "edit_wikinews_th"    , "edit_wikinews_tr"    , "edit_wikinews_uk"    , "edit_wikiquote_af", "edit_wikiquote_am"     , "edit_wikiquote_ang"    , "edit_wikiquote_ast"    , "edit_wikiquote_az"     , "edit_wikiquote_be"     , "edit_wikiquote_bg"     , "edit_wikiquote_bm"     , "edit_wikiquote_br"     , "edit_wikiquote_bs"     , "edit_wikiquote_ca"     , "edit_wikiquote_co"     , "edit_wikiquote_cs"     , "edit_wikiquote_cy"     , "edit_wikiquote_da"     , "edit_wikiquote_el"     , "edit_wikiquote_eo"     , "edit_wikiquote_eu"     , "edit_wikiquote_fi"     , "edit_wikiquote_ga"     , "edit_wikiquote_gl"     , "edit_wikiquote_gu"     , "edit_wikiquote_he"     , "edit_wikiquote_hi"     , "edit_wikiquote_hr"     , "edit_wikiquote_hu"     , "edit_wikiquote_hy"     , "edit_wikiquote_is"     , "edit_wikiquote_ja"     , "edit_wikiquote_ka"     , "edit_wikiquote_kk"     , "edit_wikiquote_kn"     , "edit_wikiquote_ko"     , "edit_wikiquote_kr"     , "edit_wikiquote_ks"     , "edit_wikiquote_ku"     , "edit_wikiquote_ky"     , "edit_wikiquote_la"     , "edit_wikiquote_lb"     , "edit_wikiquote_li"     , "edit_wikiquote_lt"     , "edit_wikiquote_mr"     , "edit_wikiquote_nl"     , "edit_wikiquote_nn"     , "edit_wikiquote_no"     , "edit_wikiquote_ro"     , "edit_wikiquote_sa"     , "edit_wikiquote_simple", "edit_wikiquote_sk"     , "edit_wikiquote_sl"     , "edit_wikiquote_sq"     , "edit_wikiquote_sr"     , "edit_wikiquote_su"     , "edit_wikiquote_sv"     , "edit_wikiquote_ta"     , "edit_wikiquote_th"     , "edit_wikiquote_tk"     , "edit_wikiquote_tr"     , "edit_wikiquote_tt"     , "edit_wikiquote_ug"     , "edit_wikiquote_uk"     , "edit_wikiquote_ur"     , "edit_wikiquote_uz"     , "edit_wikiquote_vi"     , "edit_wikiquote_vo"     , "edit_wikiquote_wo", "edit_wiktionary_aa"    , "edit_wiktionary_ab"    , "edit_wiktionary_ak"    , "edit_wiktionary_als"   , "edit_wiktionary_am"    , "edit_wiktionary_an"    , "edit_wiktionary_ang"   , "edit_wiktionary_as"    , "edit_wiktionary_av"    , "edit_wiktionary_ay"    , "edit_wiktionary_bh"    , "edit_wiktionary_bi"    , "edit_wiktionary_bm"    , "edit_wiktionary_bn"    , "edit_wiktionary_bo"    , "edit_wiktionary_bs"    , "edit_wiktionary_ch"    , "edit_wiktionary_co"    , "edit_wiktionary_cr"    , "edit_wiktionary_csb"   , "edit_wiktionary_dv"    , "edit_wiktionary_dz"    , "edit_wiktionary_fy"    , "edit_wiktionary_ga"    , "edit_wiktionary_gd"    , "edit_wiktionary_gn"    , "edit_wiktionary_gu"    , "edit_wiktionary_gv"    , "edit_wiktionary_ha"    , "edit_wiktionary_hsb"   , "edit_wiktionary_ia"    , "edit_wiktionary_ie"    , "edit_wiktionary_ik"    , "edit_wiktionary_iu"    , "edit_wiktionary_jbo"   , "edit_wiktionary_ka"    , "edit_wiktionary_kk"    , "edit_wiktionary_kl"    , "edit_wiktionary_ks"    , "edit_wiktionary_kw"    , "edit_wiktionary_lb"    , "edit_wiktionary_ln"    , "edit_wiktionary_lv"    , "edit_wiktionary_mh"    , "edit_wiktionary_mk"    , "edit_wiktionary_mo"    , "edit_wiktionary_mr"    , "edit_wiktionary_ms"    , "edit_wiktionary_mt"    , "edit_wiktionary_na"    , "edit_wiktionary_nah"   , "edit_wiktionary_ne"    , "edit_wiktionary_nn"    , "edit_wiktionary_om"    , "edit_wiktionary_pa"    , "edit_wiktionary_pnb"   , "edit_wiktionary_qu"    , "edit_wiktionary_rm"    , "edit_wiktionary_rn", "edit_wiktionary_rw"    , "edit_wiktionary_sc"    , "edit_wiktionary_sd"    , "edit_wiktionary_sg"    , "edit_wiktionary_si"    , "edit_wiktionary_sl"    , "edit_wiktionary_sm"    , "edit_wiktionary_sn"    , "edit_wiktionary_so"    , "edit_wiktionary_ss", "edit_wiktionary_su"    , "edit_wiktionary_sw"    , "edit_wiktionary_ti"    , "edit_wiktionary_tk"    , "edit_wiktionary_tn"    , "edit_wiktionary_to"    , "edit_wiktionary_tpi"   , "edit_wiktionary_ts"    , "edit_wiktionary_tt"    , "edit_wiktionary_tw"    , "edit_wiktionary_ug"    , "edit_wiktionary_ur", "edit_wiktionary_wo"    , "edit_wiktionary_xh"    , "edit_wiktionary_yi"    , "edit_wiktionary_yo"    , "edit_wiktionary_za"]
@@ -119,40 +122,71 @@ if separate_weighted:
         np.percentile(singularValues_array_unweighted, q=95, axis=0)
 
 else:
+    if plot_histogram:
+        nb_bins = 500
+        sv = singularValues_array.flatten()
+        plt.figure(figsize=(6, 4))
+        plt.hist(sv**2/len(x), bins=nb_bins,
+                 color=deep[0], edgecolor=None,
+                 linewidth=1, density=True)
+        # plt.plot(marchenko_pastur_generator(var, 1, 1000),
+        #          linewidth=2, color=deep[9], label="Marchenko-Pastur pdf")
+        plt.tick_params(axis='both', which='major')
+        plt.xlabel("Singular values $\\sigma^2$")
+        plt.ylabel("Spectral density $\\rho(\\sigma^2)$", labelpad=20)
+        plt.tight_layout()
+        plt.show()
+
     mean_singularValues = np.mean(singularValues_array, axis=0)
     std_singularValues = np.std(singularValues_array, axis=0)
     q5_singularValues = np.percentile(singularValues_array, q=5, axis=0)
     q95_singularValues = np.percentile(singularValues_array, q=95, axis=0)
 
+    derivative_q95 = np.diff(q95_singularValues)/(x[1] - x[0])
 
-""" Get exponential decrease """
+
+""" Get power law decrease """
 
 if not separate_weighted:
-    def exponential_function(x, params):
-        return params[0]*np.exp(-params[1]*x) + params[2]
+
+    def pareto_function(x, params):
+        return 1/(params[0]*x + params[1])**(params[2])
+        # return (1 + (x - params[0])/params[1])**(-params[2]) # harder to fit
+
+    def mu(params):
+        return (1 - params[1])/params[0]
+
+    def sigma(params):
+        return 1/params[0]
 
 
     def objective_function(params, x, y, norm_choice):
-        return norm(y - exponential_function(x, params), norm_choice)
+        return norm(y - pareto_function(x, params), norm_choice)
 
 
-    cte1 = 50
-    args = (x[:cte1], q5_singularValues[:cte1], 2)
-    reg5 = minimize(objective_function, np.array([1, 1, 0.1]), args)
-    expo2 = exponential_function(x, reg5.x)
-    print(reg5.x)
+    cte5 = 500
+    args = (x[:cte5], q5_singularValues[:cte5], 2)
+    reg5 = minimize(objective_function, np.array([10, 1, 0.5]), args)
+    expo5 = pareto_function(x, reg5.x)
+    print(f"params 5-th percentile : {reg5.x} =>"
+          f" mu = {mu(reg5.x)}, sigma = {sigma(reg5.x)}, alpha = {reg5.x[2]}")
+    # print(reg5.x[0]**(reg5.x[2]))
 
-    cte = 100
-    args = (x[:cte], mean_singularValues[:cte], 2)
-    regavg = minimize(objective_function, np.array([1, 1, 0.1]), args)
-    expo = exponential_function(x, regavg.x)
-    print(regavg.x)
+    cteavg = 500
+    args = (x[:cteavg], mean_singularValues[:cteavg], 2)
+    regavg = minimize(objective_function, np.array([10, 1, 0.5]), args)
+    expoavg = pareto_function(x, regavg.x)
+    print(f"params average : {regavg.x} => mu = {mu(regavg.x)},"
+          f" sigma = {sigma(regavg.x)}, alpha = {regavg.x[2]}")
+    # print(regavg.x[0]**(regavg.x[2]))
 
-    cte2 = 200
-    args = (x[:cte2], q95_singularValues[:cte2], 2)
-    reg95 = minimize(objective_function, np.array([1, 1, 0.2]), args)
-    expo3 = exponential_function(x, reg95.x)
-    print(reg95.x)
+    cte95 = 500
+    args = (x[:cte95], q95_singularValues[:cte95], 2)
+    reg95 = minimize(objective_function, np.array([10, 1, 0.5]), args)
+    expo95 = pareto_function(x, reg95.x)
+    print(f"params 95-th percentile : {reg95.x} => mu = {mu(reg95.x)},"
+          f" sigma = {sigma(reg95.x)}, alpha = {reg95.x[2]}")
+    # print(reg95.x[0]**(reg95.x[2]))
 
 
 """ Plot singular values """
@@ -181,19 +215,21 @@ else:
     plt.plot(x, mean_singularValues, color=deep[0], linewidth=2,
              label="Average", zorder=10)
     fcolor = "#38ccf9"   # deep[9]
-    # plt.plot(x[:cte-50], expo[:cte-50], color=fcolor, linestyle="-",
-    #          linewidth=1, zorder=20)
+    plt.plot(x, expoavg, color=fcolor, linestyle="-",
+             linewidth=1, zorder=20)
     # tavg = plt.text(x[cte//2] + x[cte//2]/4, expo[cte//2],
     #                 f"$\\gamma \\approx {int(np.round(regavg.x[1]))}$",
     #                 fontsize=8)
     # tavg.set_rotation(-15)
-    # plt.plot(x[:cte1-40], expo2[:cte1-40], color=fcolor, linestyle="-",
-    #          linewidth=1, zorder=20)
-    plt.plot(x[:cte2], expo3[:cte2], color=fcolor, linestyle="-",
+    plt.plot(x, expo5, color=fcolor, linestyle="-",
+             linewidth=1, zorder=20)
+    plt.plot(x, expo95, color=fcolor, linestyle="-",  # [:cte95]
              linewidth=1, zorder=20,
-             label="Exponential fit $ae^{-\\gamma x} + b$")
-    tf95 = plt.text(x[cte2//10] + x[cte2//10]/2, expo3[cte2//10],
-                    f"$\\gamma \\approx {int(np.round(reg95.x[1]))}$",
+             label="Power-law fit"
+                   "\n$\\left[1 + \\left(\\frac{x - \\mu}{\\sigma}\\right)"
+                   "\\right]^{-\\alpha}$")
+    tf95 = plt.text(x[cte95//10] + x[cte95//10]/2, expo95[cte95//10],
+                    f"$\\alpha \\approx {np.round(reg95.x[2], 2)}$",
                     fontsize=8)
     # tf95.set_rotation(-10)
     pcolor = dark_grey
@@ -205,7 +241,7 @@ else:
     t5.set_bbox(dict(facecolor=ptcolor, alpha=1, linewidth=0))
     plt.plot(x, q95_singularValues, color=pcolor, linewidth=plinewidth,
              linestyle="--")
-    t95 = plt.text(x[500], q95_singularValues[500]-q95_singularValues[500]/10,
+    t95 = plt.text(x[500], q95_singularValues[500]-q95_singularValues[500]/6,
                    f"95%", fontsize=8)
     t95.set_bbox(dict(facecolor=ptcolor, alpha=1, linewidth=0))
     for q in [20, 50, 80]:
@@ -223,6 +259,7 @@ else:
 
     plt.tick_params(axis='y', which='both', right=False)
     plt.yscale("log")
+    # plt.xscale("log")
     plt.ylim([0.001, 1.1])
     plt.xlabel("Rescaled singular value index")
     plt.ylabel("Rescaled singular values")
