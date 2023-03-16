@@ -3,6 +3,7 @@
 import glob
 import graph_tool.all as gt
 import os
+import numpy as np
 import pandas as pd
 import tabulate
 
@@ -57,6 +58,19 @@ def analyzeGraph(networkFilename):
         direction = 'directed'
         density /= 2
 
+    nb_non_zero = gt.adjacency(theGraph).count_nonzero()
+    nb_non_zero_diag = np.count_nonzero(gt.adjacency(theGraph).diagonal())
+    if direction == 'undirected':
+        if selfloops == 'noselfloops':
+            bindensity = 2 * (nb_non_zero / 2) / (nbVertices * (nbVertices - 1))
+        else:
+            bindensity = 2 * ((nb_non_zero + nb_non_zero_diag) / 2) / (nbVertices * (nbVertices + 1))
+    if direction == 'directed':
+        if selfloops == 'noselfloops':
+            bindensity = nb_non_zero / (nbVertices * nbVertices)
+        else:
+            bindensity = nb_non_zero / (nbVertices * (nbVertices - 1))
+
     partite = 'unipartite'
     if gt.is_bipartite(theGraph):
         partite = 'bipartite'
@@ -93,8 +107,10 @@ def analyzeGraph(networkFilename):
             if len(weightTags) > 0:
                 weightTag = weightTags[0]
 
+    url = theGraph.gp.url
+
     return [direction, weights, partite, selfloops, multiedges, nbVertices,
-            nbEdges, density, averageDegree, tags, weightTag]
+            nbEdges, density, bindensity, averageDegree, tags, weightTag, url]
 
 
 def extractGraphProperties():
@@ -103,7 +119,7 @@ def extractGraphProperties():
     if not os.path.isfile(graphPropFilename):
         header = ['name', '(un)dir', '(un)weighted', 'uni/bi-partite',
                   'selfloops', 'multiedges', 'nbVertices', 'nbEdges',
-                  'density', 'averageDegree', 'tags', 'weightTag']
+                  'density', 'bindensity', 'averageDegree', 'tags', 'weightTag', 'url']
         graphPropDF = pd.DataFrame(columns=header)
         graphPropList = []
     else:
@@ -113,11 +129,11 @@ def extractGraphProperties():
                                     comment="#", delimiter=r"\s+")
         graphPropList = graphPropDF.values.tolist()
 
-    for networkName in glob.glob('graphs/graph_data/netzschleuder/*.gt.zst'):
+    for networkName in glob.glob('graph_data/netzschleuder/*.gt.zst'):
         networkName = networkName.split('.')[0].split('/')[-1]
         if not (graphPropDF['name'] == networkName).any():
             print(networkName)
-            networkFilename = 'graphs/graph_data/netzschleuder/' + networkName\
+            networkFilename = 'graph_data/netzschleuder/' + networkName\
                               + '.gt.zst'
             graphPropList.append([networkName] + analyzeGraph(networkFilename))
 
