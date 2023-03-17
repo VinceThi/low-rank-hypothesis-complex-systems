@@ -6,7 +6,7 @@ https://doi.org/10.48550/arXiv.2208.04848).
 ### Network datasets
 
 The network datasets used in this projects were downloaded from the [Netzschleuder network catalogue](https://networks.skewed.de) in the `.gt.zst` file format into the `graph_data/netzschleuder/` subdirectory.
-We also provide the links for other network datasets in the paper.
+We also provide the links for other network datasets in the last section of the supplementary material of the paper.
 
 
 ### Python scripts
@@ -61,8 +61,9 @@ Once one or more new network datasets have been added to the `graph_data/netzsch
 The `plot/` folder contains the configuration parameters and functions to plot the figures of the paper, singular values, weight matrices, etc.
 
 - `config_params.py` contains the configuration parameters for the plots.
-- `plot_fig_1b_drosophila_network.py`, `plot_fig_1d_drosophila_singular_values.py`, `plot_fig_1e_effective_rank_vs_rank_scatterplot.py` and `plot_fig_1fn_effective_rank_to_dimension_ratio_densities.py` generate subfigures for Fig. 1, which is then assembled on Inkscape.
-- `plot_fig_3_error_vector_fields.py` generates Fig. 3 with the alignment errors and the bifurcations/trajectories.
+- `plot_fig_1b_drosophila_network.py`, `plot_fig_1d_drosophila_singular_values.py`, `plot_fig_1e_singular_values_real_networks.py`, `plot_fig_1f_effective_rank_vs_rank_scatterplot.py` and `plot_fig_1go_effective_rank_to_dimension_ratio_densities.py` generate subfigures for Fig. 1, which is then assembled on Inkscape.
+- `plot_fig_2bm_three_indicators_random_graphs.py` generates Figs. 2b to 2m, which is then assembled on Inkscape.
+- `plot_fig_4_error_vector_fields.py` generates Fig. 4 with the alignment errors and the bifurcations/trajectories.
 - `plot_singular_values.py` contains the functions to generate scree plots or histograms for the singular values of one or many networks. The function `plot_singular_values` gives the scree plots with the effective ranks, the cumulative explained variance and the y axis in log if desired.
 - `plot/figures/png/singular_values` contains plots of the singular values of various real networks in png, while `plot/figures/pdf/singular_values` contains the pdfs.
 
