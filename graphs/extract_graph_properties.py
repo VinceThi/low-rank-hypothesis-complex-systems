@@ -67,9 +67,11 @@ def analyzeGraph(networkFilename):
             bindensity = 2 * ((nb_non_zero + nb_non_zero_diag) / 2) / (nbVertices * (nbVertices + 1))
     if direction == 'directed':
         if selfloops == 'noselfloops':
-            bindensity = nb_non_zero / (nbVertices * nbVertices)
-        else:
             bindensity = nb_non_zero / (nbVertices * (nbVertices - 1))
+        else:
+            bindensity = nb_non_zero / (nbVertices * nbVertices)
+
+    matdensity = nb_non_zero / (nbVertices * nbVertices)
 
     partite = 'unipartite'
     if gt.is_bipartite(theGraph):
@@ -110,7 +112,7 @@ def analyzeGraph(networkFilename):
     url = theGraph.gp.url
 
     return [direction, weights, partite, selfloops, multiedges, nbVertices,
-            nbEdges, density, bindensity, averageDegree, tags, weightTag, url]
+            nbEdges, density, bindensity, matdensity, averageDegree, tags, weightTag, url]
 
 
 def extractGraphProperties():
@@ -119,7 +121,7 @@ def extractGraphProperties():
     if not os.path.isfile(graphPropFilename):
         header = ['name', '(un)dir', '(un)weighted', 'uni/bi-partite',
                   'selfloops', 'multiedges', 'nbVertices', 'nbEdges',
-                  'density', 'bindensity', 'averageDegree', 'tags', 'weightTag', 'url']
+                  'density', 'bindensity', 'matdensity', 'averageDegree', 'tags', 'weightTag', 'url']
         graphPropDF = pd.DataFrame(columns=header)
         graphPropList = []
     else:
