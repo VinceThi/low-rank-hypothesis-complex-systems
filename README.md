@@ -5,8 +5,8 @@ https://doi.org/10.48550/arXiv.2208.04848).
 
 ### Network datasets
 
-The network datasets used in this projects were downloaded from the [Netzschleuder network catalogue](https://networks.skewed.de) in the `.gt.zst` file format into the `graph_data/netzschleuder/` subdirectory.
-We also provide the links for other network datasets in the last section of the supplementary material of the paper.
+The real networks and their properties (e.g., effective ranks) used in this project are available in `graphs/datasets_table.txt`.  Most of the network datasets were downloaded from the [Netzschleuder network catalogue](https://networks.skewed.de) in the `.gt.zst` file format into the `graph_data/netzschleuder/` subdirectory.
+We also provide the links and details for other network datasets in the last section of the supplementary material of the paper.
 
 
 ### Python scripts
