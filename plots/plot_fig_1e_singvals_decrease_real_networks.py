@@ -139,7 +139,6 @@ else:
     std_singularValues = np.std(singularValues_array, axis=0)
     q5_singularValues = np.percentile(singularValues_array, q=5, axis=0)
     q95_singularValues = np.percentile(singularValues_array, q=95, axis=0)
-    q98_singularValues = np.percentile(singularValues_array, q=98, axis=0)
 
 
 """ Get power law decrease """
@@ -165,7 +164,7 @@ if not separate_weighted:
     args = (x[:cte5], q5_singularValues[:cte5], 2)   # 10, 1, 0.5
     reg5 = minimize(objective_function, np.array([10, 1, 0.5]), args,
                     bounds=bounds)
-    expo5 = pareto_function(x, reg5.x)
+    pareto5 = pareto_function(x, reg5.x)
     print(f"params 5-th percentile : {reg5.x} =>"
           f" mu = {mu(reg5.x)}, sigma = {sigma(reg5.x)}, alpha = {reg5.x[2]}")
     # print(reg5.x[0]**(reg5.x[2]))
@@ -174,7 +173,7 @@ if not separate_weighted:
     args = (x[:cteavg], mean_singularValues[:cteavg], 2)
     regavg = minimize(objective_function, np.array([10, 1, 0.5]), args,
                       bounds=bounds)
-    expoavg = pareto_function(x, regavg.x)
+    paretoavg = pareto_function(x, regavg.x)
     print(f"params average : {regavg.x} => mu = {mu(regavg.x)},"
           f" sigma = {sigma(regavg.x)}, alpha = {regavg.x[2]}")
     # print(regavg.x[0]**(regavg.x[2]))
@@ -183,15 +182,19 @@ if not separate_weighted:
     args = (x[:cte95], q95_singularValues[:cte95], 2)
     reg95 = minimize(objective_function, np.array([10, 1, 0.5]), args,
                      bounds=bounds)
-    expo95 = pareto_function(x, reg95.x)
+    pareto95 = pareto_function(x, reg95.x)
     print(f"params 95-th percentile : {reg95.x} => mu = {mu(reg95.x)},"
           f" sigma = {sigma(reg95.x)}, alpha = {reg95.x[2]}")
+
+    count_vas_below95 = 0
+    for vas in singularValues_array:
+        count_vas_below95 += np.count_nonzero(vas < pareto95)
 
     # cte98 = 500
     # args = (x[:cte98], q98_singularValues[:cte98], 2)
     # reg98 = minimize(objective_function, np.array([10, 1, 0.5]), args,
     #                  bounds=bounds)
-    # expo98 = pareto_function(x, reg98.x)
+    # pareto98 = pareto_function(x, reg98.x)
     # print(f"params 98-th percentile : {reg98.x} => mu = {mu(reg98.x)},"
     #       f" sigma = {sigma(reg98.x)}, alpha = {reg98.x[2]}")
     # print(reg95.x[0]**(reg95.x[2]))
@@ -199,7 +202,7 @@ if not separate_weighted:
     # from powerlaw import Fit, plot_pdf
     # fit = Fit(q95_singularValues[:cte95])
     # print(fit.alpha, fit.sigma,
-    #       fit.distribution_compare('power_law', 'exponential'))
+    #       fit.distribution_compare('power_law', 'paretonential'))
     # plot_pdf(q95_singularValues[:cte95])
 
     # from scipy.stats import pareto
@@ -240,27 +243,32 @@ else:
     plt.plot(x, mean_singularValues, color=deep[0], linewidth=2,
              label="Average", zorder=10)
     fcolor = "#38ccf9"   # deep[9]
-    plt.plot(x, expoavg, color=fcolor, linestyle="-",
-             linewidth=1, zorder=20)
-    # tavg = plt.text(x[cte//2] + x[cte//2]/4, expo[cte//2],
+    # plt.plot(x, paretoavg, color=fcolor, linestyle="-",
+    #          linewidth=1, zorder=20)
+    # tavg = plt.text(x[cte//2] + x[cte//2]/4, pareto[cte//2],
     #                 f"$\\gamma \\approx {int(np.round(regavg.x[1]))}$",
     #                 fontsize=8)
     # tavg.set_rotation(-15)
-    plt.plot(x, expo5, color=fcolor, linestyle="-",
-             linewidth=1, zorder=20)
-    plt.plot(x, expo95, color=fcolor, linestyle="-",
+    # plt.plot(x, pareto5, color=fcolor, linestyle="-",
+    #          linewidth=1, zorder=20)
+    plt.plot(x, pareto95, color=fcolor, linestyle="-",
              linewidth=1, zorder=20,
-             label="Power-law\nupper bound"
+             label="Experimental\nupper bound"
                    "\n$\\left[1 + \\left(\\frac{x - \\mu}{\\sigma}\\right)"
                    "\\right]^{-\\alpha}$")
-    # plt.plot(x, expo98, color=fcolor, linestyle="-",
+    # plt.plot(x, pareto98, color=fcolor, linestyle="-",
     #          linewidth=1, zorder=20,
     #          label="Power-law fit"
     #                "\n$\\left[1 + \\left(\\frac{x - \\mu}{\\sigma}\\right)"
     #                "\\right]^{-\\alpha}$")
-    tf95 = plt.text(x[cte95//10] + x[cte95//10]/2, expo95[cte95//10],
+    tf95 = plt.text(x[cte95//10] + x[cte95//10]/1.5, pareto95[cte95//10],
                     f"$\\alpha \\approx {np.round(reg95.x[2], 2)}$",
                     fontsize=8)
+    print(100*count_vas_below95/(network_count*len(x)))
+    percentage_vas_below95 =\
+        int(np.round(100*count_vas_below95/(network_count*len(x))))
+    plt.text(0.97, 0.075, f"{percentage_vas_below95}% of the\nsingular\nvalues",
+             fontsize=8, ha="center")
     # tf95.set_rotation(-10)
     pcolor = dark_grey
     plinewidth = 0.5
