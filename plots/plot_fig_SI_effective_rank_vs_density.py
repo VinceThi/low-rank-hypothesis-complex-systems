@@ -4,146 +4,84 @@
 import pandas as pd
 import matplotlib as plt
 from plots.config_rcparams import *
-import numpy as np
 from scipy.stats import pearsonr
+import numpy as np
 
 
-def plotEffectiveRanks_vs_density(effectiveRanksDF):
-    color = "lightsteelblue"
-    letter_posx, letter_posy = 0.5, 1
-    ylim2 = [-1000, 10500]
-    fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(3*2.4, 3*2))
+def plotEffectiveRank_vs_density(ax, letter_str, effrank_name, networkDF,
+                                 ylim, labelpad):
+    print(f"\n{effrank_name} vs. density\n--------------")
 
-    axes[0][0].scatter(effectiveRanksDF['Density'], effectiveRanksDF['StableRank'], s=10)
-    axes[0][0].text(letter_posx, letter_posy, "a", fontweight="bold",
-                    horizontalalignment="center",
-                    verticalalignment="top", transform=axes[0, 0].transAxes)
-    # axes[0][0].set_ylim([-20, 300])  # An outlier is removed for viz
-    print(pearsonr(effectiveRanksDF['Density'],
-                   effectiveRanksDF['StableRank']))
+    """ ----------------- Get the data -------------------------- """
+    density = networkDF['matDensity']
+    effrank = networkDF[effrank_name]
+    print(f"{len(density)} networks")
 
-    axes[0][1].scatter(effectiveRanksDF['Density'], effectiveRanksDF['NuclearRank'], s=10)
-    axes[0][1].text(letter_posx, letter_posy, "b", fontweight="bold",      # erank",
-                    horizontalalignment="center",
-                    verticalalignment="top", transform=axes[0, 1].transAxes)
-    # axes[0][1].set_ylim([-90, 1300])  # An outlier is removed for viz
+    """ ----------------- Plot effective ranks vs density ----------------- """
+    s = 2
+    letter_posx, letter_posy = -0.27, 1.05
+    # np.ones(len(size))/len(size)
+    ax.scatter(density, effrank, s=s)
+    ax.text(letter_posx, letter_posy, letter_str, fontweight="bold",
+            horizontalalignment="center",
+            verticalalignment="top", transform=ax.transAxes)
 
-    axes[0][2].scatter(effectiveRanksDF['Density'], effectiveRanksDF['Elbow'], s=10)
-    axes[0][2].text(letter_posx, letter_posy, "c", fontweight="bold",  # Energy ratio"
-                    horizontalalignment="center",
-                    verticalalignment="top", transform=axes[0, 2].transAxes)
-    # axes[0][2].set_ylim([-200, 3000])
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlabel('Density')
+    # ax.set_xticks([0, 1])
+    # ax.set_xlim([-100, 5100])
+    # ax.xaxis.set_label_coords(0.45, -0.3)
+    # ax.set_ylim(ylim)
+    ax.set_ylim([0.3, 30000])
+    ax.set_xlim([10**(-4), 2])
+    ax.set_yticks([10**0, 10**2, 10**4])
+    ax.set_ylabel(effrank_name, labelpad=labelpad)
+    ax.tick_params(axis="y", which="minor", top=False, right=False, left=False)
+    # ax.set_yticks([1, ylim[1]])
+    # ax.legend(loc=1)
 
-    axes[1][0].scatter(effectiveRanksDF['Density'], effectiveRanksDF['EnergyRatio'], s=10)
-    axes[1][0].text(letter_posx, letter_posy, "d", fontweight="bold",      # Elbow",
-                    horizontalalignment="center",
-                    verticalalignment="top", transform=axes[1, 0].transAxes)
-    # axes[1][0].set_ylim([-500, 7500])
+    """ ----------------- Print correlation measures  --------------------- """
+    corr = pearsonr(np.log10(density), np.log10(effrank))[0]
+    print(f"Pearson correlation coefficient = {corr}")
+    ax.text(0.02, 18000, f"$r = {np.round(corr, 2)}$", fontsize=10)
 
-    axes[1][1].scatter(effectiveRanksDF['Density'], effectiveRanksDF['OptimalThreshold'], s=10)
-    axes[1][1].text(letter_posx, letter_posy, "e", fontweight="bold",
-                    horizontalalignment="center", verticalalignment="top",
-                    transform=axes[1, 1].transAxes)
-    # axes[1][1].set_ylim(ylim2)
 
-    axes[1][2].scatter(effectiveRanksDF['Density'], effectiveRanksDF['OptimalShrinkage'], s=10)
-    axes[1][2].text(letter_posx, letter_posy, "f", fontweight="bold",
-                    horizontalalignment="center", verticalalignment="top",
-                    transform=axes[1, 2].transAxes)
-    # axes[1][2].set_ylim(ylim2)
+def plot_effective_ranks_vs_density(networkDF):
 
-    axes[2][0].scatter(effectiveRanksDF['Density'], effectiveRanksDF['Erank'], s=10)
-    axes[2][0].text(letter_posx, letter_posy, "g", fontweight="bold",
-                    horizontalalignment="center", verticalalignment="top",
-                    transform=axes[2, 0].transAxes)
-    # axes[2][0].set_ylim(ylim2)
+    fig, axes = plt.subplots(nrows=2, ncols=4, figsize=(10, 5))
+    plotEffectiveRank_vs_density(axes[0][0], "a", "srank",
+                                 networkDF, [-10, 250], 0)
 
-    axes[2][1].scatter(effectiveRanksDF['Density'], effectiveRanksDF['Rank'], s=10)
-    axes[2][1].text(letter_posx, letter_posy, "h", fontweight="bold",  # Rank",
-                    horizontalalignment="center",
-                    verticalalignment="top", transform=axes[2, 1].transAxes)
-    # axes[2][1].set_ylim([-1000, np.max(effectiveRanksDF['Density'])+3000])
+    plotEffectiveRank_vs_density(axes[0][1], "b", "nrank",
+                                 networkDF, [-50, 1000], 0)
 
-    nbVertices = effectiveRanksDF['Density']
-    nbVertices = nbVertices.values
-    x, bins, p = axes[2][2].hist(nbVertices, density=True, color=color)
-    for item in p:
-        item.set_height(item.get_height() / sum(x))
-    plt.text(letter_posx, letter_posy, "f", fontweight="bold",
-             horizontalalignment="center",
-             verticalalignment="top", transform=axes[2, 2].transAxes)
-    # axes[2][2].set_xscale('log')
-    axes[2][2].set_ylim([-0.01, 1])
-    axes[2][2].set_xlim([-0.05, 1])
+    plotEffectiveRank_vs_density(axes[0][2], "c", "elbow",
+                                 networkDF, [-50, 1000], 0)
 
-    axes[0, 0].set_xlabel('Density')
-    axes[0, 1].set_xlabel('Density')
-    axes[0, 2].set_xlabel('Density')
-    axes[1, 0].set_xlabel('Density')
-    axes[1, 1].set_xlabel('Density')
-    axes[1, 2].set_xlabel('Density')
-    axes[2, 0].set_xlabel('Density')
-    axes[2, 1].set_xlabel('Density')
-    axes[2, 2].set_xlabel('Density')
-    axes[0, 0].set_ylabel('srank')
-    axes[0, 1].set_ylabel('nrank')
-    axes[0, 2].set_ylabel('elbow')
-    axes[1, 0].set_ylabel('energy')
-    axes[1, 1].set_ylabel('thrank')
-    axes[1, 2].set_ylabel('shrank')
-    axes[2, 0].set_ylabel('erank')
-    axes[2, 1].set_ylabel('rank')
-    axes[2, 2].set_ylabel('Fraction\nof networks')
-    # axes[2, 2].xaxis.set_label_coords(1.05, -0.025)
+    plotEffectiveRank_vs_density(axes[0][3], "d",  "energy",
+                                 networkDF, [-50, 2000], 0)
 
-    # axes[0, 0].set_xticks([10**0, 10**2, 10**4])
-    # axes[0, 1].set_xticks([10**0, 10**2, 10**4])
-    # axes[0, 2].set_xticks([10**0, 10**2, 10**4])
-    # axes[1, 0].set_xticks([10**0, 10**2, 10**4])
-    # axes[1, 1].set_xticks([10**0, 10**2, 10**4])
-    # axes[1, 2].set_xticks([10**0, 10**2, 10**4])
-    # axes[2, 0].set_xticks([10**0, 10**2, 10**4])
-    # axes[2, 1].set_xticks([10**0, 10**2, 10**4])
-    # axes[2, 2].set_xticks([10**0, 10**2, 10**4])
-    # axes[0, 0].set_yticks([10**0, 10**2, 10**4])
-    # axes[0, 1].set_yticks([10**0, 10**2, 10**4])
-    # axes[0, 2].set_yticks([10**0, 10**2, 10**4])
-    # axes[1, 0].set_yticks([10**0, 10**2, 10**4])
-    # axes[1, 1].set_yticks([10**0, 10**2, 10**4])
-    # axes[1, 2].set_yticks([10**0, 10**2, 10**4])
-    # axes[2, 0].set_yticks([10**0, 10**2, 10**4])
-    # axes[2, 1].set_yticks([10**0, 10**2, 10**4])
-    # axes[2, 2].set_yticks([10**0, 10**2, 10**4])
-    # 
-    # axes[0, 0].set_xscale("log")
-    # axes[0, 1].set_xscale("log")
-    # axes[0, 2].set_xscale("log")
-    # axes[1, 0].set_xscale("log")
-    # axes[1, 1].set_xscale("log")
-    # axes[1, 2].set_xscale("log")
-    # axes[2, 0].set_xscale("log")
-    # axes[2, 1].set_xscale("log")
-    # axes[2, 2].set_xscale("log")
-    # 
-    # axes[0, 0].set_yscale("log")
-    # axes[0, 1].set_yscale("log")
-    # axes[0, 2].set_yscale("log")
-    # axes[1, 0].set_yscale("log")
-    # axes[1, 1].set_yscale("log")
-    # axes[1, 2].set_yscale("log")
-    # axes[2, 0].set_yscale("log")
-    # axes[2, 1].set_yscale("log")
-    # axes[2, 2].set_yscale("log")
+    plotEffectiveRank_vs_density(axes[1][0], "e",  "thrank",
+                                 networkDF, [-100, 2000], 0)
 
-    return fig
+    plotEffectiveRank_vs_density(axes[1][1], "f", "shrank",
+                                 networkDF, [-100, 2000], 0)
+
+    plotEffectiveRank_vs_density(axes[1][2], "g", "erank",
+                                 networkDF, [-100, 2000], 0)
+
+    plotEffectiveRank_vs_density(axes[1][3], "h", "rank",
+                                 networkDF, [-250, 5000], 0)
+
+    plt.subplots_adjust(right=0.5, left=0)
 
 
 def main():
 
     effectiveRanksFilename = "C:/Users/thivi/Documents/GitHub/" \
                              "low-rank-hypothesis-complex-systems/" \
-                             "singular_values/properties/" \
-                             "effective_ranks_densities.txt"
+                             "graphs/graph_data/datasets_table.txt"
     # 'singular_values/properties/effective_ranks.txt'
     header = \
         open(effectiveRanksFilename, 'r').readline().replace('#', ' ').split()
@@ -156,7 +94,7 @@ def main():
     # figureFilenamePNG = 'figures/png/' \
     #                     'effective_rank_to_dimension_ratio_densities.png'
 
-    plotEffectiveRanks_vs_density(effectiveRanksDF)
+    plot_effective_ranks_vs_density(effectiveRanksDF)
     plt.show()
     # fig.savefig(figureFilenamePDF, bbox_inches='tight')
     # fig.savefig(figureFilenamePNG, bbox_inches='tight')

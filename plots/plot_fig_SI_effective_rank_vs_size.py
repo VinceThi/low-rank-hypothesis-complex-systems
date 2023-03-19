@@ -8,20 +8,28 @@ from scipy.optimize import minimize
 from plots.config_rcparams import *
 import numpy as np
 from scipy.stats import pearsonr, binned_statistic
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 
 def power_function(x, params):
-    # return params[1]*x**(params[0])
-    return (x/10)**params
-
-
-def linear_function(x, params):
-    # return params[0]*x + params[1]
-    return params[0]*(x - 1)
+    return params[0]*x**params[1] + params[2]
 
 
 def objective_function(params, x, y, w, norm_choice):
-    return norm(w*(y - linear_function(x, params)), norm_choice)
+    return norm(w * (y - power_function(x, params)), norm_choice)
+
+
+def inset_setup(ax):
+    axins = inset_axes(ax, width="45%", height="35%",
+                       bbox_to_anchor=(-0.25, 0.55, 1, 1),
+                       bbox_transform=ax.transAxes, loc=4)
+    axins.spines['top'].set_visible(True)
+    axins.spines['right'].set_visible(True)
+    for axis in ['top', 'bottom', 'left', 'right']:
+        axins.spines[axis].set_linewidth(0.5)
+    axins.tick_params(axis='both', which='major', labelsize=8,
+                      width=0.5, length=2)
+    return axins
 
 
 def plotEffectiveRank_vs_N(ax, letter_str, effRank_str, effrank_name,
@@ -31,7 +39,7 @@ def plotEffectiveRank_vs_N(ax, letter_str, effRank_str, effrank_name,
     """ ----------------- Get and treat the data -------------------------- """
     df = effectiveRanksDF.sort_values(by=['Size'])
     min_size = np.min(df['Size'])
-    max_size = 5000   # np.max(df['Size'])
+    max_size = np.max(df['Size'])
     df = df[df['Size'] <= max_size]
     size = df['Size'].array
     effrank = df[effRank_str].array
@@ -40,7 +48,7 @@ def plotEffectiveRank_vs_N(ax, letter_str, effRank_str, effrank_name,
 
     """ ----------------- Plot effective ranks vs N ----------------------- """
     s = 2
-    letter_posx, letter_posy = 0.1, 1
+    letter_posx, letter_posy = 0.05, 1.1
     # np.ones(len(size))/len(size)
     ax.scatter(size, effrank, s=s)
     ax.text(letter_posx, letter_posy, letter_str, fontweight="bold",
@@ -102,87 +110,79 @@ def plotEffectiveRank_vs_N(ax, letter_str, effRank_str, effrank_name,
         raise ValueError("The weights choice is uniform or inverse-variance")
 
     # ----- Regression
-    args = (np.log10(size), np.log10(effrank), weights, norm_choice)
-    reg = minimize(objective_function, np.array([1]), args)
+    bound = [(0, 10), (0, 1), (-100, 30)]
+    # args = (np.log10(size), np.log10(effrank), weights, norm_choice)
+    args = (size, effrank, weights, norm_choice)
+    reg = minimize(objective_function, np.array([1, 0.5, -1]), args, bounds=bound)
     error = \
         objective_function(reg.x, args[0], args[1], args[2], norm_choice)
-    print(f"Optimal exponent = {reg.x[0]}")
-    print(f"L{norm_choice} regression error = {error}")
+    print(f"Optimal exponent = {reg.x[1]}")
+    print(f"Params = {reg.x}")
+    print(f"Normalized L{norm_choice} regression error ="
+          f" {error/(np.max(effrank) - np.min(effrank))}")
     N_array = np.linspace(min_size, max_size, 10000)
-    eval_reg = power_function(N_array, reg.x[0])
-    ax.plot(N_array, eval_reg, color=dark_grey,
-            label="Fit $\\left(\dfrac{N}{10}\\right)"
-                  + "^{{{}}}$".format(np.round(reg.x[0], 2)))
-
+    eval_reg = power_function(N_array, reg.x)  # [0])
+    ax.plot(N_array, eval_reg, color=dark_grey)
+    # label="Fit $\\propto N"
+    #       + "^{{{}}}$".format(np.round(reg.x[1], 2)))
+    ax.text(N_array[-1]-2000, eval_reg[-1] - 5,
+            "$\\propto N" + "^{{{}}}$".format("%.2f" % np.round(reg.x[1], 2)),
+            fontsize=9, clip_on=False)
     # ax.set_xscale("log")
     # ax.set_yscale("log")
-    ax.set_xlabel('N')
-    ax.set_xticks([10, 5000])
-    ax.set_xlim([-100, 5100])
-    ax.xaxis.set_label_coords(0.5, -0.05)
+    ax.set_xlabel('$N$')
+    ax.set_xticks([10, 20000])
+    ax.set_xlim([-500, 20000])
+    ax.xaxis.set_label_coords(0.5, -0.06)
     ax.set_ylim(ylim)
     ax.set_ylabel(effrank_name, labelpad=labelpad)
     ax.set_yticks([1, ylim[1]])
-    ax.legend(loc=1)
+    # ax.legend(loc=1)
+
+    axins = inset_setup(ax)
+    axins.scatter(size, effrank, s=s)
+    axins.plot(N_array, eval_reg, color=dark_grey)
+    ymax = ylim[1]/8
+    ylim_axins = [-ymax/20, ymax]
+    axins.set_ylim(ylim_axins)
+    axins.set_yticks([1, np.round(ymax)])
+    axins.set_xlim([-200, 3050])
+    axins.set_xticks([10, 3000])
 
     """ ----------------- Print correlation measures  --------------------- """
     corr = pearsonr(size, effrank)[0]
     print(f"Pearson correlation coefficient = {corr}")
-    # from tests.zold.npeet import mi, entropy
-    # mutinf = mi(size, effrank)
-    # print(f"Estimated mutual information = {mutinf}")
-    # Nlist = [[x] for x in size]
-    # effranklist = [[x] for x in effrank]
-    # hN = entropy(Nlist)
-    # heffrank = entropy(effranklist)
-    # nmutinf = mutinf/np.max([hN, heffrank])   # (hN + heffrank - mutinf)
-    # print(f"Estimated uncertainty coefficient = {nmutinf}\n")
 
 
 def plot_effective_ranks_vs_N(effectiveRanksDF):
 
-    plot_d_h = False
+    fig, axes = plt.subplots(nrows=2, ncols=4, figsize=(11, 5))
+    plotEffectiveRank_vs_N(axes[0][0], "a", "StableRank", "srank",
+                           effectiveRanksDF, [-10, 200], -10)
 
-    if plot_d_h:
-        fig, axes = plt.subplots(nrows=2, ncols=4, figsize=(10, 4))
-        plotEffectiveRank_vs_N(axes[0][0], "a", "StableRank", "srank",
-                               effectiveRanksDF, [-10, 200], -10)
+    plotEffectiveRank_vs_N(axes[0][1], "b", "NuclearRank", "nrank",
+                           effectiveRanksDF, [-50, 1000], -20)
 
-        plotEffectiveRank_vs_N(axes[0][1], "b", "NuclearRank", "nrank",
-                               effectiveRanksDF, [-50, 400], -20)
+    plotEffectiveRank_vs_N(axes[0][2], "c", "Elbow", "elbow",
+                           effectiveRanksDF, [-50, 1000], -20)
 
-        plotEffectiveRank_vs_N(axes[0][2], "c", "Elbow", "elbow",
-                               effectiveRanksDF, [-50, 400], -20)
+    plotEffectiveRank_vs_N(axes[0][3], "d", "EnergyRatio", "energy",
+                           effectiveRanksDF, [-250, 5000], -20)
 
-        plotEffectiveRank_vs_N(axes[0][3], "d", "EnergyRatio", "energy",
-                               effectiveRanksDF, [-50, 1000], -20)
+    plotEffectiveRank_vs_N(axes[1][0], "e", "OptimalThreshold", "thrank",
+                           effectiveRanksDF, [-250, 5000], -20)
 
-        plotEffectiveRank_vs_N(axes[1][0], "e", "OptimalThreshold", "thrank",
-                               effectiveRanksDF, [-100, 2000], -20)
+    plotEffectiveRank_vs_N(axes[1][1], "f", "OptimalShrinkage", "shrank",
+                           effectiveRanksDF, [-250, 5000], -20)
 
-        plotEffectiveRank_vs_N(axes[1][1], "f", "OptimalShrinkage", "shrank",
-                               effectiveRanksDF, [-100, 2000], -20)
+    plotEffectiveRank_vs_N(axes[1][2], "g", "Erank", "erank",
+                           effectiveRanksDF, [-500, 10000], -20)
 
-        plotEffectiveRank_vs_N(axes[1][2], "g", "Erank", "erank",
-                               effectiveRanksDF, [-100, 2000], -20)
+    plotEffectiveRank_vs_N(axes[1][3], "h", "Rank", "rank",
+                           effectiveRanksDF,
+                           [-1000, 20000], -30)
 
-        plotEffectiveRank_vs_N(axes[1][3], "h", "Rank", "rank",
-                               effectiveRanksDF,
-                               [-250, 5000], -30)
-
-        plt.subplots_adjust(right=0.5, left=0)
-
-    else:
-        fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(10, 3))
-
-        plotEffectiveRank_vs_N(axes[0], "a", "StableRank", "srank",
-                               effectiveRanksDF, [-1, 100], -10)
-
-        plotEffectiveRank_vs_N(axes[1], "b", "NuclearRank", "nrank",
-                               effectiveRanksDF, [-5, 400], -10)
-
-        plotEffectiveRank_vs_N(axes[2], "c", "Elbow", "elbow",
-                               effectiveRanksDF, [-5, 400], -10)
+    plt.subplots_adjust(right=0.5, left=0)
 
 
 def main():
@@ -195,48 +195,9 @@ def main():
     effectiveRanksDF = pd.read_table(effectiveRanksFilename, names=header,
                                      comment="#", delimiter=r"\s+")
     effectiveRanksDF.set_index('Name', inplace=True)
-    # plotEffectiveRanks_vs_N(effectiveRanksDF)
-    # plt.subplots_adjust(wspace=20, left=0, right=1)
     plot_effective_ranks_vs_N(effectiveRanksDF)
     plt.show()
 
 
 if __name__ == "__main__":
     main()
-
-
-# nb_iterations = 10
-# regression_error = 10**10
-# best_regression = None
-# for _ in range(nb_iterations):  #  tqdm(range(nb_iterations)):
-#     exponent = np.random.uniform(0.05, 1)
-#     # offset = np.random.uniform(-2, 2)
-#     # r = minimize(objective_function, np.array([exponent,
-# offset]), args)
-#     r = minimize(objective_function, np.array([exponent]), args)
-#     L1_error = \
-#         objective_function(r.x, args[0], args[1], args[2], norm_choice)
-#
-#     if L1_error < regression_error:
-#         best_regression = r
-#         best_guess_exponent = exponent
-#         regression_error = L1_error
-#         # print(f"Regression parameters: {r.x}")
-#         # print(
-#         #     f"Regression error: "
-#         #     f"{objective_function(r.x, args[0], args[1],
-#         #  args[2], norm_choice)}")
-#
-# reg = best_regression
-# print(f"\nBest guess exponent = {best_guess_exponent}")
-# print(f"Regression parameters: {reg.x}")
-# print(f"Regression error: "
-#       f"{objective_function(reg.x, args[0], args[1], args[2], norm_choice)}")
-
-
-# def coefficient_of_determination(y, haty, cv_choice="L1"):
-#     if cv_choice == "L1":
-#         cv = 1 - np.sum(np.abs(y - haty))/np.sum(np.abs(y - np.mean(y)))
-#     else:  # cv_choice = "L2"
-#         cv = 1 - np.sum((y - haty)**2) / np.sum((y - np.mean(y))**2)
-#     return cv

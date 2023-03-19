@@ -13,54 +13,54 @@ figureFilenamePNG = 'figures/png/fig1_effective_rank_vs_rank_real_networks.png'
 
 graphPropFilename = 'C:/Users/thivi/Documents/GitHub/' \
                     'low-rank-hypothesis-complex-systems/graphs/' \
-                    'graph_data/graph_properties_augmented.txt'
+                    'graph_data/datasets_table.txt'
 header = open(graphPropFilename, 'r').readline().replace('#', ' ').split()
 graphPropDF = pd.read_table(graphPropFilename, names=header,
                             comment="#", delimiter=r"\s+")
-graphPropDF.set_index('name', inplace=True)
+graphPropDF.set_index('Name', inplace=True)
 
 # Connectome tag
-graphPropDF.loc[graphPropDF['tags'] ==
-                "Biological,Connectome", 'tags'] = "Connectome"
+graphPropDF.loc[graphPropDF['Tags'] ==
+                "Biological,Connectome", 'Tags'] = "Connectome"
 
 # Ecological tag
-graphPropDF.loc[graphPropDF['tags'] ==
-                "Social,Animal", 'tags'] = "Ecological"
-graphPropDF.loc[graphPropDF['tags'] ==
-                "Biological,Foodweb", 'tags'] = "Ecological"
-graphPropDF.loc[graphPropDF['tags'] ==
-                "Biological,FoodWeb,Uncertain", 'tags'] = "Ecological"
-graphPropDF.loc[graphPropDF['tags'] ==
-                "Biological,Foodweb,Multilayer", 'tags'] = "Ecological"
+graphPropDF.loc[graphPropDF['Tags'] ==
+                "Social,Animal", 'Tags'] = "Ecological"
+graphPropDF.loc[graphPropDF['Tags'] ==
+                "Biological,Foodweb", 'Tags'] = "Ecological"
+graphPropDF.loc[graphPropDF['Tags'] ==
+                "Biological,FoodWeb,Uncertain", 'Tags'] = "Ecological"
+graphPropDF.loc[graphPropDF['Tags'] ==
+                "Biological,Foodweb,Multilayer", 'Tags'] = "Ecological"
 
 # Interactome tag
 # See Interactome Networks and Human Disease by Vidal et al. for more info
 # on interactomes. We include the drug-drug interactions in the
 # interactome category.
-graphPropDF.loc[graphPropDF['tags'] ==
-                "Biological,Proteininteractions", 'tags'] = "Interactome"
-graphPropDF.loc[graphPropDF['tags'] ==
-                "Biological,Generegulation", 'tags'] = "Interactome"
-graphPropDF.loc[graphPropDF['tags'] ==
+graphPropDF.loc[graphPropDF['Tags'] ==
+                "Biological,Proteininteractions", 'Tags'] = "Interactome"
+graphPropDF.loc[graphPropDF['Tags'] ==
+                "Biological,Generegulation", 'Tags'] = "Interactome"
+graphPropDF.loc[graphPropDF['Tags'] ==
                 "Biological,Generegulation,Proteininteractions,Multilayer",
-                'tags'] = "Interactome"
-graphPropDF.loc[graphPropDF['tags'] ==
+                'Tags'] = "Interactome"
+graphPropDF.loc[graphPropDF['Tags'] ==
                 "Biological,Genetic,Projection,Multilayer",
-                'tags'] = "Interactome"
-graphPropDF.loc[graphPropDF['tags'] ==
-                "Biological,Metabolic", 'tags'] = "Interactome"
-graphPropDF.loc[graphPropDF['tags'] ==
-                "Biological,Druginteractions", 'tags'] = "Interactome"
+                'Tags'] = "Interactome"
+graphPropDF.loc[graphPropDF['Tags'] ==
+                "Biological,Metabolic", 'Tags'] = "Interactome"
+graphPropDF.loc[graphPropDF['Tags'] ==
+                "Biological,Druginteractions", 'Tags'] = "Interactome"
 
 # Economic tag
-graphPropDF.loc[graphPropDF['tags'] ==
-                "Economic,Trade,Multilayer", 'tags'] = "Economic"
+graphPropDF.loc[graphPropDF['Tags'] ==
+                "Economic,Trade,Multilayer", 'Tags'] = "Economic"
 
 # Communication tag
-graphPropDF.loc[graphPropDF['tags'] ==
-                "Social,Communication", 'tags'] = "Communication"
-graphPropDF.loc[graphPropDF['tags'] == "Social,Communication,Timestamps",
-                "tags"] = "Communication"
+graphPropDF.loc[graphPropDF['Tags'] ==
+                "Social,Communication", 'Tags'] = "Communication"
+graphPropDF.loc[graphPropDF['Tags'] == "Social,Communication,Timestamps",
+                "Tags"] = "Communication"
 
 effectiveRanksFilename = 'C:/Users/thivi/Documents/GitHub/' \
                          'low-rank-hypothesis-complex-systems/' \
@@ -95,7 +95,7 @@ rank = {cat: [] for cat in validCategories}
 effectiveRank = {cat: [] for cat in validCategories}
 for networkName in effectiveRanksDF.index:
 
-    cat = [tag for tag in graphPropDF.loc[networkName]['tags'].split(',')
+    cat = [tag for tag in graphPropDF.loc[networkName]['Tags'].split(',')
            if tag in validCategories]
     if len(cat) == 0:
         cat = 'other'
