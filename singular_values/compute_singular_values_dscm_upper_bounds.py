@@ -8,6 +8,15 @@ def singvals_infinite_sum(a, b, k):
     return np.linalg.norm(a**k)*np.linalg.norm(b**k)
 
 
+def upper_bound_all_singvals(indices, a, b, upper_bound_function, tol):
+    """ The indices start at 1 and finish at N"""
+    upper_bound_singvals = np.zeros(len(indices))
+    for i in indices:
+        upper_bound_singvals[i - 1] = \
+            upper_bound_function(i, a, b, tol)
+    return upper_bound_singvals
+
+
 """ Unweighted directed soft configuration model bounds in two regimes """
 
 

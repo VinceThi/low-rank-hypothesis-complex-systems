@@ -31,13 +31,13 @@ nb_networks = 100
 directed = True
 selfloops = True
 norm_choice = 2
-expected_nb_edges = N*np.array([[0.30, 0.10, 0.10, 0.02, 0.13],
+expected_nb_edges = N*np.array([[0.40, 0.10, 0.10, 0.02, 0.13],
                                 [0.05, 0.80, 0.02, 0.09, 0.10],
-                                [0.02, 0.02, 0.20, 0.05, 0.02],
+                                [0.02, 0.02, 0.30, 0.05, 0.02],
                                 [0.10, 0.05, 0.05, 0.40, 0.01],
-                                [0.10, 0.09, 0.05, 0.05, 0.60]])
+                                [0.10, 0.09, 0.05, 0.05, 0.30]])
 
-g = 10   # 100, 10
+g = 100   # 100, 10
 expected_nb_edges = g*expected_nb_edges
 
 sizes = np.array([N//10, 2*N//5, N//10, N//5, N//5])

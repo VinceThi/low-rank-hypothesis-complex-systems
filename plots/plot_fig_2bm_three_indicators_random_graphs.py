@@ -25,8 +25,8 @@ effrank_indicator_list_gauss = global_effrank_list
 
 """ Degree-corrected stochastic block model """
 graph_str_SBM = "sbm"
-spec_path_str_SBM_svdvals_1 = "2023_03_02_23h17min27sec_100graphs_g100_r0_091"
-spec_path_str_SBM_svdvals_2 = "2023_03_02_23h18min38sec_100graphs_g10_r0_285"
+spec_path_str_SBM_svdvals_1 = "2023_03_21_14h42min27sec_100graphs_g100_r0_087"
+spec_path_str_SBM_svdvals_2 = "2023_03_21_14h33min17sec_100graphs_g10_r0_268"
 spec_path_str_SBM = "2023_03_02_13h52min15sec_100graphs_30s"
 effrank_indicator_list_SBM = global_effrank_list
 
@@ -329,7 +329,7 @@ frame.set_color("#f0f0f0")
 
 plot_singular_values_random_graphs(ax2, graph_str_SBM,
                                    spec_path_str_SBM_svdvals_1, [0, 0.1],
-                                   [0, 0.1], 0.93, "s", max_scatter)
+                                   [0, 0.1], 0.9, "s", max_scatter)
 # ax2.set_title("Stochastic block", fontsize=fontsize_title,
 #               pad=title_pad)
 ax2.text(letter_posx, letter_posy, "c", fontweight="bold",
@@ -364,7 +364,7 @@ ax5.text(letter_posx, letter_posy, "f", fontweight="bold",
 
 plot_singular_values_random_graphs(ax6, graph_str_SBM,
                                    spec_path_str_SBM_svdvals_2, [0, 0.3],
-                                   [0, 0.3], 0.97, "*", max_scatter)
+                                   [0, 0.3], 0.91, "*", max_scatter)
 ax6.text(letter_posx, letter_posy, "g", fontweight="bold",
          horizontalalignment="center", verticalalignment="top",
          transform=ax6.transAxes)
