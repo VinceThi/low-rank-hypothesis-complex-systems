@@ -2,20 +2,17 @@
 # @author: Vincent Thibeault
 
 import numpy as np
-import pandas as pd
 from numpy.linalg import norm
 from scipy.optimize import minimize
 from tqdm import tqdm
 import glob
 from plots.config_rcparams import *
 
-separate_weighted = False
-plot_histogram = False
 path = "C:/Users/thivi/Documents/GitHub/low-rank-hypothesis-complex-systems/" \
        "singular_values/properties/"
 
-singularValuesFiles_list = glob.glob(path +
-                                     'singular_values/*_singular_values.txt')
+singularValuesFiles_list = glob.glob(
+    path + 'singular_values/*_singular_values.txt')
 
 """ Get singular values """
 x = np.linspace(0, 1, 1000)
@@ -25,21 +22,9 @@ drop_wiki = ["edit_wikibooks_af", "edit_wikibooks_ak", "edit_wikibooks_als", "ed
 drop_ego = ["ego_social_gplus_100521671383026672718", "ego_social_gplus_100535338638690515335", "ego_social_gplus_100637660947564674695", "ego_social_gplus_100668989009254813743", "ego_social_gplus_100715738096376666180", "ego_social_gplus_100720409235366385249", "ego_social_gplus_100962871525684315897", "ego_social_gplus_101130571432010257170", "ego_social_gplus_101133961721621664586", "ego_social_gplus_101185748996927059931", "ego_social_gplus_101263615503715477581", "ego_social_gplus_101373961279443806744", "ego_social_gplus_101499880233887429402", "ego_social_gplus_101541879642294398860", "ego_social_gplus_101560853443212199687", "ego_social_gplus_101626577406833098387", "ego_social_gplus_101848191156408080085", "ego_social_gplus_101997124338642780860", "ego_social_gplus_102170431816592344972", "ego_social_gplus_102340116189726655233", "ego_social_gplus_102615863344410467759", "ego_social_gplus_102778563580121606331", "ego_social_gplus_103236949470535942612", "ego_social_gplus_103241736833663734962", "ego_social_gplus_103251633033550231172", "ego_social_gplus_103338524411980406972", "ego_social_gplus_103503116383846951534", "ego_social_gplus_103537112468125883734", "ego_social_gplus_103752943025677384806", "ego_social_gplus_103892332449873403244", "ego_social_gplus_104105354262797387583", "ego_social_gplus_104226133029319075907", "ego_social_gplus_104290609881668164623", "ego_social_gplus_104607825525972194062", "ego_social_gplus_104672614700283598130", "ego_social_gplus_104905626100400792399", "ego_social_gplus_104917160754181459072", "ego_social_gplus_104987932455782713675", "ego_social_gplus_105565257978663183206", "ego_social_gplus_105646458226420473639", "ego_social_gplus_106186407539128840569", "ego_social_gplus_106228758905254036967", "ego_social_gplus_106328207304735502636", "ego_social_gplus_106382433884876652170", "ego_social_gplus_106417861423111072106", "ego_social_gplus_106724181552911298818", "ego_social_gplus_106837574755355833243", "ego_social_gplus_107013688749125521109", "ego_social_gplus_107040353898400532534", "ego_social_gplus_107203023379915799071", "ego_social_gplus_107223200089245371832", "ego_social_gplus_107296660002634487593", "ego_social_gplus_107362628080904735459", "ego_social_gplus_107459220492917008623", "ego_social_gplus_107489144252174167638", "ego_social_gplus_107965826228461029730", "ego_social_gplus_108156134340151350951", "ego_social_gplus_108404515213153345305", "ego_social_gplus_108541235642523883716", "ego_social_gplus_108883879052307976051", "ego_social_gplus_109130886479781915270", "ego_social_gplus_109213135085178239952", "ego_social_gplus_109327480479767108490", "ego_social_gplus_109342148209917802565", "ego_social_gplus_109596373340495798827", "ego_social_gplus_109602109099036550366", "ego_social_gplus_110232479818136355682", "ego_social_gplus_110241952466097562819", "ego_social_gplus_110538600381916983600", "ego_social_gplus_110581012109008817546", "ego_social_gplus_110614416163543421878", "ego_social_gplus_110701307803962595019", "ego_social_gplus_110739220927723360152", "ego_social_gplus_110809308822849680310", "ego_social_gplus_110971010308065250763", "ego_social_gplus_111048918866742956374", "ego_social_gplus_111058843129764709244", "ego_social_gplus_111091089527727420853", "ego_social_gplus_111213696402662884531", "ego_social_gplus_112317819390625199896", "ego_social_gplus_112463391491520264813", "ego_social_gplus_112573107772208475213", "ego_social_gplus_112724573277710080670", "ego_social_gplus_112737356589974073749", "ego_social_gplus_112787435697866537461", "ego_social_gplus_113112256846010263985", "ego_social_gplus_113122049849685469495", "ego_social_gplus_113171096418029011322", "ego_social_gplus_113356364521839061717", "ego_social_gplus_113455290791279442483", "ego_social_gplus_113597493946570654755", "ego_social_gplus_113718775944980638561", "ego_social_gplus_113799277735885972934", "ego_social_gplus_113881433443048137993", "ego_social_gplus_114054672576929802335", "ego_social_gplus_114104634069486127920", "ego_social_gplus_114122960748905067938", "ego_social_gplus_114124942936679476879", "ego_social_gplus_114147483140782280818", "ego_social_gplus_114336431216099933033", "ego_social_gplus_115121555137256496805", "ego_social_gplus_115273860520983542999", "ego_social_gplus_115360471097759949621", "ego_social_gplus_115455024457484679647", "ego_social_gplus_115516333681138986628", "ego_social_gplus_115573545440464933254", "ego_social_gplus_115576988435396060952", "ego_social_gplus_115625564993990145546", "ego_social_gplus_116059998563577101552", "ego_social_gplus_116247667398036716276", "ego_social_gplus_116315897040732668413", "ego_social_gplus_116450966137824114154", "ego_social_gplus_116807883656585676940", "ego_social_gplus_116825083494890429556", "ego_social_gplus_116899029375914044550", "ego_social_gplus_116931379084245069738", "ego_social_gplus_117412175333096244275", "ego_social_gplus_117503822947457399073", "ego_social_gplus_117668392750579292609", "ego_social_gplus_117734260411963901771", "ego_social_gplus_117798157258572080176", "ego_social_gplus_117866881767579360121", "ego_social_gplus_118107045405823607895", "ego_social_gplus_118255645714452180374", "ego_social_gplus_118379821279745746467"]
 
 network_count = 0
+singularValues_array = np.ones(len(x))
 
-if separate_weighted:
-    graphPropFilename = \
-        '../graphs/graph_data/graph_properties_augmented.txt'
-    header = open(graphPropFilename, 'r'). \
-        readline().replace('#', ' ').split()
-    graphPropDF = pd.read_table(graphPropFilename, names=header,
-                                comment="#", delimiter=r"\s+")
-    graphPropDF.set_index('name', inplace=True)
-    singularValues_array_weighted = np.ones(len(x))
-    singularValues_array_unweighted = np.ones(len(x))
-else:
-    singularValues_array = np.ones(len(x))
-
-# Extract effective ranks from Netzschleuder
+""" Extract singular values from Netzschleuder """
 for networkName in tqdm(singularValuesFiles_list):
 
     networkName = networkName.split('_singular_values')[0].split('\\')[-1]
@@ -58,23 +43,12 @@ for networkName in tqdm(singularValuesFiles_list):
         indices = np.arange(0, N, 1)/(N-1)
         singularValues = singularValues/np.max(singularValues)
         singularValues = np.interp(x, indices, singularValues)
-
-        if separate_weighted:
-
-            if graphPropDF["(un)weighted"][networkName] == "weighted":
-                singularValues_array_weighted = \
-                    np.vstack((singularValues_array_weighted, singularValues))
-            else:
-                singularValues_array_unweighted = \
-                    np.vstack((singularValues_array_unweighted,
-                               singularValues))
-        else:
-            singularValues_array = np.vstack((singularValues_array,
-                                              singularValues))
+        singularValues_array = np.vstack((singularValues_array,
+                                          singularValues))
         network_count += 1
 
 
-# Extract effective ranks from other sources
+""" Extract singular values from other sources """
 for networkName in tqdm(glob.glob(path + '*_singular_values.txt')):
     networkName = networkName.split('_singular_values')[0].split('\\')[-1]
 
@@ -87,223 +61,141 @@ for networkName in tqdm(glob.glob(path + '*_singular_values.txt')):
     indices = np.arange(0, N, 1)/(N-1)
     singularValues = singularValues/np.max(singularValues)
     singularValues = np.interp(x, indices, singularValues)
-
-    if separate_weighted:
-
-        if graphPropDF["(un)weighted"][networkName] == "weighted":
-            singularValues_array_weighted = \
-                np.vstack((singularValues_array_weighted, singularValues))
-        else:
-            singularValues_array_unweighted = \
-                np.vstack((singularValues_array_unweighted, singularValues))
-    else:
-        singularValues_array = np.vstack((singularValues_array,
-                                          singularValues))
+    singularValues_array = np.vstack((singularValues_array,
+                                      singularValues))
 
     network_count += 1
 
-print(f"There are {network_count} networks that were used.")
-
-if separate_weighted:
-    mean_singularValues_weighted = \
-        np.mean(singularValues_array_weighted, axis=0)
-    q5_singularValues_weighted = \
-        np.percentile(singularValues_array_weighted, q=5, axis=0)
-    q95_singularValues_weighted = \
-        np.percentile(singularValues_array_weighted, q=95, axis=0)
-
-    mean_singularValues_unweighted = \
-        np.mean(singularValues_array_unweighted,  axis=0)
-    q5_singularValues_unweighted = \
-        np.percentile(singularValues_array_unweighted, q=5, axis=0)
-    q95_singularValues_unweighted = \
-        np.percentile(singularValues_array_unweighted, q=95, axis=0)
-
-else:
-    if plot_histogram:
-        nb_bins = 500
-        sv = singularValues_array.flatten()
-        plt.figure(figsize=(6, 4))
-        plt.hist(sv**2/len(x), bins=nb_bins,
-                 color=deep[0], edgecolor=None,
-                 linewidth=1, density=True)
-        # plt.plot(marchenko_pastur_generator(var, 1, 1000),
-        #          linewidth=2, color=deep[9], label="Marchenko-Pastur pdf")
-        plt.tick_params(axis='both', which='major')
-        plt.xlabel("Singular values $\\sigma^2$")
-        plt.ylabel("Spectral density $\\rho(\\sigma^2)$", labelpad=20)
-        plt.tight_layout()
-        plt.show()
-
-    mean_singularValues = np.mean(singularValues_array, axis=0)
-    std_singularValues = np.std(singularValues_array, axis=0)
-    q5_singularValues = np.percentile(singularValues_array, q=5, axis=0)
-    q95_singularValues = np.percentile(singularValues_array, q=95, axis=0)
+print(f"{network_count} networks were used.")
 
 
-""" Get power law decrease """
-
-if not separate_weighted:
-
-    def pareto_function(x, params):
-        return 1/(params[0]*x + params[1])**(params[2])
-        # return (1 + (x - params[0])/params[1])**(-params[2]) # harder to fit
-
-    def mu(params):
-        return (1 - params[1])/params[0]
-
-    def sigma(params):
-        return 1/params[0]
-
-    def objective_function(params, x, y, norm_choice):
-        return norm(y - pareto_function(x, params), norm_choice)
-
-    bounds = None   # ((10, 10000), (0.5, 2), (0.51, 4))
-
-    cte5 = 500
-    args = (x[:cte5], q5_singularValues[:cte5], 2)   # 10, 1, 0.5
-    reg5 = minimize(objective_function, np.array([10, 1, 0.5]), args,
-                    bounds=bounds)
-    pareto5 = pareto_function(x, reg5.x)
-    print(f"params 5-th percentile : {reg5.x} =>"
-          f" mu = {mu(reg5.x)}, sigma = {sigma(reg5.x)}, alpha = {reg5.x[2]}")
-    # print(reg5.x[0]**(reg5.x[2]))
-
-    cteavg = 500
-    args = (x[:cteavg], mean_singularValues[:cteavg], 2)
-    regavg = minimize(objective_function, np.array([10, 1, 0.5]), args,
-                      bounds=bounds)
-    paretoavg = pareto_function(x, regavg.x)
-    print(f"params average : {regavg.x} => mu = {mu(regavg.x)},"
-          f" sigma = {sigma(regavg.x)}, alpha = {regavg.x[2]}")
-    # print(regavg.x[0]**(regavg.x[2]))
-
-    cte95 = 500
-    args = (x[:cte95], q95_singularValues[:cte95], 2)
-    reg95 = minimize(objective_function, np.array([10, 1, 0.5]), args,
-                     bounds=bounds)
-    pareto95 = pareto_function(x, reg95.x)
-    print(f"params 95-th percentile : {reg95.x} => mu = {mu(reg95.x)},"
-          f" sigma = {sigma(reg95.x)}, alpha = {reg95.x[2]}")
-
-    count_vas_below95 = 0
-    for vas in singularValues_array:
-        count_vas_below95 += np.count_nonzero(vas < pareto95)
-
-    # cte98 = 500
-    # args = (x[:cte98], q98_singularValues[:cte98], 2)
-    # reg98 = minimize(objective_function, np.array([10, 1, 0.5]), args,
-    #                  bounds=bounds)
-    # pareto98 = pareto_function(x, reg98.x)
-    # print(f"params 98-th percentile : {reg98.x} => mu = {mu(reg98.x)},"
-    #       f" sigma = {sigma(reg98.x)}, alpha = {reg98.x[2]}")
-    # print(reg95.x[0]**(reg95.x[2]))
-
-    # from powerlaw import Fit, plot_pdf
-    # fit = Fit(q95_singularValues[:cte95])
-    # print(fit.alpha, fit.sigma,
-    #       fit.distribution_compare('power_law', 'paretonential'))
-    # plot_pdf(q95_singularValues[:cte95])
-
-    # from scipy.stats import pareto
-    # a, loc, scale = 0.5, 0.1, 1
-    # params = pareto.fit(q95_singularValues[:cte95], a, loc=loc, scale=scale)
-    # print(params)
-    # rv = pareto(params[0], loc=params[1], scale=params[2])
-    # plt.plot(x, rv.pdf(x))
-    # plt.plot(x, q95_singularValues, linestyle="--")
-    # plt.yscale("log")
-    # plt.show()
+""" Get statistics on the singular values """
+mean_singularValues = np.mean(singularValues_array, axis=0)
+q5_singularValues = np.percentile(singularValues_array, q=5, axis=0)
+q95_singularValues = np.percentile(singularValues_array, q=95, axis=0)
 
 
-""" Plot singular values """
-if separate_weighted:
-    plt.figure(figsize=(5, 5))
+""" Get bounds through fits on the singular values """
 
-    plt.plot(x, mean_singularValues_weighted, color=deep[0], linewidth=2,
-             label="Weighted")
-    plt.fill_between(x, q5_singularValues_weighted,
-                     q95_singularValues_weighted, alpha=0.1)
-    plt.plot(x, mean_singularValues_unweighted, color=deep[1], linewidth=2,
-             label="Unweighted")
-    plt.fill_between(x, q5_singularValues_unweighted,
-                     q95_singularValues_unweighted, alpha=0.1)
 
-    # plt.yscale("log")
-    plt.xlabel("Rescaled singular value index")
-    plt.ylabel("Rescaled singular values")
-    plt.legend(loc=1, fontsize=10)
-    plt.yscale("log")
-    plt.ylim([0.005, 1.1])
-    plt.show()
+def rational_function(x, params):
+    return (1 - x)**params[0]/(params[1]*x + 1)**(params[2])
 
-else:
-    plt.figure(figsize=(5, 5))
-    ax = plt.gca()
-    plt.plot(x, mean_singularValues, color=deep[0], linewidth=2,
-             label="Average", zorder=10)
-    fcolor = "#38ccf9"   # deep[9]
-    # plt.plot(x, paretoavg, color=fcolor, linestyle="-",
-    #          linewidth=1, zorder=20)
-    # tavg = plt.text(x[cte//2] + x[cte//2]/4, pareto[cte//2],
-    #                 f"$\\gamma \\approx {int(np.round(regavg.x[1]))}$",
-    #                 fontsize=8)
-    # tavg.set_rotation(-15)
-    # plt.plot(x, pareto5, color=fcolor, linestyle="-",
-    #          linewidth=1, zorder=20)
-    plt.plot(x, pareto95, color=fcolor, linestyle="-",
-             linewidth=1, zorder=20,
-             label="Experimental\nupper bound"
-                   "\n$\\left[1 + \\left(\\frac{x - \\mu}{\\sigma}\\right)"
-                   "\\right]^{-\\alpha}$")
-    # plt.plot(x, pareto98, color=fcolor, linestyle="-",
-    #          linewidth=1, zorder=20,
-    #          label="Power-law fit"
-    #                "\n$\\left[1 + \\left(\\frac{x - \\mu}{\\sigma}\\right)"
-    #                "\\right]^{-\\alpha}$")
-    tf95 = plt.text(x[cte95//10] + x[cte95//10]/1.5, pareto95[cte95//10],
-                    f"$\\alpha \\approx {np.round(reg95.x[2], 2)}$",
-                    fontsize=8)
-    print(100*count_vas_below95/(network_count*len(x)))
-    percentage_vas_below95 =\
-        int(np.round(100*count_vas_below95/(network_count*len(x))))
-    plt.text(0.97, 0.075, f"{percentage_vas_below95}% of the\nsingular\nvalues",
-             fontsize=8, ha="center")
-    # tf95.set_rotation(-10)
-    pcolor = dark_grey
-    plinewidth = 0.5
-    ptcolor = "#fafafa"
-    plt.plot(x, q5_singularValues, color=pcolor, linewidth=plinewidth,
-             linestyle="--", label="Percentiles")
-    t5 = plt.text(0.02, 0.02, f"5%", fontsize=8)
-    t5.set_bbox(dict(facecolor=ptcolor, alpha=1, linewidth=0))
-    plt.plot(x, q95_singularValues, color=pcolor, linewidth=plinewidth,
+
+def mu(params):
+    return (1 - params[1]) / params[0]
+
+
+def sigma(params):
+    return 1 / params[0]
+
+
+def objective_function(params, x, y, norm_choice):
+    return norm(y - rational_function(x, params), norm_choice)
+
+
+bounds5 = ((0.0000001, 10), (0.01, 5000), (0.01, 10))
+boundsavg = ((0.000001, 10), (0.01, 1000), (0.01, 10))
+bounds95 = ((0.000001, 10), (0.01, 1000), (0.01, 10))
+
+cte95 = len(x)
+args = (x[:cte95], q95_singularValues[:cte95], 2)
+reg95 = minimize(objective_function, np.array([1, 2, 1]), args,
+                 bounds=bounds95)
+ratio95 = rational_function(x, reg95.x)
+print(f"params 95-th percentile : {reg95.x})")
+
+cteavg = len(x)
+args = (x[:cteavg], mean_singularValues[:cteavg], 2)
+regavg = minimize(objective_function, np.array([1, 2, 1]), args,
+                  bounds=boundsavg)
+ratioavg = rational_function(x, regavg.x)
+print(f"params average : {regavg.x}")
+
+cte5 = len(x)
+args = (x[:cte5], q5_singularValues[:cte5], 2)
+reg5 = minimize(objective_function, np.array([1, 2, 1]), args,
+                bounds=bounds5)
+ratio5 = rational_function(x, reg5.x)
+print(f"params 5-th percentile : {reg5.x}")
+
+count_vas_below95 = 0
+count_networks_below95 = 0
+count_networks_below95_with_tol = 0
+for vas in singularValues_array:
+    count_vas_below95 += np.count_nonzero(vas <= ratio95)
+    if np.all(vas <= ratio95):
+        count_networks_below95 += 1
+    if np.count_nonzero(vas <= ratio95) > 995:
+        count_networks_below95_with_tol += 1
+percentage_vas_below95 = \
+    int(np.round(100*count_vas_below95/(network_count * len(x))))
+percentage_networks_below95 = \
+    int(np.round(100*count_networks_below95/network_count))
+percentage_networks_below95_with_tol = \
+    int(np.round(100*count_networks_below95_with_tol/network_count))
+print(f"\n{percentage_vas_below95}% of singular values of all the networks"
+      f" below the bound")
+print(f"\n{percentage_networks_below95}% of the networks have all their"
+      f"singular values below the bound")
+print(f"\n{percentage_networks_below95_with_tol}% of the networks have 99.5%"
+      f" of their singular values below the bound")
+
+plt.figure(figsize=(5, 5))
+ax = plt.gca()
+plt.plot(x, mean_singularValues, color=deep[0], linewidth=2,
+         label="Average", zorder=10)
+fcolor = "#38ccf9"   # deep[9]
+plt.plot(x, ratioavg, color=fcolor, linestyle="-",
+         linewidth=1, zorder=20)
+plt.plot(x, ratio5, color=fcolor, linestyle="-",
+         linewidth=1, zorder=20)
+plt.plot(x, ratio95, color=fcolor, linestyle="-",
+         linewidth=1, zorder=20,
+         label="Experimental bound $\\frac{(1 - x)^a}{(1 + bx)^c}$")
+# "Experimental\nupper bound"
+
+pcolor = dark_grey
+plinewidth = 0.5
+ptcolor = "#fafafa"
+# plt.text(x[cte95 // 10] + x[cte95 // 10] / 2, ratio95[cte95 // 10],
+#          f"$a \\approx {np.round(reg95.x[0], 1)}$\n"
+#          f"$b \\approx {np.round(reg95.x[1], 1)}$\n"
+#          f"$c \\approx {np.round(reg95.x[2], 1)}$",
+#          fontsize=8)
+t95 = plt.text(0.91, 0.055,
+               f"{percentage_vas_below95}% of the\nsingular\nvalues",
+               fontsize=8, ha="center")
+t95.set_bbox(dict(facecolor=ptcolor, alpha=1, linewidth=0))
+plt.plot(x, q5_singularValues, color=pcolor, linewidth=plinewidth,
+         linestyle="--", label="Percentiles")
+t5 = plt.text(0.02, 0.02, f"5%", fontsize=8)
+t5.set_bbox(dict(facecolor=ptcolor, alpha=1, linewidth=0))
+plt.plot(x, q95_singularValues, color=pcolor, linewidth=plinewidth,
+         linestyle="--")
+t95 = plt.text(x[500], q95_singularValues[500]-q95_singularValues[500]/4.5,
+               f"95%", fontsize=8)
+t95.set_bbox(dict(facecolor=ptcolor, alpha=1, linewidth=0))
+for q in [20, 50, 80]:
+    percentile = np.percentile(singularValues_array, q=q, axis=0)
+    plt.plot(x, percentile, color=pcolor, linewidth=plinewidth,
              linestyle="--")
-    t95 = plt.text(x[500], q95_singularValues[500]-q95_singularValues[500]/6,
-                   f"95%", fontsize=8)
-    t95.set_bbox(dict(facecolor=ptcolor, alpha=1, linewidth=0))
-    for q in [20, 50, 80]:
-        percentile = np.percentile(singularValues_array, q=q, axis=0)
-        plt.plot(x, percentile, color=pcolor, linewidth=plinewidth,
-                 linestyle="--")
-        t = plt.text(x[q*10//2], percentile[q*10//2]-percentile[q*10//2]/10,
-                     f"{q}%", fontsize=8)
-        t.set_bbox(dict(facecolor=ptcolor, alpha=1, linewidth=0))
-    # plt.plot(x, 1 - x, linestyle="--", color=reduced_grey)
-    # plt.fill_between(x, mean_singularValues - std_singularValues,
-    #                  mean_singularValues + std_singularValues, alpha=0.5)
-    plt.fill_between(x, q5_singularValues, q95_singularValues, color=ptcolor,
-                     alpha=1)
+    t = plt.text(x[q*10//2], percentile[q*10//2]-percentile[q*10//2]/10,
+                 f"{q}%", fontsize=8)
+    t.set_bbox(dict(facecolor=ptcolor, alpha=1, linewidth=0))
+# plt.fill_between(x, mean_singularValues - std_singularValues,
+#                  mean_singularValues + std_singularValues, alpha=0.5)
+plt.fill_between(x, q5_singularValues, q95_singularValues, color=ptcolor,
+                 alpha=1)
 
-    plt.tick_params(axis='y', which='both', right=False)
-    plt.yscale("log")
-    # plt.xscale("log")
-    plt.ylim([0.001, 1.1])
-    plt.xlabel("Rescaled singular value index")
-    plt.ylabel("Rescaled singular values")
-    plt.legend(loc=1, fontsize=10)
-    handles, labels = ax.get_legend_handles_labels()
-    order = [0, 2, 1]
-    plt.legend([handles[idx] for idx in order], [labels[idx] for idx in order],
-               loc=1, fontsize=10)
-    plt.show()
+plt.tick_params(axis='y', which='both', right=False)
+plt.yscale("log")
+plt.ylim([0.001, 1.1])
+plt.xlabel("Rescaled singular value index")
+plt.ylabel("Rescaled singular values")
+plt.legend(loc=1, fontsize=10)
+handles, labels = ax.get_legend_handles_labels()
+order = [0, 2, 1]
+plt.legend([handles[idx] for idx in order], [labels[idx] for idx in order],
+           loc=1, fontsize=10)
+plt.show()

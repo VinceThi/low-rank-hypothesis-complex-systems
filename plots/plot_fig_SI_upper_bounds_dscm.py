@@ -34,7 +34,7 @@ def plot_singular_values_expected_matrix(ax, indices, a, b,
         upper_bound_all_singvals(indices, a, b, upper_bound_function, tol)
     RMSE = rmse(upper_bound / sig1, singular_values / sig1)
 
-    letter_posx, letter_posy = -0.27, 1.05
+    letter_posx, letter_posy = -0.2, 1.12
     ax.text(letter_posx, letter_posy, letter, fontweight="bold",
             horizontalalignment="center", verticalalignment="top",
             transform=ax.transAxes)
@@ -47,16 +47,16 @@ def plot_singular_values_expected_matrix(ax, indices, a, b,
     if ylabel:
         ax.set_ylabel("Rescaled singular\n values $\\sigma_i/\\sigma_1$")
     ax.set_xlabel("Index i")
-    # ax.set_xscale("log")
-    ax.set_xticks([1, 5, 10])
-    ax.set_xlim([0.9, 10.1])
+    ax.set_xscale("log")
+    ax.set_xticks([1, 10, 100])
+    ax.set_xlim([0, 101])
     # ax.set_xticks([1, 20])
     # ax.set_xlim([0, 25])
     ax.set_yscale("log")
-    ax.set_yticks([10**(-10), 10**(-8), 10**(-6), 10**(-4), 10**(-2), 1])
-    ax.set_ylim([10**(-10), 20])
+    ax.set_yticks([10**(-15), 10**(-12), 10**(-9), 10**(-6), 10**(-3), 1])
+    ax.set_ylim([10**(-15), 20])
     plt.tick_params(axis="x", which="both", top=False)
-    ax.legend(loc=1, fontsize=8, bbox_to_anchor=(1, 1.06))
+    ax.legend(loc=1, fontsize=8, bbox_to_anchor=(1.08, 1.12))
 
 
 def plot_rmse_upper_bound_dscm(ax, x_array, a_array, b_array,

@@ -113,13 +113,14 @@ def plotEffectiveRank_vs_N(ax, letter_str, effRank_str, effrank_name,
     bound = [(0, 10), (0, 1), (-100, 30)]
     # args = (np.log10(size), np.log10(effrank), weights, norm_choice)
     args = (size, effrank, weights, norm_choice)
-    reg = minimize(objective_function, np.array([1, 0.5, -1]), args, bounds=bound)
+    reg = minimize(objective_function, np.array([1, 0.5, -1]),
+                   args, bounds=bound)
     error = \
         objective_function(reg.x, args[0], args[1], args[2], norm_choice)
     print(f"Optimal exponent = {reg.x[1]}")
     print(f"Params = {reg.x}")
     print(f"Normalized L{norm_choice} regression error ="
-          f" {error/(np.max(effrank) - np.min(effrank))}")
+          f" {error/(np.mean(effrank))}")
     N_array = np.linspace(min_size, max_size, 10000)
     eval_reg = power_function(N_array, reg.x)  # [0])
     ax.plot(N_array, eval_reg, color=dark_grey)
