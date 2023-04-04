@@ -5,7 +5,7 @@ https://doi.org/10.48550/arXiv.2208.04848).
 
 ### Network datasets
 
-The real networks and their properties (e.g., effective ranks) used in this project are available in `graphs/datasets_table.txt`.  Most of the network datasets were downloaded from the [Netzschleuder network catalogue](https://networks.skewed.de) in the `.gt.zst` file format into the `graph_data/netzschleuder/` subdirectory.
+The real networks and their properties (e.g., effective ranks) used in this project are available in `graphs/graph_data/datasets_table.txt`. Most of the network datasets were downloaded from the [Netzschleuder network catalogue](https://networks.skewed.de) in the `.gt.zst` file format into the `graph_data/netzschleuder/` subdirectory.
 We also provide the links and details for other network datasets in the last section of the supplementary material of the paper.
 
 
@@ -22,10 +22,12 @@ The `dynamics/` folder contains the code for the integration of various nonlinea
 
 #### Graphs
 
-The `graphs/` folder contains the code to extract real networks, generate random graphs (e.g, $S^1$ model), among others.
+The `graphs/` folder contains the code to extract real networks, generate random graphs (e.g, $S^1$ model, degree-corrected SBM, configuration models), among others.
 
 - `get_real_networks.py` allows to extract the networks that are not Netzschleuder with functions such as `get_<type of network>(graph_name)`.
 - `generate_random_graphs.py` allows to generate graphs from various random graphs with fixed parameters or random parameters.
+- `generate_degree_corrected_stochastic_block_model.py` contains the function `degree_corrected_stochastic_block_model`, a generator of graphs from the degree-corrected stochastic block model (DCSBM).
+- `generate_soft_configuration_model.py` contains the random graph generator `soft_configuration_model` for the directed soft configuration model (DSCM) and the random graph generator `weighted_soft_configuration_model` for the weighted directed soft configuration model (WDSCM).
 - `generate_S1_random_graphs.py` contains the function `s1_model`, a generator of graphs from the random geometric model $S^1$.
 - `compute_tensors.py` contains different functions to compute the tensors arising in the dimension reduction of the paper.
 - `split_weight_nws`, by Gabriel Eilerstein, contains the function `unpack` that allows to separate layer weights for convolutional and fully connected layers in convolutional neural networks from [nws](https://github.com/gabrieleilertsen/nws).
@@ -54,6 +56,10 @@ Once one or more new network datasets have been added to the `graph_data/netzsch
 1. `compute_singular_values.py` computes the singular values for every new network datasets from Netzschleuder in `graph_data/netzschleuder/`. The singular values are saved into the file `properties/singular_values/<dataset name>_singular_values.txt`.
 2. `compute_singular_values_non_netzschleuder.py` computes the singular values for specific network datasets not from Netzschleuder in `graph_data/`. The singular values are saved into the file `properties/<dataset name>_singular_values.txt`.
 3. `compute_effective_ranks.py` computes the rank as well as various _effective_ ranks and add them into the file `properties/effective_ranks.txt`.
+- `compute_singular_values_dscm_upper_bounds` contains the functions to compute the upper bounds of the soft configuration models.
+- The scripts `singular_values_<random graph name>` allow to generate the results for Fig. 2b to 2i.
+- The scripts `effective_ranks_<random graph name>` allow to generate the results for Fig. 2j to 2m.
+
 
 
 #### Plotting the results
@@ -64,6 +70,7 @@ The `plot/` folder contains the configuration parameters and functions to plot t
 - `plot_fig_1b_drosophila_network.py`, `plot_fig_1d_drosophila_singular_values.py`, `plot_fig_1e_singular_values_real_networks.py`, `plot_fig_1f_effective_rank_vs_rank_scatterplot.py` and `plot_fig_1go_effective_rank_to_dimension_ratio_densities.py` generate subfigures for Fig. 1, which is then assembled on Inkscape.
 - `plot_fig_2bm_three_indicators_random_graphs.py` generates Figs. 2b to 2m, which is then assembled on Inkscape.
 - `plot_fig_4_error_vector_fields.py` generates Fig. 4 with the alignment errors and the bifurcations/trajectories.
+- The scripts with the form `plot_fig_SI_<figures name>.py` allow to generate the figures for the supplementary information of the paper. 
 - `plot_singular_values.py` contains the functions to generate scree plots or histograms for the singular values of one or many networks. The function `plot_singular_values` gives the scree plots with the effective ranks, the cumulative explained variance and the y axis in log if desired.
 - `plot/figures/png/singular_values` contains plots of the singular values of various real networks in png, while `plot/figures/pdf/singular_values` contains the pdfs.
 
@@ -74,7 +81,7 @@ Unit tests are in the folder `tests/` and are seperated in three: `tests/test_dy
 
 - The tests in `tests/test_dynamics/` ensure that the complete dynamics and the reduced dynamics coincide in tensor form at $n=N$ (scripts test_<dynamics' name>}) and that the $x'$ and Jacobian matrices (found analytically or numerically) to compute the upper bound on the alignment error are correct (scripts test_error_vector_fields_<dynamics' name>).
 
-- The tests in `tests/test_graphs/test_compute_tensors.py` ensure that the tensors arising in the dimension reduction are well computed numerically. Simple speed tests for different methods (einsum, matmul, loop) to compute the tensors are also available.
+- The tests in `tests/test_graphs/test_compute_tensors.py` ensure that the tensors arising in the dimension reduction are well computed numerically. Simple speed tests for different methods (einsum, matmul, loop) to compute the tensors are also available. We also provide tests for the random graph generators (`tests/test_graphs/test_generate_<random graph name>.py`).
 
 - The tests `tests/test_singular_values/test_compute_effective_ranks.py` ensure that the effective ranks thrank and shrank under different norms (frobenius, spectral/operator, nuclear) gives the correct value in a simple example of a matrix of rank 20. thrank and shrank with different norms are also compared for the drosophila connectome. The script `tests/test_singular_values/test_compute_svd.py` contains simple tests for functions introduced in  `singular_values/compute_svd.py`. Finally, the tests in `tests/test_singular_values/test_optimal_shrinkage.py` ensure that for a given matrix shrank and thrank under different norms give the same results as the Matlab scripts optimal_shrinkage.m [Gavish, Matan and Donoho, David. (2016). Code Supplement for
 "Optimal Shrinkage of Singular Values". Stanford Digital Repository.
