@@ -94,7 +94,6 @@ markerMap = dict(zip(validCategories, markers))
 rank = {cat: [] for cat in validCategories}
 effectiveRank = {cat: [] for cat in validCategories}
 for networkName in effectiveRanksDF.index:
-
     cat = [tag for tag in graphPropDF.loc[networkName]['Tags'].split(',')
            if tag in validCategories]
     if len(cat) == 0:
