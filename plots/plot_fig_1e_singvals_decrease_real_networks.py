@@ -72,14 +72,16 @@ print(f"{network_count} networks were used.")
 """ Get statistics on the singular values """
 mean_singularValues = np.mean(singularValues_array, axis=0)
 q5_singularValues = np.percentile(singularValues_array, q=5, axis=0)
+q50_singularValues = np.percentile(singularValues_array, q=50, axis=0)
 q95_singularValues = np.percentile(singularValues_array, q=95, axis=0)
+q96_singularValues = np.percentile(singularValues_array, q=96, axis=0)
 
 
 """ Get bounds through fits on the singular values """
 
 
-def rational_function(x, params):
-    return (1 - x)**params[0]/(params[1]*x + 1)**(params[2])
+def ratio_function(x, params):
+    return (1 - x)**(params[0]-2)/(1 + params[1]*x)**(params[2])
 
 
 def mu(params):
@@ -91,32 +93,41 @@ def sigma(params):
 
 
 def objective_function(params, x, y, norm_choice):
-    return norm(y - rational_function(x, params), norm_choice)
+    return norm(y - ratio_function(x, params), norm_choice)
 
 
-bounds5 = ((0.0000001, 10), (0.01, 5000), (0.01, 10))
-boundsavg = ((0.000001, 10), (0.01, 1000), (0.01, 10))
-bounds95 = ((0.000001, 10), (0.01, 1000), (0.01, 10))
+bounds5 = ((2, 10), (0.01, 5000), (0.01, 10))
+boundsavg = ((2, 10), (0.01, 1000), (0.01, 10))
+bounds50 = ((2, 10), (0.01, 1000), (0.01, 10))
+bounds95 = ((2, 10), (0.01, 1000), (0.01, 10))
 
 cte95 = len(x)
 args = (x[:cte95], q95_singularValues[:cte95], 2)
 reg95 = minimize(objective_function, np.array([1, 2, 1]), args,
                  bounds=bounds95)
-ratio95 = rational_function(x, reg95.x)
+ratio95 = ratio_function(x, reg95.x)
 print(f"params 95-th percentile : {reg95.x})")
 
 cteavg = len(x)
 args = (x[:cteavg], mean_singularValues[:cteavg], 2)
 regavg = minimize(objective_function, np.array([1, 2, 1]), args,
                   bounds=boundsavg)
-ratioavg = rational_function(x, regavg.x)
+ratioavg = ratio_function(x, regavg.x)
 print(f"params average : {regavg.x}")
+
+cte50 = len(x)
+args = (x[:cteavg], q50_singularValues[:cte50], 2)
+reg50 = minimize(objective_function, np.array([1, 2, 1]), args,
+                 bounds=boundsavg)
+ratio50 = ratio_function(x, reg50.x)
+print(f"params 50-th percentile : {reg50.x}")
+
 
 cte5 = len(x)
 args = (x[:cte5], q5_singularValues[:cte5], 2)
 reg5 = minimize(objective_function, np.array([1, 2, 1]), args,
                 bounds=bounds5)
-ratio5 = rational_function(x, reg5.x)
+ratio5 = ratio_function(x, reg5.x)
 print(f"params 5-th percentile : {reg5.x}")
 
 count_vas_below95 = 0
@@ -124,7 +135,7 @@ count_networks_below95 = 0
 count_networks_below95_with_tol = 0
 for vas in singularValues_array:
     count_vas_below95 += np.count_nonzero(vas <= ratio95)
-    if np.all(vas <= ratio95):
+    if np.all(vas <= ratio95 + 0.000001):
         count_networks_below95 += 1
     if np.count_nonzero(vas <= ratio95) > 995:
         count_networks_below95_with_tol += 1
@@ -132,12 +143,13 @@ percentage_vas_below95 = \
     int(np.round(100*count_vas_below95/(network_count * len(x))))
 percentage_networks_below95 = \
     int(np.round(100*count_networks_below95/network_count))
+print(100*count_vas_below95/(network_count * len(x)))
 percentage_networks_below95_with_tol = \
     int(np.round(100*count_networks_below95_with_tol/network_count))
 print(f"\n{percentage_vas_below95}% of singular values of all the networks"
       f" below the bound")
 print(f"\n{percentage_networks_below95}% of the networks have all their"
-      f"singular values below the bound")
+      f" singular values below the bound")
 print(f"\n{percentage_networks_below95_with_tol}% of the networks have 99.5%"
       f" of their singular values below the bound")
 
@@ -146,13 +158,16 @@ ax = plt.gca()
 plt.plot(x, mean_singularValues, color=deep[0], linewidth=2,
          label="Average", zorder=10)
 fcolor = "#38ccf9"   # deep[9]
-plt.plot(x, ratioavg, color=fcolor, linestyle="-",
+# plt.plot(x, ratioavg, color=fcolor, linestyle="-",
+#          linewidth=1, zorder=20)
+plt.plot(x, ratio50, color=fcolor, linestyle="-",
          linewidth=1, zorder=20)
-plt.plot(x, ratio5, color=fcolor, linestyle="-",
-         linewidth=1, zorder=20)
+# plt.plot(x, ratio5, color=fcolor, linestyle="-",
+#          linewidth=1, zorder=20)
 plt.plot(x, ratio95, color=fcolor, linestyle="-",
-         linewidth=1, zorder=20,
-         label="Experimental bound $\\frac{(1 - x)^a}{(1 + bx)^c}$")
+         linewidth=1, zorder=20,  # Experimental bound
+         label="Enveloping curve $\\frac{(1 - x)^{c-2}}"
+               "{(1 + \\zeta x)^b}$")
 # "Experimental\nupper bound"
 
 pcolor = dark_grey
@@ -163,9 +178,9 @@ ptcolor = "#fafafa"
 #          f"$b \\approx {np.round(reg95.x[1], 1)}$\n"
 #          f"$c \\approx {np.round(reg95.x[2], 1)}$",
 #          fontsize=8)
-t95 = plt.text(0.91, 0.055,
-               f"{percentage_vas_below95}% of the\nsingular\nvalues",
-               fontsize=8, ha="center")
+t95 = plt.text(0.66, 0.073,
+               f"{percentage_vas_below95}%\nof the\nsingular values",
+               fontsize=8)  # , ha="center"
 t95.set_bbox(dict(facecolor=ptcolor, alpha=1, linewidth=0))
 plt.plot(x, q5_singularValues, color=pcolor, linewidth=plinewidth,
          linestyle="--", label="Percentiles")
