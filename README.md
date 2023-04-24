@@ -49,7 +49,7 @@ The `simulation/` folder contains the code to compute the alignment errors, the 
 - `simulation/simulation_data/` contains all the data to generate Fig. 3 of the paper.
 
 
-#### Singular values, ranks and effective ranks
+#### Singular values and effective ranks
 
 Once one or more new network datasets have been added to the `graph_data/netzschleuder/` and `graph_data/` subdirectories, their singular values, rank and effective ranks can computed by executing the following scripts from the `singular_values/` folder in this specific order.
 
