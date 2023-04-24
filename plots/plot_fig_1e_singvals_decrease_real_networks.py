@@ -166,7 +166,7 @@ plt.plot(x, ratio50, color=fcolor, linestyle="-",
 #          linewidth=1, zorder=20)
 plt.plot(x, ratio95, color=fcolor, linestyle="-",
          linewidth=1, zorder=20,  # Experimental bound
-         label="Enveloping curve $\\frac{(1 - x)^{c-2}}"
+         label="Envelope $\\frac{(1 - x)^{c-2}}"
                "{(1 + \\zeta x)^b}$")
 # "Experimental\nupper bound"
 

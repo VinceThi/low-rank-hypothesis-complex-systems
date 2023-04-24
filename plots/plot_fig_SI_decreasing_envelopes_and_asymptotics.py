@@ -58,11 +58,11 @@ plt.text(x[len(x)-1800], y4[len(x)-1800]+0.013,
          "Exponential", rotation=0, fontsize=10, color='C4')
 # plt.text(x[len(x)-1950], y4[len(x)-1950],
 #          "Exponential", rotation=-85, fontsize=10, color='C4')
-ax1.set_xlabel('Index $i$', fontsize=12)
+ax1.set_xlabel('$x$', fontsize=12)
 plt.tick_params(which="both", top=False, right=False)
 plt.xticks([1, N/2, N], ['1', '$N/2$', '$N$'])
 plt.yticks([0.0, 0.5, 1.0], ['0.0', '0.5', '1.0'])
-ax1.set_ylabel(f"Enveloping curves")
+ax1.set_ylabel(f"Singular-value envelope $\psi(x)$")
 # plt.savefig('asymptotics.pdf', bbox_inches="tight")
 # plt.show()
 
@@ -79,7 +79,7 @@ plt.tick_params(which="both", top=False, right=False)
 plt.legend(['$O(N)$', '$O(N)$', '$O(N^{1-\epsilon}),\,\epsilon=0.3$',
             '$O(N^{1-\epsilon}),\,\epsilon=0.6$', '$O(1)$'],
            fontsize=10, loc='lower center')
-ax2.set_xlabel('Index $i$', fontsize=12)
+ax2.set_xlabel('$x$', fontsize=12)
 plt.xticks([1, N/2, N], ['1', '$N/2$', '$N$'])
 # plt.savefig('asymptotics-log.pdf', bbox_inches="tight")
 plt.show()
