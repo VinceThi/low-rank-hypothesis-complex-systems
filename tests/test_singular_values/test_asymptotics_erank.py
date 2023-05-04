@@ -79,7 +79,7 @@ def plot_erank_asymptotics_hypergeo():
     print(f"b_* must be above 2b^* - 1 = {2*bt - 1}")
     assert bb > 2*bt - 1
     print(f"2b^* - (1-delta)b_* - 1 = {2*bt - (1-delta)*bb - 1} "
-          f"must be smaller than 0")
+          f"must be smaller negative")
     assert 2*bt - (1-delta)*bb - 1 < 0
 
     ct, cb = 2.2, 2.1
