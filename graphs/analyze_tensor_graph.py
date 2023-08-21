@@ -1,38 +1,17 @@
 # -*- coding: utf-8 -*-
 # @author: Vincent Thibeault
 
-import networkx as nx
 import numpy as np
 from graphs.compute_tensors import compute_tensor_order_3
 from singular_values.compute_svd import computeTruncatedSVD_more_positive
-from singular_values.compute_effective_ranks import computeEffectiveRanks
 from scipy.linalg import svdvals , pinv
 import matplotlib.pyplot as plt
 
-# graph_str = "high_school_proximity"
-# path_str = f"C:/Users/thivi/Documents/GitHub/low-dimension-hypothesis/" \
-#            f"graphs/graph_data/{graph_str}/"
-# G = nx.read_edgelist(path_str + "edges_no_time.csv", delimiter=',',
-#                      create_using=nx.Graph)
-# A = nx.to_numpy_array(G)
-# graph_str = "caribbean"  # "little_rock"
-# path_str = f"C:/Users/thivi/Documents/GitHub/low-dimension-hypothesis/" \
-#            f"graphs/graph_data/foodwebs/{graph_str}/"
-# if graph_str == "little_rock":
-#     G = nx.read_edgelist(path_str + "edges.csv", delimiter=',',
-#                          create_using=nx.DiGraph)
-#     A = nx.to_numpy_array(G).T
-# elif graph_str == "caribbean":
-#     A = np.genfromtxt(graph_str, delimiter=",")
-# else:
-#     raise ValueError("This graph_str is not an option.")
-# # A = A - A.T
 
 N = 20
 A = np.random.uniform(-1, 1, (N, N))
 n = N
 Un, Sn, M = computeTruncatedSVD_more_positive(A, n)
-# print(computeEffectiveRanks(svdvals(A), graph_str, N))
 print(f"\nDimension of the reduced system n = {n} \n")
 
 W = A/Sn[0][0]  # We normalize the network by the largest singular value

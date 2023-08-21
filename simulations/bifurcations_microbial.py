@@ -133,13 +133,6 @@ ell_bar = np.sum(M[:n_min, :], axis=1)/(normalization_constant*N)
 ell = np.concatenate([ell_bar, np.zeros(n - n_min)])
 m = ell@M
 
-# from matrix_factorization.snmf import snmf_multiple_inits
-# F, G, snmf_frob_error = snmf_multiple_inits(M[:n_min, :], num_bases=1,
-#                                             number_initializations=1000)
-# ell_bar = pinv(F)
-# ell = np.concatenate([ell_bar[0], np.zeros(n - n_min)])
-# m = ell@M
-
 timestr_M_D = time.strftime("%Y_%m_%d_%Hh%Mmin%Ssec")
 
 

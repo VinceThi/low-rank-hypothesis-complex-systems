@@ -111,7 +111,6 @@ def plotEffectiveRank_vs_N(ax, letter_str, effRank_str, effrank_name,
 
     # ----- Regression
     bound = [(0, 10), (0, 1), (-100, 30)]
-    # args = (np.log10(size), np.log10(effrank), weights, norm_choice)
     args = (size, effrank, weights, norm_choice)
     reg = minimize(objective_function, np.array([1, 0.5, -1]),
                    args, bounds=bound)
@@ -124,13 +123,9 @@ def plotEffectiveRank_vs_N(ax, letter_str, effRank_str, effrank_name,
     N_array = np.linspace(min_size, max_size, 10000)
     eval_reg = power_function(N_array, reg.x)  # [0])
     ax.plot(N_array, eval_reg, color=dark_grey)
-    # label="Fit $\\propto N"
-    #       + "^{{{}}}$".format(np.round(reg.x[1], 2)))
     ax.text(N_array[-1]-2000, eval_reg[-1] - 5,
             "$\\propto N" + "^{{{}}}$".format("%.2f" % np.round(reg.x[1], 2)),
             fontsize=9, clip_on=False)
-    # ax.set_xscale("log")
-    # ax.set_yscale("log")
     ax.set_xlabel('$N$')
     ax.set_xticks([10, 20000])
     ax.set_xlim([-500, 20000])
@@ -138,7 +133,6 @@ def plotEffectiveRank_vs_N(ax, letter_str, effRank_str, effrank_name,
     ax.set_ylim(ylim)
     ax.set_ylabel(effrank_name, labelpad=labelpad)
     ax.set_yticks([1, ylim[1]])
-    # ax.legend(loc=1)
 
     axins = inset_setup(ax)
     axins.scatter(size, effrank, s=s)

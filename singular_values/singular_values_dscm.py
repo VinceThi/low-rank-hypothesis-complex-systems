@@ -149,12 +149,7 @@ ticks = ax1.get_xticks()
 ticks[ticks.tolist().index(0)] = 1
 plt.xticks(ticks[ticks > 0])
 plt.tick_params(axis='both', which='major')
-# plt.ylim([0.01*np.min(singularValues), 1.5])
-# ax1.set_yscale('log')
-# plt.tick_params(axis='y', which='both', left=True,
-#                 right=False, labelbottom=False)
 plt.xlabel(xlabel)
-# plt.ylabel(ylabel)  # , labelpad=20)
 plt.xlim([-50, N+50])
 
 axins = inset_axes(ax1, width="50%", height="50%",
@@ -199,8 +194,6 @@ for axis in ['top', 'bottom', 'left', 'right']:
     axins.spines[axis].set_linewidth(0.5)
 axins.tick_params(axis='both', which='major', labelsize=8,
                   width=0.5, length=2)
-
-# plt.tight_layout()
 plt.show()
 if messagebox.askyesno("Python",
                        "Would you like to save the parameters,"

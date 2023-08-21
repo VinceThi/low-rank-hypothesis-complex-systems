@@ -50,8 +50,6 @@ def plot_singular_values_expected_matrix(ax, indices, a, b,
     ax.set_xscale("log")
     ax.set_xticks([1, 10, 100])
     ax.set_xlim([0, 101])
-    # ax.set_xticks([1, 20])
-    # ax.set_xlim([0, 25])
     ax.set_yscale("log")
     ax.set_yticks([10**(-15), 10**(-12), 10**(-9), 10**(-6), 10**(-3), 1])
     ax.set_ylim([10**(-15), 20])
@@ -124,12 +122,5 @@ for i, g in enumerate([0.3, 0.6, 0.9]):
         tol, deep[i],
         f"max$(\\langle W \\rangle) \\approx {round_sig(maxEW)}$",
         "c", weighted=True)
-
-
-# ax4 = plt.subplot(234)
-#
-# ax5 = plt.subplot(235)
-#
-# ax6 = plt.subplot(236)
 
 plt.show()

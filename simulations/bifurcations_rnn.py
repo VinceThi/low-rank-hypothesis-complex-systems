@@ -81,7 +81,7 @@ calD = M@D@Mp
 x_forward_equilibrium_points_list = []
 redx_forward_equilibrium_points_list = []
 
-x0 = np.linspace(-1, 1, N)   # 2*np.random.random(N) - 1 ##################################################################
+x0 = np.linspace(-1, 1, N)   # 2*np.random.random(N) - 1
 # x0 = -10*np.random.random(N)
 redx0 = M@x0
 # print("\nIterating on coupling constants for equilibrium point diagram(f)\n")
@@ -148,8 +148,6 @@ for coupling in tqdm(coupling_constants):
         plt.subplot(133)
         plt.scatter(redx[:, 0], redx[:, 1], color=dark_grey,
                     linewidth=redlinewidth, linestyle="--", s=2)
-        # ylab = plt.ylabel('$X_{\\mu}$', labelpad=20)
-        # ylab.set_rotation(0)
         plt.xlim([-1.2, 1.2])
         plt.ylim([-1.2, 1.2])
 
@@ -233,7 +231,6 @@ if compute_backward_branch:
              color=second_community_color)
 ylab = plt.ylabel('Global activity equilibrium point $X^*$')
 plt.xlabel('Coupling constant')
-# plt.ylim([-0.02, 1.02])
 plt.tick_params(axis='both', which='major')
 plt.legend(loc=4, fontsize=fontsize_legend)
 plt.tight_layout()

@@ -20,7 +20,6 @@ def plotEffectiveRank_vs_density(ax, letter_str, effrank_name, networkDF,
     """ ----------------- Plot effective ranks vs density ----------------- """
     s = 2
     letter_posx, letter_posy = -0.27, 1.05
-    # np.ones(len(size))/len(size)
     ax.scatter(density, effrank, s=s)
     ax.text(letter_posx, letter_posy, letter_str, fontweight="bold",
             horizontalalignment="center",
@@ -29,17 +28,11 @@ def plotEffectiveRank_vs_density(ax, letter_str, effrank_name, networkDF,
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlabel('Density')
-    # ax.set_xticks([0, 1])
-    # ax.set_xlim([-100, 5100])
-    # ax.xaxis.set_label_coords(0.45, -0.3)
-    # ax.set_ylim(ylim)
     ax.set_ylim([0.3, 30000])
     ax.set_xlim([10**(-4), 2])
     ax.set_yticks([10**0, 10**2, 10**4])
     ax.set_ylabel(effrank_name, labelpad=labelpad)
     ax.tick_params(axis="y", which="minor", top=False, right=False, left=False)
-    # ax.set_yticks([1, ylim[1]])
-    # ax.legend(loc=1)
 
     """ ----------------- Print correlation measures  --------------------- """
     corr = pearsonr(np.log10(density), np.log10(effrank))[0]
@@ -82,7 +75,6 @@ def main():
     effectiveRanksFilename = "C:/Users/thivi/Documents/GitHub/" \
                              "low-rank-hypothesis-complex-systems/" \
                              "graphs/graph_data/datasets_table.txt"
-    # 'singular_values/properties/effective_ranks.txt'
     header = \
         open(effectiveRanksFilename, 'r').readline().replace('#', ' ').split()
     effectiveRanksDF = pd.read_table(effectiveRanksFilename, names=header,

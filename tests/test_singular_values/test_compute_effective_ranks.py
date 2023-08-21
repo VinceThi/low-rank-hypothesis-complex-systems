@@ -14,8 +14,6 @@ def test_compare_optimal_shrinkage_and_threshold_random_matrix():
     prng = np.random.RandomState(1234567890)
     L = prng.uniform(0, 0.5, (N, rank_r))
     M = prng.normal(0, 0.5, (rank_r, N))
-    # D = np.diag(np.exp(np.linspace(0, 1, rank_r)) + )
-    # utiliser ortho np.random
     sigma = 2.5
     noise_level = sigma / np.sqrt(N)
     W = L@M + noise_level * prng.normal(0, 0.2, (N, N))
