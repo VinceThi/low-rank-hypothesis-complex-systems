@@ -1,0 +1,39 @@
+Hemibrain Adjacency Table
+=========================
+
+This directory contains the exported adjacency table for all
+non-cropped Traced Neurons in the hemibrain v1.1 dataset from
+https://neuprint.janelia.org.
+
+
+traced-neurons.csv
+------------------
+Contains a table of the neuron IDs, types, and instance names.
+
+
+traced-total-connections.csv
+----------------------
+Contains the neuron-neuron connection table, where 'weight' corresponds
+to the total synapse count in the connections between each neuron pair.
+
+
+traced-roi-connections.csv
+--------------------------
+Contains the neuron-neuron connection table, but each connection pair
+is split across multiple rows, according to the ROI (brain region) in
+which those synapses reside.  Only "primary" ROIs are referenced.
+If a connection includes synapses which do not reside in any primary
+ROI, those synapses are not represented in the table.
+You can infer the count of missing synapses by subtracting the summed
+per-ROI weights from the counts 'total' connections table (described above).
+
+
+Provenance
+----------
+These results were obtained via the neuprint-python[1] library (v0.4.9) as follows:
+
+>>> from neuprint import Client, fetch_traced_adjacencies
+>>> client = Client('neuprint.janelia.org', 'hemibrain:v1.1', token=...)
+>>> traced_df, roi_conn_df = fetch_traced_adjacencies('exported-connections')
+
+[1]: https://github.com/connectome-neuprint/neuprint-python
