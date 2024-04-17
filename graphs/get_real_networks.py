@@ -82,7 +82,7 @@ def get_connectome_weight_matrix(graph_name):
         # N = 21733
         # srank = 11.5811
 
-    elif graph_name == "cintestinalis":
+    elif graph_name == "ciona":
         A_from_xlsx = pd.read_excel(path_str +
                                     'ciona_intestinalis_lavaire_elife-16962'
                                     '-fig16-data1-v1_modified.xlsx').values
