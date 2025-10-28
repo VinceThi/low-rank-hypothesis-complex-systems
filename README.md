@@ -1,6 +1,6 @@
 # The low-rank hypothesis of complex systems
 Code to generate the results of the paper [The low-rank hypothesis of complex systems](
-https://doi.org/10.48550/arXiv.2208.04848) publié dans [Nature Physics](https://doi.org/10.1038/s41567-023-02303-0) (2024). 
+https://doi.org/10.48550/arXiv.2208.04848) published in [Nature Physics, 20, 294–302](https://doi.org/10.1038/s41567-023-02303-0) (2024). 
 
 
 ### Network datasets
